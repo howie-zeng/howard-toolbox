@@ -1,0 +1,18 @@
+===============================================
+RENAME FOLDER INSTRUCTIONS
+===============================================
+
+To rename 'commands' to 'quant_workflows':
+
+1. CLOSE the notebook in Cursor/VS Code
+   - Close: quant_workflows_notebook.ipynb
+
+2. Run this command in PowerShell:
+   cd "c:\Users\hzeng\Desktop\howard-toolbox"
+   ren commands quant_workflows
+
+3. Delete this instruction file
+
+That's it! The folder will be renamed and all documentation already reflects the new name.
+
+===============================================

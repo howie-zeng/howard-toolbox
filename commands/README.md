@@ -1,0 +1,370 @@
+# Quantitative Workflows Notebook
+
+A comprehensive, organized collection of commands and workflows for quantitative research operations.
+
+## 📋 Overview
+
+This notebook contains all the commands needed to run monthly quantitative operations, including:
+- Jenkins workflow orchestration
+- Data updates (CRT, LP, HELOC, DV01)
+- Vector generation (LMSim)
+- Risk runs
+- Tracking reports
+- Database operations
+
+## 🚀 Quick Start
+
+### 1. Open the Notebook
+```bash
+jupyter notebook quant_workflows_notebook.ipynb
+```
+
+### 2. Update Global Configuration (Cell 1)
+**Good news!** AS_OF_DATE now auto-calculates to the most recent business day (excluding weekends).
+
+You can still override it manually if needed:
+
+```python
+# Auto-calculated (default behavior):
+AS_OF_DATE = today.strftime("%Y%m%d")  # Most recent business day
+
+# Or override manually:
+# AS_OF_DATE = "20251001"
+
+EMAIL_RECIPIENTS = "hzeng@libremax.com"
+RAY_CLUSTER = "east-spot"
+```
+
+### 3. Navigate to Your Task
+Use the table of contents below to jump to the section you need.
+
+---
+
+## 📚 Table of Contents
+
+The notebook is organized by workflow type with clear section markers.
+
+### Core Workflows
+| Section | Description | When to Use |
+|---------|-------------|-------------|
+| **1. Jenkins Workflows** | Monthly tracking workflow steps | Monthly process checklist |
+| **2. HECM Reports** | Automated HECM report generation | Monthly HECM reporting |
+| **3. CRT Pseudo Deals** | Create pseudo pools | New month setup |
+
+### 📁 Flat File Generation
+| Section | Description | When to Use |
+|---------|-------------|-------------|
+| **4. CRT and LP Data Updates** | Update CRT/LP flat files | Daily/weekly data refresh |
+| **5. HELOC Data Updates** | HELOC-specific flat file updates | HELOC deal updates |
+| **6. Monthly Data Refresh** | Comprehensive update commands | End-of-month full refresh |
+
+### 📊 Vector Generation
+| Section | Description | When to Use |
+|---------|-------------|-------------|
+| **7. Tracking Vectors** | ECA, Matrix, Forward Projection | Monthly tracking runs |
+| **8. Ad-hoc LMSim** | One-off simulation commands | Testing, special analyses |
+| **9. Position-Only Runs** | Quick position updates | Daily position updates |
+
+### 📈 Risk
+| Section | Description | When to Use |
+|---------|-------------|-------------|
+| **10. Risk Runs** | Generate risk vectors/JSON | Portfolio risk analysis |
+
+### 🔧 Other Operations
+| Section | Description | When to Use |
+|---------|-------------|-------------|
+| **11. Debug Operations** | LMSim debugging commands | Troubleshooting |
+| **12. Utilities** | Git, Ray job management | Infrastructure tasks |
+| **13. Deal Lists** | Common deal identifiers | Reference for deal names |
+| **14. Quick Generator** | Dynamic workflow builder | Generate full workflows |
+| **15. Google Cloud** | BigQuery access instructions | Cloud database queries |
+| **16. Tape Cracking** | New deal onboarding | Adding new deals |
+| **17. Database Ops** | SQL queries, kill jobs | Database management |
+| **18. IntexLoader** | Load Intex data | Intex data updates |
+
+---
+
+## 🎯 Common Use Cases
+
+### Monthly Tracking Workflow
+```python
+# 1. Check AS_OF_DATE in Cell 1 (auto-calculated to latest business day)
+# Override if needed: AS_OF_DATE = "20251101"
+
+# 2. Run Section 1 - Jenkins Workflows (follow in order)
+
+# 3. Flat File Generation:
+#    - Section 3: CRT Pseudo Deals
+#    - Section 6: Monthly Data Refresh (comprehensive)
+#    - Section 4 & 5: Specific updates as needed
+
+# 4. Vector Generation:
+#    - Section 7: Tracking Vectors & Reports
+```
+
+### Quick Data Update for One Deal
+```python
+# Go to Section 4 - CRT and LP Data Updates
+# Use the ad-hoc examples (Cell after generator function)
+
+# Example:
+# Python agencydata/wh_lp_update.py --skip_unload --deal_type "JUMBO2_0" --deal_list "CHASE 2024-6" --force_save_stats
+```
+
+### Generate Position-Only Vectors
+```python
+# Go to Section 9 - Position-Only Runs
+# Update the variables:
+AS_OF_DATE_POS = 20251201
+purpose = "PROD"
+deal_type = "JUMBO2_0"
+
+# Run the cell to generate commands
+```
+
+### Debug a Simulation Issue
+```python
+# Go to Section 10 - Debug Operations
+# Choose production or development debug command
+# Run LMSim with debug logging enabled
+```
+
+---
+
+## 💡 Tips & Best Practices
+
+### 1. **AS_OF_DATE Auto-Calculates**
+- The global `AS_OF_DATE` now defaults to the most recent business day (excludes weekends)
+- It cascades through all commands automatically
+- Override manually if needed: `AS_OF_DATE = "20251101"`
+
+### 2. **Use Generator Functions**
+Instead of hardcoding commands, use the provided functions:
+
+```python
+# ❌ Don't do this (hard to maintain)
+cmd = "python agencydata\\wh_crt_update.py --deal_type CAS --deal_list 'CAS 2022-R02' --force_save_stats"
+
+# ✅ Do this (flexible and reusable)
+cmd = generate_wh_crt_update(
+    deal_type="CAS",
+    deal_list="CAS 2022-R02",
+    force_save_stats=True
+)
+```
+
+### 3. **Follow the Workflow Order**
+- Notebook is organized by logical flow: **Flat Files → Vectors → Risk → Other**
+- Section markers (`# Flat File Gen`, `# Vector`, `# Risk`, `# Other`) help navigate
+- Section 6 (Monthly Refresh) positioned logically after flat file updates
+
+### 4. **Section 6 is Your Monthly Checklist**
+- Use it for comprehensive end-of-month data refreshes
+- All deal types covered in one place
+- Copy/paste commands directly into terminal
+
+### 5. **Save Custom Configurations**
+If you frequently run the same combination:
+
+```python
+# Create a custom cell with your common settings
+MY_DEAL_TYPE = "JUMBO2_0"
+MY_PURPOSE = "Howard_jumbo_prod"
+MY_SCENARIOS = "Base,ParallelUp200,ParallelDn200"
+
+# Then use these in generator functions
+commands = generate_lmsim_commands(
+    MY_DEAL_TYPE, AS_OF_DATE, MY_PURPOSE,
+    scenarios=MY_SCENARIOS
+)
+```
+
+### 6. **Reference Deal Lists**
+Section 13 contains pre-defined deal lists for common scenarios:
+- `DEAL_LISTS['STACR_RECENT']`
+- `DEAL_LISTS['HELOC_GRADE']`
+- `DEAL_LISTS['JUMBO_RECENT']`
+
+---
+
+## 🔧 Customization Guide
+
+### Adding a New Command Pattern
+
+1. **Find the appropriate section** (or create a new one)
+2. **Add a generator function** if the command is reusable
+3. **Document parameters** clearly
+4. **Add an example** showing typical usage
+
+Example:
+```python
+def generate_my_custom_workflow(deal_type, date, purpose):
+    """Generate custom workflow for XYZ analysis
+    
+    Args:
+        deal_type: Deal type (e.g., "CRT", "JUMBO2_0")
+        date: As-of date (YYYYMMDD)
+        purpose: Purpose tag for database
+    
+    Returns:
+        Command string ready to execute
+    """
+    return f"python my_script.py --deal_type {deal_type} --date {date} --purpose {purpose}"
+
+# Example usage:
+cmd = generate_my_custom_workflow("JUMBO2_0", "20251001", "PROD")
+print(cmd)
+```
+
+### Creating a New Section
+
+Use this markdown template:
+```markdown
+## X. Your Section Name
+Brief description of what this section contains
+```
+
+Then add code cells with clear comments and examples.
+
+---
+
+## 🗂️ File Organization
+
+```
+commands/
+├── README.md                        # This file
+└── quant_workflows_notebook.ipynb   # Main notebook
+```
+
+**Suggested rename:** Consider renaming this folder to `quant_workflows/` for better clarity.
+
+---
+
+## 📝 Workflow Patterns
+
+### Pattern 1: Data Update → Vector Generation → Tracking
+```python
+# Step 1: Update flat files
+cmd_update = generate_wh_crt_update(deal_type="CAS", ...)
+
+# Step 2: Generate vectors
+commands = generate_lmsim_commands(deal_type="CAS", ...)
+
+# Step 3: Generate tracking report
+tracking_cmd = generate_tracking_command(deal_type="CAS", ...)
+```
+
+### Pattern 2: Position-Only Daily Updates
+```python
+# Quick daily position update without full run
+as_of_date = "20251115"
+deal_types = "CRT,JUMBO2_0,NONQM,HELOC"
+purpose = "PROD"
+
+# See Section 9 for ready-to-use commands
+```
+
+### Pattern 3: Risk Run for Portfolio
+```python
+# Step 1: Get CUSIPs (Section 10 has common lists)
+cusips = CRT_CUSIPS  # or define your own
+
+# Step 2: Generate risk run
+cmd = generate_risk_run(date, "RATE_HEDGE", cusips, purpose)
+```
+
+---
+
+## ⚠️ Important Notes
+
+### Git Token Security
+**Section 12 contains a GitHub token.** This is a security risk if the notebook is shared:
+- Consider moving tokens to environment variables
+- Use `.gitignore` to prevent committing tokens
+- Rotate tokens periodically
+
+### Ray Cluster Configuration
+Default cluster is `east-spot`. If it's down:
+- Change `RAY_CLUSTER = "east"` in global config
+- Or override in individual commands
+
+### Database Connections
+Some operations require database access. Ensure:
+- VPN connection is active
+- Database credentials are current
+- Network has access to required resources
+
+---
+
+## 🆘 Troubleshooting
+
+### "Command not found" errors
+- Ensure you're in the correct Git repo directory (C:\Git\LMQR or C:\Git\LMQR_prod)
+- Check Python environment is activated
+- Verify paths in global configuration (Cell 1)
+
+### Ray job stuck/hanging
+- Use Section 12 (Utilities) to stop Ray jobs
+- Update `job_id` variable with your job ID
+- Run the curl command for your cluster
+
+### Data update fails
+- Check date formats (YYYYMMDD vs YYYYMM)
+- Verify deal names match Bloomberg conventions
+- Check database connectivity
+
+### IntexLoader errors
+- Verify deal list exists in Intex system
+- Check date range is valid
+- Ensure database has write permissions
+
+---
+
+## 📞 Support
+
+For questions or issues:
+- Check this README first
+- Review comments in the notebook cells
+- Consult team documentation
+- Contact: hzeng@libremax.com
+
+---
+
+## 🔄 Maintenance
+
+### Weekly
+- Review Section 8 (Ad-hoc commands) - move repeated patterns to organized sections
+
+### Monthly
+- Update `AS_OF_DATE` in Cell 1 (or let it auto-calculate)
+- Run Section 6 (Monthly Refresh)
+- Archive old commands that are no longer needed
+
+### Quarterly
+- Review and update deal lists (Section 13)
+- Update CUSIP lists (Section 10)
+- Check for deprecated commands
+
+---
+
+## 📈 Version History
+
+- **v1.0** - Initial organized version with 18 sections
+- Consolidated scattered commands into logical groups
+- Added generator functions for common patterns
+- Created comprehensive monthly refresh checklist
+
+---
+
+## 🎓 Learning Resources
+
+New to the notebook? Start here:
+1. Read the Overview section
+2. Review Common Use Cases
+3. Run through a simple workflow (e.g., single deal update)
+4. Explore generator functions in Section 7
+5. Bookmark frequently-used sections
+
+---
+
+*Last updated: January 2026*
