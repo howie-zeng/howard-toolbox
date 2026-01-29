@@ -49,20 +49,35 @@ def process_clipboard_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-**Weekly Analysis Update**
+**Monthly Model Update: Return to Spread Incentive Framework**
 
-Below is the most recent chart from today's review:
+As discussed in the "Jumbo Update," we are reverting to the spread incentive framework. This version introduces a new short-term PMMS momentum variable modeled with two smooths (Low WAC and High WAC).
 
-<table>
-<tr>
-<td><img src="2026-01-29-10-11-02.png" height="300"></td>
-<td><img src="2026-01-29-10-39-24.png" height="300"></td>
-</tr>
-</table>
+**New Variable Definition**
 
-### Key Observations
-- The current trend remains positive.
-- Mathematical reference: $y = x^2$
+The short-term momentum is defined as:
+
+$$
+\text{pmms30\_spread\_3m} = \text{pmms\_lag3m} - \text{pmms\_lowest\_weekly}
+$$
+
+Among several alternative media/momentum variables tested (e.g., `Media3y1m`, `Media1y1m`, `pmms30_spread_24m`), the 3-month PMMS spread (`pmms30_spread_3m`) performed the best.
+
+**Model Updates & Performance**
+
+**1. New Smooth Functions**
+*Left: Low WAC | Right: High WAC*
+
+![](assets/2026-01-29-16-05-11.png)
+
+**2. Impact Analysis**
+*Left: With New Variable | Right: Before Change*
+
+![](assets/2026-01-29-16-05-17.png)
+
+**3. Performance by Vintage**
+
+![](assets/2026-01-29-16-07-32.png)
 """
 
 # -----------------------------------------------------------------------------

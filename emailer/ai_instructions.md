@@ -30,15 +30,24 @@ You are writing `MD_CONTENT` for an email body to be rendered by Howard Toolbox.
   ```html
   <table>
   <tr>
-    <td><img src="assets/chart1.png" height="200"></td>
-    <td><img src="assets/chart2.png" height="200"></td>
+    <td><img src="chart1.png" height="400"></td>
+    <td><img src="chart2.png" height="400"></td>
   </tr>
   </table>
   ```
 
 ### Layout
 - **Tables**: Use standard Markdown tables for data.
-- **Code**: Use fenced code blocks for snippets.
+- **Code Blocks**: Use fenced code blocks with language tags for syntax highlighting style.
+  ```markdown
+  ```python
+  def hello():
+      print("world")
+  ```
+  ```
+- **Inline Code**: Use backticks for tech terms: `variable_name`.
+- **Horizontal Rules**: Use `---` to separate sections visually.
+- **Links**: Standard markdown `[text](url)` links are styled professionally.
 
 ## Example Output
 
@@ -53,8 +62,8 @@ The volatility model has converged.
 
 <table>
 <tr>
-<td><img src="assets/chart1.png" height="250"></td>
-<td><img src="assets/chart2.png" height="250"></td>
+<td><img src="assets/chart1.png" height="500"></td>
+<td><img src="assets/chart2.png" height="500"></td>
 </tr>
 </table>
 
