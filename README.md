@@ -13,9 +13,12 @@ howard-toolbox/
 │   ├── assets/          # Images for embedding
 │   └── outputs/         # Generated HTML files
 │
-└── commands/            # ⚠️ Rename to quant_workflows/
-    ├── README.md        # Comprehensive workflow documentation
-    └── quant_workflows_notebook.ipynb  # 18 organized sections of commands
+├── quant_workflows/     # Quantitative workflows and commands
+│   ├── README.md        # Comprehensive workflow documentation (411 lines)
+│   └── quant_workflows_notebook.ipynb  # 18 organized sections (1500+ lines)
+│
+├── README.md            # This file
+└── requirements.txt     # Python dependencies
 ```
 
 ---
@@ -38,24 +41,28 @@ python emailer/run.py
 - Clipboard integration
 - Special tag: `{{CLIPBOARD}}` for dynamic images
 
-### 2. Quantitative Workflows (`commands/`)
+### 2. Quantitative Workflows (`quant_workflows/`)
 
-**📝 Recommended:** Rename this folder to `quant_workflows/` for clarity.
+Comprehensive notebook with 18 sequentially organized sections:
 
-Comprehensive notebook with 18 organized sections covering:
-- Jenkins workflows
-- Data updates (CRT, LP, HELOC)
-- Vector generation (LMSim)
-- Risk runs and tracking
-- Database operations
-- Monthly refresh checklists
+**📁 Flat File Generation (4-6):** CRT/LP updates, HELOC data, monthly refresh  
+**📊 Vector Generation (7-9):** Tracking vectors, ad-hoc LMSim, position-only runs  
+**📈 Risk (10):** Portfolio risk analysis and vectors  
+**🔧 Other (11-18):** Debug, utilities, deal lists, database ops, IntexLoader
+
+**Features:**
+- ✅ Auto-calculates `AS_OF_DATE` to most recent business day
+- ✅ Secure credential handling (environment variables)
+- ✅ Generator functions for reusable commands
+- ✅ Clear visual section markers
+- ✅ Comprehensive monthly refresh checklist
 
 **Quick start:**
 ```bash
-jupyter notebook commands/quant_workflows_notebook.ipynb
+jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
 ```
 
-**See [`commands/README.md`](commands/README.md) for full documentation.**
+**See [`quant_workflows/README.md`](quant_workflows/README.md) for full documentation.**
 
 ---
 
@@ -76,9 +83,11 @@ jupyter notebook commands/quant_workflows_notebook.ipynb
 ### Quant Workflows Architecture
 
 - **Single Notebook**: `quant_workflows_notebook.ipynb` contains all workflows
-- **Global Config**: Cell 1 has variables that cascade through all commands
+- **Global Config**: Cell 1 auto-calculates `AS_OF_DATE` to most recent business day
 - **Generator Functions**: Reusable command builders for common operations
-- **Organization**: 18 sections grouped by function (see TOC in notebook README)
+- **Organization**: 18 sections grouped logically (Flat Files → Vectors → Risk → Other)
+- **Section Markers**: Visual separators (📁📊📈🔧) for easy navigation
+- **Security**: Environment variables for credentials (no hardcoded tokens)
 - **No External Dependencies**: Self-contained, just needs Jupyter
 
 ---
@@ -96,22 +105,53 @@ pip install -r requirements.txt
 3. Paste from clipboard into email client
 
 ### Workflows
-1. Open: `jupyter notebook commands/quant_workflows_notebook.ipynb`
-2. Update `AS_OF_DATE` in Cell 1
-3. Navigate to desired section
+1. Open: `jupyter notebook quant_workflows/quant_workflows_notebook.ipynb`
+2. Run Cell 1 to configure (AS_OF_DATE auto-calculates to latest business day)
+3. Navigate to desired section using visual markers (📁📊📈🔧)
 4. Copy/run commands as needed
+
+**For Git operations:** Set `GITHUB_TOKEN` environment variable before use
+```powershell
+# PowerShell
+$env:GITHUB_TOKEN = "your_token_here"
+```
 
 ---
 
-## 🔄 Maintenance
+## 🔒 Security
 
-### To Rename Commands Folder
-```bash
-# Close the notebook in Cursor first, then:
-ren commands quant_workflows
+### Environment Variables for Credentials
+The notebook uses environment variables for sensitive data:
+
+**GitHub Token (Section 12):**
+```powershell
+# PowerShell
+$env:GITHUB_TOKEN = "your_token_here"
+
+# Bash
+export GITHUB_TOKEN="your_token_here"
 ```
 
-Then update all documentation references.
+**Best Practices:**
+- ✅ Never commit tokens or credentials to the repository
+- ✅ Use environment variables for all sensitive data
+- ✅ Rotate tokens regularly
+- ✅ Clear notebook outputs before committing
+- ⚠️ GitHub will block pushes containing secrets
+
+---
+
+---
+
+## 📝 Recent Updates
+
+### January 2026
+- ✅ **Security**: Removed hardcoded GitHub token, switched to environment variables
+- ✅ **Organization**: Renumbered sections 1-18 sequentially
+- ✅ **Automation**: AS_OF_DATE auto-calculates to most recent business day
+- ✅ **Navigation**: Added visual section markers (📁📊📈🔧)
+- ✅ **Documentation**: Comprehensive README with best practices
+- ✅ **Sections**: Improved titles ("HELOC Flatfile" → "HELOC Data Updates")
 
 ---
 

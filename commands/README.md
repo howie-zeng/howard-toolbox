@@ -4,13 +4,22 @@ A comprehensive, organized collection of commands and workflows for quantitative
 
 ## 📋 Overview
 
-This notebook contains all the commands needed to run monthly quantitative operations, including:
+This notebook contains all the commands needed to run monthly quantitative operations, featuring:
+
+**✨ New in v2.0:**
+- ✅ Auto-calculating dates (no manual date entry needed!)
+- ✅ Secure credential handling (environment variables)
+- ✅ Visual section markers for easy navigation
+- ✅ Sequential numbering (1-18)
+- ✅ Enhanced security (no hardcoded tokens)
+
+**Operations Covered:**
 - Jenkins workflow orchestration
 - Data updates (CRT, LP, HELOC, DV01)
 - Vector generation (LMSim)
-- Risk runs
+- Risk runs and portfolio analysis
 - Tracking reports
-- Database operations
+- Database operations and queries
 
 ## 🚀 Quick Start
 
@@ -19,24 +28,31 @@ This notebook contains all the commands needed to run monthly quantitative opera
 jupyter notebook quant_workflows_notebook.ipynb
 ```
 
-### 2. Update Global Configuration (Cell 1)
-**Good news!** AS_OF_DATE now auto-calculates to the most recent business day (excluding weekends).
-
-You can still override it manually if needed:
+### 2. Run Global Configuration (Cell 1)
+**✨ New!** AS_OF_DATE now auto-calculates to the most recent business day (excluding weekends).
 
 ```python
-# Auto-calculated (default behavior):
-AS_OF_DATE = today.strftime("%Y%m%d")  # Most recent business day
+# Run Cell 1 - it auto-calculates AS_OF_DATE
+# Output: >>> Configuration loaded for date: 20260128
 
-# Or override manually:
+# Override manually if needed:
 # AS_OF_DATE = "20251001"
 
+# Other settings:
 EMAIL_RECIPIENTS = "hzeng@libremax.com"
 RAY_CLUSTER = "east-spot"
 ```
 
-### 3. Navigate to Your Task
-Use the table of contents below to jump to the section you need.
+**What's Auto-Calculated:**
+- `AS_OF_DATE` → Most recent business day
+- `date_ranges` → Start/end dates for unloading
+
+### 3. Navigate Using Visual Markers
+Look for these section markers to quickly find what you need:
+- 📁 **FLAT FILE GENERATION** (Sections 4-6)
+- 📊 **VECTOR GENERATION** (Sections 7-9)
+- 📈 **RISK OPERATIONS** (Section 10)
+- 🔧 **OTHER OPERATIONS** (Sections 11-18)
 
 ---
 
@@ -231,12 +247,10 @@ Then add code cells with clear comments and examples.
 ## 🗂️ File Organization
 
 ```
-commands/
-├── README.md                        # This file
-└── quant_workflows_notebook.ipynb   # Main notebook
+quant_workflows/
+├── README.md                        # This file (411 lines)
+└── quant_workflows_notebook.ipynb   # Main notebook (1500+ lines, 18 sections)
 ```
-
-**Suggested rename:** Consider renaming this folder to `quant_workflows/` for better clarity.
 
 ---
 
@@ -277,11 +291,26 @@ cmd = generate_risk_run(date, "RATE_HEDGE", cusips, purpose)
 
 ## ⚠️ Important Notes
 
-### Git Token Security
-**Section 12 contains a GitHub token.** This is a security risk if the notebook is shared:
-- Consider moving tokens to environment variables
-- Use `.gitignore` to prevent committing tokens
-- Rotate tokens periodically
+### Security Best Practices ✅
+
+**Environment Variables (Section 12):**
+The notebook now uses environment variables for GitHub tokens instead of hardcoding them:
+
+```powershell
+# PowerShell
+$env:GITHUB_TOKEN = "your_token_here"
+
+# Bash
+export GITHUB_TOKEN="your_token_here"
+```
+
+**Security Checklist:**
+- ✅ Tokens stored in environment variables (not hardcoded)
+- ✅ Tokens masked in output (`***TOKEN***`)
+- ✅ GitHub will block pushes containing secrets
+- ⚠️ Always clear cell outputs before committing
+- ⚠️ Never commit credentials or API keys
+- ⚠️ Rotate tokens regularly
 
 ### Ray Cluster Configuration
 Default cluster is `east-spot`. If it's down:
@@ -349,10 +378,19 @@ For questions or issues:
 
 ## 📈 Version History
 
-- **v1.0** - Initial organized version with 18 sections
+### v2.0 - January 2026
+- ✅ **Security**: Removed hardcoded GitHub token, switched to environment variables
+- ✅ **Organization**: Renumbered all sections sequentially (1-18)
+- ✅ **Automation**: AS_OF_DATE auto-calculates to most recent business day
+- ✅ **Navigation**: Added visual section markers (📁📊📈🔧)
+- ✅ **Titles**: Improved section names for clarity
+- ✅ **Documentation**: Enhanced README with security best practices
+
+### v1.0 - Initial Release
 - Consolidated scattered commands into logical groups
 - Added generator functions for common patterns
 - Created comprehensive monthly refresh checklist
+- Organized into 18 sections
 
 ---
 
