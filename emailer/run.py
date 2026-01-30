@@ -49,35 +49,31 @@ def process_clipboard_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-**Monthly Model Update: Return to Spread Incentive Framework**
+**Proposal: Jumbo Monitor Screen & Monthly Reporting**
 
-As discussed in the "Jumbo Update," we are reverting to the spread incentive framework. This version introduces a new short-term PMMS momentum variable modeled with two smooths (Low WAC and High WAC).
+**1. Overview**
 
-**New Variable Definition**
+This proposal outlines the plan for a new **Jumbo Monitor Screen**. As a preliminary step before building the full interactive monitor, we can distribute the key tracking metrics as a **monthly email report**.
 
-The short-term momentum is defined as:
+**2. Future Enhancements**
 
-$$
-\text{pmms30\_spread\_3m} = \text{pmms\_lag3m} - \text{pmms\_lowest\_weekly}
-$$
+Once the baseline monthly report is established, we can expand the monitor to include additional groupings such as:
+*   **WAC**
+*   **Vintage**
+*   **Position Only** vs. **All Deals**
+*   Other custom stratifications
 
-Among several alternative media/momentum variables tested (e.g., `Media3y1m`, `Media1y1m`, `pmms30_spread_24m`), the 3-month PMMS spread (`pmms30_spread_3m`) performed the best.
+**3. Examples**
 
-**Model Updates & Performance**
+Here are two examples of the proposed reporting format:
 
-**1. New Smooth Functions**
-*Left: Low WAC | Right: High WAC*
+**A. Shelf Tracking**
 
-![](assets/2026-01-29-16-05-11.png)
+*(Insert Shelf Tracking Summary Table/Chart Here)*
 
-**2. Impact Analysis**
-*Left: With New Variable | Right: Before Change*
+**B. IO Deal Tracking**
 
-![](assets/2026-01-29-16-05-17.png)
-
-**3. Performance by Vintage**
-
-![](assets/2026-01-29-16-07-32.png)
+*(Insert IO Deal Tracking Summary Table/Chart Here)*
 """
 
 # -----------------------------------------------------------------------------
@@ -100,3 +96,6 @@ if __name__ == "__main__":
     print("1. Go to Outlook/Gmail")
     print("2. Paste (Ctrl+V)")
     print("---------------------------------------------------------")
+
+
+# python emailer\run.py
