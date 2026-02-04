@@ -66,6 +66,42 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
 
 **See [`quant_workflows/README.md`](quant_workflows/README.md) for full documentation.**
 
+### 3. Dial Updates (`dial/`)
+
+Generate a compact dial spec, edit it once, and apply it to produce a new model JSON.
+
+**Quick start (generate a short spec):**
+```bash
+python dial/update_dials.py --generate-spec "dial/stacr_v1.8.0_all_dials_spec.json" --generate-only-dials --generate-group-by-model --input "C:\Git\LMSimData\data\STACR\stacr_v1.8.0.json"
+```
+
+**Edit the spec (one dial can target many transitions):**
+```json
+{
+  "model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoC_2025_10_02.txt",
+  "targets": [
+    "M90->M90toC",
+    "M120->M120toC",
+    "M150->M150toC"
+  ],
+  "cohort": "CAS",
+  "start_date": "20240701",
+  "dial": 0.98
+}
+```
+
+**Apply the spec to generate a new JSON:**
+```bash
+python dial/update_dials.py --spec "dial/stacr_v1.8.0_all_dials_spec.json" --output "C:\Git\LMSimData\data\STACR\stacr_v1.8.1.json" --version "V1.8.1"
+```
+
+**Notes:**
+- `--generate-only-dials` excludes transitions with no `Shock` (no dial).
+- `--generate-group-by-model` groups transitions that share the same model file.
+- Shorthand targets are the default; use `--generate-verbose-targets` if you want expanded objects.
+- Overrides apply by default; use `"disabled": true` to skip a line.
+- `convert_cohort` defaults to true; set `"convert_cohort": false` on a line to prevent conversion.
+
 ---
 
 ## 🧠 For AI Agents / Developers
