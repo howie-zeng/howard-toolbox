@@ -49,31 +49,63 @@ def process_clipboard_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-**Proposal: Jumbo Monitor Screen & Monthly Reporting**
+Hi Team,
 
-**1. Overview**
+Here is the monthly tracking review for January 2026. The supporting charts are included below.
 
-This proposal outlines the plan for a new **Jumbo Monitor Screen**. As a preliminary step before building the full interactive monitor, we can distribute the key tracking metrics as a **monthly email report**.
+**1. Key Issue / Anomaly**
 
-**2. Future Enhancements**
+*   **NONQM M60 to D** is off by a large amount. The **6% M6 to D** rate looks unusually high.
 
-Once the baseline monthly report is established, we can expand the monitor to include additional groupings such as:
-*   **WAC**
-*   **Vintage**
-*   **Position Only** vs. **All Deals**
-*   Other custom stratifications
+![](2026-02-03-14-21-09.png)
 
-**3. Examples**
+I double-checked the numbers and the code. The **CDR calculations for NONQM** (and possibly **JUMBO** and **HELOC**) appear to be incorrect. If there are no objections, I will proceed with the fixes.
 
-Here are two examples of the proposed reporting format:
+**2. Example Discrepancy**
 
-**A. Shelf Tracking**
+Example NONQM deal (**CHNGE 2022-2**): our result shows **1.7 CDR** while **Intex** shows **0**.
 
-*(Insert Shelf Tracking Summary Table/Chart Here)*
+![](2026-02-03-14-29-46.png)
+![](2026-02-03-14-30-44.png)
 
-**B. IO Deal Tracking**
+**3. Implied vs Proposed Dial (by deal type)**
 
-*(Insert IO Deal Tracking Summary Table/Chart Here)*
+**STACR**
+![](2026-02-03-14-31-41.png)
+
+**CAS**
+![](2026-02-03-14-31-48.png)
+
+**JUMBO**  
+Due to small loan counts for most transitions, I do **not** recommend applying any dial for JUMBO.
+![](2026-02-03-14-47-43.png)
+
+**HELOC (FIGRE)**
+![](2026-02-03-14-32-52.png)
+
+**NONQM**
+![](2026-02-03-14-34-14.png)
+
+**4. CPR by Deal Type**
+
+**CAS**
+![](2026-02-03-14-37-27.png)
+
+**STACR**
+![](2026-02-03-14-37-49.png)
+
+**JUMBO**
+![](2026-02-03-14-38-23.png)
+
+**NONQM**
+![](2026-02-03-14-38-39.png)
+
+**HELOC (FIGRE)**
+![](2026-02-03-14-38-53.png)
+
+../2026-02-04-09-16-14.png
+
+../2026-02-04-09-16-59.png
 """
 
 # -----------------------------------------------------------------------------

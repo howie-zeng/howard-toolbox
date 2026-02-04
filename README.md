@@ -10,7 +10,7 @@ howard-toolbox/
 ├── emailer/              # Email content generator with Markdown support
 │   ├── run.py           # Main entry point
 │   ├── render.py        # MD -> HTML rendering logic
-│   ├── assets/          # Images for embedding
+│   ├── assets/          
 │   └── outputs/         # Generated HTML files
 │
 ├── quant_workflows/     # Quantitative workflows and commands
