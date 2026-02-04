@@ -21,12 +21,15 @@ You are writing `MD_CONTENT` for an email body to be rendered by Howard Toolbox.
 
 ### Images
 - Place images in the `assets/` folder
-- **Inline Images**: Images are inline by default:
+- The emailer will normalize Markdown `![]()` links into `assets/` when possible
+- If you use HTML `<img>`, keep `src` in `assets/` or a valid relative path
+- Use `{{CLIPBOARD}}` to insert the current clipboard image (single image)
+-- **Inline Images**: Images are inline by default:
   ```markdown
   ![](assets/img1.png) ![](assets/img2.png)
   ```
 
-- **Sizing**: Use HTML for explicit sizing:
+-- **Sizing**: Use HTML for explicit sizing:
   ```html
   <table>
   <tr>
@@ -34,6 +37,13 @@ You are writing `MD_CONTENT` for an email body to be rendered by Howard Toolbox.
     <td><img src="chart2.png" height="400"></td>
   </tr>
   </table>
+  ```
+
+### Outlook Line Breaks
+- To force label + image on separate lines in older Outlook, use HTML blocks:
+  ```html
+  <div><strong>STACR</strong></div>
+  <div><img src="assets/stacr.png"></div>
   ```
 
 ### Layout

@@ -104,7 +104,8 @@ def render_markdown(
     markdown_text: str,
     copy: bool = True,
     output_path: Optional[str] = None,
-    base_path: str = None
+    base_path: str = None,
+    strict_images: bool = False,
 ) -> str:
     """
     Render raw markdown to HTML with email-friendly formatting.
@@ -114,6 +115,7 @@ def render_markdown(
         copy: If True, copy HTML to clipboard automatically
         output_path: Optional file path to save HTML
         base_path: Base path to resolve relative image links
+        strict_images: If True, raise on missing local images
     
     Returns:
         Rendered HTML string
@@ -126,6 +128,7 @@ def render_markdown(
     soup = BeautifulSoup(raw_html, 'html.parser')
     
     # --- Process Images ---
+    missing_images = []
     for img in soup.find_all('img'):
         src = img.get('src')
         if src and not re.match(r'^(http|https|data):', src):
@@ -142,7 +145,7 @@ def render_markdown(
                 except Exception as e:
                     print(f"Warning: Failed to embed image {src}: {e}")
             else:
-                img['src'] = Path(abs_path).as_uri()
+                missing_images.append(f"{src} -> {abs_path}")
         
         current_style = img.get('style', '')
         if 'display' not in current_style:
@@ -222,6 +225,16 @@ def render_markdown(
     # --- Process Horizontal Rules ---
     for hr in soup.find_all('hr'):
         hr['style'] = "height:1px;background-color:#d0d7de;border:none;margin:24px 0;"
+
+    if missing_images:
+        if strict_images:
+            missing_list = "\n".join(f"- {item}" for item in missing_images)
+            raise FileNotFoundError(
+                "Missing local image files:\n" + missing_list
+            )
+        print("Warning: Missing local image files (not embedded):")
+        for item in missing_images:
+            print(f" - {item}")
 
     # Wrap in container
     container = f"""

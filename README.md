@@ -38,8 +38,10 @@ python emailer/run.py
 - Markdown to HTML with tables and styling
 - LaTeX math support via CodeCogs
 - Image embedding (local files → base64)
-- Clipboard integration
+- Clipboard integration (Windows-only; `pywin32` + `Pillow`)
 - Special tag: `{{CLIPBOARD}}` for dynamic images
+- Markdown image links are auto-normalized into `assets/` when possible
+- Missing local images warn and keep original `src` (not embedded); set `STRICT_IMAGES = True` to error
 
 ### 2. Quantitative Workflows (`quant_workflows/`)
 
@@ -75,7 +77,7 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
   - Markdown -> HTML (using `markdown` lib)
   - Post-processing with `BeautifulSoup` (tables, styling, unwrap images)
   - LaTeX Math -> CodeCogs images (`$$...$$` -> `<img src="...">`)
-  - Local Images -> Base64 encoded strings (for email portability)
+  - Local Images -> Base64 encoded strings when the file exists
 - **Clipboard**: The script uses `win32clipboard` to put the final HTML into the Windows clipboard.
 - **Special Tags**:
   - `{{CLIPBOARD}}`: Replaced at runtime with the image currently in the OS clipboard.
@@ -101,6 +103,7 @@ pip install -r requirements.txt
 
 ### Emailer
 1. Edit `emailer/run.py` → modify `MD_CONTENT`
+   - Prefer `![]()` for auto-normalization; HTML `<img>` should already use `assets/` or a valid relative path
 2. Run: `python emailer/run.py`
 3. Paste from clipboard into email client
 
