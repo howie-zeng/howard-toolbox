@@ -1,0 +1,21 @@
+{
+    "input": "C:\\Git\\LMSimData\\data\\HE\\he_v2.0.V6.json",
+    "output": "C:\\Git\\LMSimData\\data\\HE\\he_v2.0.V6.json",
+    "overrides": [
+        {"start_date": "20241201","dial": 0.963988998881189,"target": "C->CtoP"},
+        {"start_date": "20241201","dial": 1.26328196269516,"target": "C->CtoM30"},
+        {"start_date": "20241201","dial": 1.12106167091082,"target": "M30->M30toC"},
+        {"start_date": "20241201","dial": 0.876600347347746,"target": "M30->M30toM60"},
+        {"start_date": "20241201","dial": 0.678357694399091,"target": "M30->M30toP"},
+        {"start_date": "20241201","dial": 0.661235924226457,"target": "M60->M60toC"},
+        {"start_date": "20241201","dial": 0.532,"target": "M60->M60toM30"},
+        {"start_date": "20241201","dial": 1.663,"target": "M60->M60toM90"},
+        {"model_detail": "data/STACR/ModelFiles/m9ptoc_crt_1.4.5_2022_12_09.txt","targets": ["M90->M90toC","M120->M120toC","M150->M150toC"],"start_date": "20241201","dial": 0.866741117836026},
+        {"model_detail": "data/STACR/ModelFiles/m9ptom3_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toM30","M120->M120toM30","M150->M150toM30"],"start_date": "20241201","dial": 0.687269316615015},
+        {"model_detail": "data/STACR/ModelFiles/m9ptom6_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toM60","M120->M120toM60","M150->M150toM60"],"start_date": "20241201","dial": 1.10336161406972},
+        {"model_detail": "data/HE/ModelFiles/m9ptow_heloc_1.4.0_2022_08_31.txt","targets": ["M90->M90toM120","M120->M120toM150","M150->M150toM180"],"start_date": "20241201","dial": 0.655816004578719},
+        {"model_detail": "data/STACR/ModelFiles/m9ptop_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toP","M120->M120toP","M150->M150toP"],"start_date": "20241201","dial": 1},
+        {"model_detail": "data/STACR/ModelFiles/m9ptob_crt_1.4.0_2022_09_01.txt","targets": ["M120->M120toM90","M150->M150toM120"],"start_date": "20241201","dial": 1}
+    ],
+    "version": "V2.0.V6"
+}

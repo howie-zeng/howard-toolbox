@@ -13,38 +13,46 @@ DEFAULT_VERSION: Optional[str] = None
 # Use a JSON spec file to define overrides (recommended).
 
 _VERSION_RE = re.compile(
-    r"^(?P<prefix>[Vv]?)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$"
+    r"^(?P<prefix>[Vv]?)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch_prefix>[Vv]?)(?P<patch>\d+)(?:\.(?P<extra_prefix>[Vv]?)(?P<extra>\d+))?$"
 )
 _VERSION_IN_FILENAME_RE = re.compile(
-    r"(?P<prefix>[Vv]?)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
+    r"(?P<prefix>[Vv]?)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch_prefix>[Vv]?)(?P<patch>\d+)(?:\.(?P<extra_prefix>[Vv]?)(?P<extra>\d+))?"
 )
 
 
-def _split_version(version: str) -> tuple[str, str, str, str]:
+def _split_version(version: str) -> tuple[str, str, str, str, str, str, Optional[str]]:
     match = _VERSION_RE.match(version.strip())
     if not match:
         raise ValueError(f"Unrecognized version format: {version!r}")
+    extra = match.group("extra")
+    extra_prefix = match.group("extra_prefix") or ""
+    if extra is None:
+        extra_prefix = ""
     return (
         match.group("prefix"),
         match.group("major"),
         match.group("minor"),
+        match.group("patch_prefix"),
         match.group("patch"),
+        extra_prefix,
+        extra,
     )
 
 
 def _bump_version_string(version: str) -> str:
-    prefix, major, minor, patch = _split_version(version)
-    return f"{prefix}{major}.{minor}.{int(patch) + 1}"
+    prefix, major, minor, patch_prefix, patch, extra_prefix, extra = _split_version(version)
+    if extra is not None:
+        bumped = int(extra) + 1
+        return f"{prefix}{major}.{minor}.{patch_prefix}{patch}.{extra_prefix}{bumped}"
+    return f"{prefix}{major}.{minor}.{patch_prefix}{int(patch) + 1}"
 
 
 def _replace_version_in_filename(name: str, version: str) -> Optional[str]:
+    _split_version(version)
     match = _VERSION_IN_FILENAME_RE.search(name)
     if not match:
         return None
-    _, major, minor, patch = _split_version(version)
-    prefix = match.group("prefix") or ""
-    replacement = f"{prefix}{major}.{minor}.{patch}"
-    return f"{name[:match.start()]}{replacement}{name[match.end():]}"
+    return f"{name[:match.start()]}{version}{name[match.end():]}"
 
 
 def _parse_target_shorthand(value: str) -> Dict[str, str]:
@@ -82,6 +90,10 @@ def dial(x: float) -> str:
     parts.append("1.0x for 1")
     parts.append("1x")
     return " ".join(parts)
+
+
+def _is_identity_dial(value: float) -> bool:
+    return round(float(value), 3) == 1.0
 
 
 def update_all_versions(node: Any, new_version: str) -> None:
@@ -209,6 +221,39 @@ def _upsert_cohort_shock(
         entry["Detail"] = dial(dial_value)
 
 
+def _remove_shock(
+    target: Dict[str, Any],
+    state: str,
+    transition: str,
+    detail: Optional[str],
+    cohort: Optional[str],
+) -> None:
+    shock = target.get("Shock")
+    if shock is None:
+        return
+
+    if cohort is None:
+        target.pop("Shock", None)
+        return
+
+    if not _is_cohort_shock(shock):
+        target.pop("Shock", None)
+        return
+
+    cohorts = shock.get("Cohorts")
+    if not isinstance(cohorts, list):
+        return
+
+    remaining = [entry for entry in cohorts if entry.get("Cohort") != cohort]
+    if len(remaining) == len(cohorts):
+        return
+
+    if remaining:
+        shock["Cohorts"] = remaining
+    else:
+        target.pop("Shock", None)
+
+
 def _expand_override_targets(override: Dict[str, Any]) -> List[Dict[str, Any]]:
     targets = override.get("targets")
     target = override.get("target")
@@ -258,6 +303,9 @@ def _apply_dial_override(data: Dict[str, Any], override: Dict[str, Any]) -> None
 
     target = _target_for_shock(data, state, transition, detail)
     cohort = override.get("cohort")
+    if _is_identity_dial(dial_value):
+        _remove_shock(target, state, transition, detail, cohort)
+        return
     if cohort is not None:
         convert_cohort = override.get("convert_cohort", True)
         _upsert_cohort_shock(
@@ -407,6 +455,8 @@ def generate_all_transition_overrides(
                 cohort_name = cohort_entry.get("Cohort") or "COHORT_NAME"
                 start_date = cohort_entry.get("StartDate") or default_start_date
                 dial_value = _parse_dial_value(cohort_entry.get("Detail"), default_dial)
+                if _is_identity_dial(dial_value):
+                    continue
 
                 override = {
                     "state": state,
@@ -426,6 +476,8 @@ def generate_all_transition_overrides(
             if isinstance(shock, dict):
                 start_date = shock.get("StartDate") or start_date
                 dial_value = _parse_dial_value(shock.get("Detail"), dial_value)
+            if _is_identity_dial(dial_value):
+                continue
 
             override = {
                 "state": state,
@@ -470,7 +522,6 @@ def _group_overrides_by_model_detail(
             override.get("cohort"),
             override.get("start_date"),
             override.get("dial"),
-            override.get("enabled"),
         )
         if key not in groups:
             groups[key] = {"model_detail": model_detail, "entries": []}
@@ -507,7 +558,7 @@ def _group_overrides_by_model_detail(
                     target["detail"] = entry["detail"]
                 grouped_override["targets"].append(target)
 
-        for key in ("cohort", "start_date", "dial", "enabled"):
+        for key in ("cohort", "start_date", "dial"):
             if key in base:
                 grouped_override[key] = base[key]
 

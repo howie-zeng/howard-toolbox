@@ -70,10 +70,9 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
 
 Generate a compact dial spec, edit it once, and apply it to produce a new model JSON.
 
-**Quick start (generate a short spec):**
-```bash
-python dial/update_dials.py --generate-spec "dial/stacr_v1.8.0_all_dials_spec.json" --generate-only-dials --generate-group-by-model --input "C:\Git\LMSimData\data\STACR\stacr_v1.8.0.json"
-```
+**Quick start (generate commands in a notebook):**
+- Open `dial/dial.ipynb`
+- Run the **Dial Command Generator** cell at the top
 
 **Edit the spec (one dial can target many transitions):**
 ```json
@@ -100,6 +99,7 @@ python dial/update_dials.py --spec "dial/stacr_v1.8.0_all_dials_spec.json" --out
 - `--generate-group-by-model` groups transitions that share the same model file.
 - Shorthand targets are the default; use `--generate-verbose-targets` if you want expanded objects.
 - Overrides apply by default; use `"disabled": true` to skip a line.
+- Dial values of `1.0` are treated as "no dial" and remove the shock for that target/cohort.
 - `convert_cohort` defaults to true; set `"convert_cohort": false` on a line to prevent conversion.
 
 ---
