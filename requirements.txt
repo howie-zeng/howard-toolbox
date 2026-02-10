@@ -1,4 +1,13 @@
+# emailer
 pywin32
 markdown
 Pillow
 beautifulsoup4
+
+# dial (run.py, dial_utils.py)
+pandas
+openpyxl
+numpy
+
+# emailer/generate_diagram.py
+matplotlib

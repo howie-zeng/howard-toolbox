@@ -227,10 +227,13 @@ def extract_summary_rows(
                 in_target_section = False
                 break
 
-            if in_target_section and pd.isna(row.get("Bucket")) or (
-                bucket_val
-                and bucket_type.upper() not in bucket_val
-                and "ALL AVG" not in bucket_val
+            if in_target_section and (
+                pd.isna(row.get("Bucket"))
+                or (
+                    bucket_val
+                    and bucket_type.upper() not in bucket_val
+                    and "ALL AVG" not in bucket_val
+                )
             ):
                 in_target_section = False
 

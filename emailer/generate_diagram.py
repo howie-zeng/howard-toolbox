@@ -1,7 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib
-matplotlib.use('Agg') # Use non-interactive backend to avoid Qt errors
+matplotlib.use('Agg')  # Use non-interactive backend to avoid Qt errors
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os

@@ -104,7 +104,7 @@ def render_markdown(
     markdown_text: str,
     copy: bool = True,
     output_path: Optional[str] = None,
-    base_path: str = None,
+    base_path: Optional[str] = None,
     strict_images: bool = False,
 ) -> str:
     """

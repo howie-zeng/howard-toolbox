@@ -780,7 +780,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-
-# python dial/update_dials.py --spec "dial/stacr_v1.8.0_all_dials_spec.json" --output "C:\Git\LMSimData\data\STACR\stacr_v1.8.0_updated.json"
