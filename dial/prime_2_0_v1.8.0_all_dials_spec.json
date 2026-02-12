@@ -1,0 +1,22 @@
+{
+    "input": "C:\\Git\\LMSimData\\data\\JUMBO2\\prime_2_0_v1.8.0.json",
+    "output": "C:\\Git\\LMSimData\\data\\JUMBO2\\prime_2_0_V1.8.1.json",
+    "overrides": [
+        {"start_date": "20240601","dial": 0.76,"target": "C->CtoM30@Clean"},
+        {"start_date": "20240601","dial": 0.76,"target": "C->CtoM30@Dirty"},
+        {"start_date": "20200401","dial": 0.4,"target": "M30->M30toC"},
+        {"start_date": "20200401","dial": 4.0,"target": "M30->M30toM60"},
+        {"start_date": "20200401","dial": 0.4,"target": "M60->M60toC"},
+        {"start_date": "20200401","dial": 0.3,"target": "M60->M60toM30"},
+        {"start_date": "20200401","dial": 2.25,"target": "M60->M60toM90"},
+        {"start_date": "20200401","dial": 0.02,"target": "M60->M60toD"},
+        {"start_date": "20200401","dial": 0.02,"target": "M60->M60toDREO"},
+        {"start_date": "20200401","dial": 0.3,"target": "M90->M90toM30"},
+        {"start_date": "20200401","dial": 0.3,"target": "M90->M90toM60"},
+        {"start_date": "20240601","dial": 0.1,"target": "M90->M90toD"},
+        {"start_date": "20240601","dial": 0.1,"target": "M90->M90toDREO"},
+        {"start_date": "20240601","dial": 0.1,"target": "M270P->M270PtoD"},
+        {"start_date": "20240601","dial": 0.1,"target": "M270P->M270PtoDREO"}
+    ],
+    "version": "V1.8.1"
+}

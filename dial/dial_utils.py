@@ -15,13 +15,17 @@ def trim_float(x: float) -> str:
     return s
 
 
-def dial_schedule(x: float) -> str:
+def dial_schedule(x: float, flat_months: int = 48, ramp_months: int = 23) -> str:
     """Generate the dial string for a scalar multiplier x."""
-    x = round(x, 3)
+    if flat_months <= 0:
+        raise ValueError(f"flat_months must be > 0 (got {flat_months})")
+    if ramp_months <= 0:
+        raise ValueError(f"ramp_months must be > 0 (got {ramp_months})")
 
-    parts = [f"{trim_float(x)}x for 36"]
-    for i in range(1, 24):
-        val = ((24 - i) * x + i - 1) / 23
+    x = round(x, 3)
+    parts = [f"{trim_float(x)}x for {flat_months}"]
+    for i in range(1, ramp_months + 1):
+        val = ((ramp_months + 1 - i) * x + i - 1) / ramp_months
         val = round(val, 3)
         parts.append(f"{trim_float(val)}x for 1")
 

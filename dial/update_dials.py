@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from dial_utils import dial_schedule, trim_float
+
 DEFAULT_INPUT = Path("data/STACR/stacr_v1.8.0.json")
 DEFAULT_OUTPUT: Optional[Path] = None
 DEFAULT_VERSION: Optional[str] = None
@@ -18,6 +20,7 @@ _VERSION_RE = re.compile(
 _VERSION_IN_FILENAME_RE = re.compile(
     r"(?P<prefix>[Vv]?)(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch_prefix>[Vv]?)(?P<patch>\d+)(?:\.(?P<extra_prefix>[Vv]?)(?P<extra>\d+))?"
 )
+_FLAT_ONLY_RE = re.compile(r"^\s*([0-9]+(?:\.[0-9]+)?)x\s+for\s+(\d+)\s*$", re.IGNORECASE)
 
 
 def _split_version(version: str) -> tuple[str, str, str, str, str, str, Optional[str]]:
@@ -80,20 +83,17 @@ def _format_target_shorthand(state: str, transition: str, detail: Optional[str])
     return value
 
 
-def dial(x: float) -> str:
-    """Builds a dial string with a flat period then linear ramp to 1.0x."""
-    x = round(x, 3)
-    parts = [f"{x}x for 36"]
-    for i in range(1, 24):
-        val = round(((24 - i) * x + i - 1) / 23, 3)
-        parts.append(f"{val}x for 1")
-    parts.append("1.0x for 1")
-    parts.append("1x")
-    return " ".join(parts)
-
-
 def _is_identity_dial(value: float) -> bool:
     return round(float(value), 3) == 1.0
+
+
+def _build_dial_detail(dial_value: float, existing_detail: Optional[str]) -> str:
+    if isinstance(existing_detail, str):
+        match = _FLAT_ONLY_RE.match(existing_detail)
+        if match:
+            months = int(match.group(2))
+            return f"{trim_float(round(dial_value, 3))}x for {months}"
+    return dial_schedule(dial_value)
 
 
 def update_all_versions(node: Any, new_version: str) -> None:
@@ -150,7 +150,8 @@ def _upsert_simple_shock(
     shock = target.get("Shock")
     if isinstance(shock, dict) and ("Cohorts" in shock or shock.get("HasCohort")):
         raise ValueError(f"Refusing to overwrite cohort shock at {_format_path(state, transition, detail)}")
-    target["Shock"] = {"StartDate": start_date, "Detail": dial(dial_value)}
+    existing_detail = shock.get("Detail") if isinstance(shock, dict) else None
+    target["Shock"] = {"StartDate": start_date, "Detail": _build_dial_detail(dial_value, existing_detail)}
 
 
 def _ensure_cohort_shock(
@@ -198,6 +199,11 @@ def _upsert_cohort_shock(
     add_cohort: bool,
     convert_cohort: bool,
 ) -> None:
+    prior_shock = target.get("Shock")
+    fallback_detail: Optional[str] = None
+    if isinstance(prior_shock, dict) and not _is_cohort_shock(prior_shock):
+        fallback_detail = prior_shock.get("Detail") if isinstance(prior_shock.get("Detail"), str) else None
+
     add_cohort = add_cohort or convert_cohort
     path = _format_path(state, transition, detail)
     shock = _ensure_cohort_shock(
@@ -216,9 +222,23 @@ def _upsert_cohort_shock(
         cohorts.append(entry)
         matches = [entry]
 
+    other_detail: Optional[str] = None
+    for entry in cohorts:
+        if not isinstance(entry, dict):
+            continue
+        detail_val = entry.get("Detail")
+        if isinstance(detail_val, str):
+            other_detail = detail_val
+            break
+
     for entry in matches:
         entry["StartDate"] = start_date
-        entry["Detail"] = dial(dial_value)
+        existing_detail = entry.get("Detail") if isinstance(entry.get("Detail"), str) else None
+        if existing_detail is None:
+            existing_detail = fallback_detail
+        if existing_detail is None:
+            existing_detail = other_detail
+        entry["Detail"] = _build_dial_detail(dial_value, existing_detail)
 
 
 def _remove_shock(

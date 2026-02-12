@@ -91,60 +91,50 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Here is the monthly tracking review for January 2026. The supporting charts are included below.
+Subject: Overview: Core files for adding a new product (LMSim)
 
-**1. Key Issue / Anomaly**
+Hi Team,
 
-*   **NONQM M60 to D** is off by a large amount. The **6% M6 to D** rate looks unusually high.
+To add a new product with transition and cashflow simulation, here are the key areas of the codebase to modify.
 
-![](assets/2026-02-03-14-21-09.png)
+### 1. Asset Definition
+**Goal:** Define inputs and normalize raw data.
+*   `LMAsset/include/Asset.h`: Base fields.
+*   `LMAsset/include/ResiAsset.h` / `.cpp`: Residential logic (extend this or `Asset`).
+*   `LMAsset/src/*Loader.cpp`: Input parsing (see `StacrLoader.cpp` for reference).
 
-I double-checked the numbers and the code. The **CDR calculations for NONQM** (and possibly **JUMBO** and **HELOC**) appear to be incorrect. If there are no objections, I will proceed with the fixes.
+### 2. Cashflow Engine
+**Goal:** Generate monthly cashflows from the asset.
+*   `LMCashFlow/include/LoanCashFlow.h`: Data structures.
+*   `LMCashFlow/src/*`: logic implementation.
+*   `LMCashFlow/*Adaptor*`: The bridge between the asset and the model (e.g., `ResiAssetCashFlowAdaptor`).
 
-**2. Example Discrepancy**
+### 3. Transition Model
+**Goal:** Simulate state transitions (Current → Prepaid/Default).
+*   `LMModel/include/TransSimple.h`: Main simulation loop.
+*   `LMModel/include/TransState.h`: State definitions.
+*   `LMModel/include/ResiModelVariable.h`: Model variables (predictors).
+*   `LMModel/ResiModelVariableLoader.cpp`: Loads model coefficients from files.
 
-Example NONQM deal (**CHNGE 2022-2**): our result shows **1.7 CDR** while **Intex** shows **0**.
+### 4. Wiring & Execution
+**Goal:** Hook it all together.
+*   `LMModel/src/ModelFactory.cpp`: Logic to select the new model type.
+*   `LMAssetVisitor/src/ResiAssetVisitor.cpp`: Instantiates and runs the model.
 
-<div><img src="assets/2026-02-03-14-29-46.png" /></div>
-<div><img src="assets/2026-02-03-14-30-44.png" /></div>
+---
 
-**3. Implied vs Proposed Dial (by deal type)**
+### Implementation Checklist
 
-<div><strong>STACR</strong></div>
-<div><img src="assets/2026-02-03-14-31-41.png" /></div>
+1.  **Asset**: Create/Update Loader & Asset class.
+2.  **Cashflow**: Implement `CashFlowAdaptor` for the new product.
+3.  **Model**: Subclass `TransStateModel` (or reuse `TransSimple` if fits).
+4.  **Factory**: Register the new model in `ModelFactory`.
+5.  **Config**: Register new variables in `ResiModelVariableLoader`.
 
-<div><strong>CAS</strong></div>
-<div><img src="assets/2026-02-03-14-31-48.png" /></div>
+Let me know if you need help with a specific component.
 
-<div><strong>JUMBO</strong></div>
-<div><img src="assets/2026-02-03-14-47-43.png" /></div>  
-Due to small loan counts for most transitions, I do **not** recommend applying any dial for JUMBO.
-
-<div><strong>HELOC (FIGRE)</strong></div>
-<div><img src="assets/2026-02-03-14-32-52.png" /></div>
-
-<div><strong>NONQM</strong></div>
-<div><img src="assets/2026-02-03-14-34-14.png" /></div>
-
-**4. CPR by Deal Type**
-
-<div><strong>CAS</strong></div>
-<div><img src="assets/2026-02-03-14-37-27.png" /></div>
-
-<div><strong>STACR</strong></div>
-<div><img src="assets/2026-02-03-14-37-49.png" /></div>
-
-<div><strong>JUMBO</strong></div>
-<div><img src="assets/2026-02-03-14-38-23.png" /></div>
-
-<div><strong>NONQM</strong></div>
-<div><img src="assets/2026-02-03-14-38-39.png" /></div>
-
-<div><strong>HELOC (FIGRE)</strong></div>
-<div><img src="assets/2026-02-03-14-38-53.png" /></div>
-
-<div><img src="assets/2026-02-04-09-16-14.png" /></div>
-<div><img src="assets/2026-02-04-09-16-59.png" /></div>
+Best,
+[Your Name]
 """
 
 # -----------------------------------------------------------------------------

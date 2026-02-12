@@ -99,6 +99,7 @@ Reads latest tracking files from network, outputs a multi-sheet Excel (`dial/out
 - Overrides apply by default; use `"disabled": true` to skip a line
 - Dial values of `1.0` are treated as "no dial" and remove the shock
 - `convert_cohort` defaults to true; set `"convert_cohort": false` on a line to prevent conversion
+- If the original model uses a flat-only dial (e.g., `"0.719x for 400"`), updates keep that flat-only format
 
 ### 3. Quantitative Workflows (`quant_workflows/`)
 
