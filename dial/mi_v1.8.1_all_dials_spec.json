@@ -1,6 +1,6 @@
 {
     "input": "C:\\Git\\LMSimData\\data\\STACR\\mi_v1.8.1.json",
-    "output": "C:\\Git\\LMSimData\\data\\STACR\\mi_v1.8.2.json",
+    "output": "C:\\Git\\LMSimData\\data\\STACR\\mi_V1.8.2.json",
     "overrides": [
         {"cohort": "CAS","start_date": "20241101","dial": 1.361,"target": "C->CtoM30@Clean"},
         {"cohort": "CRT","start_date": "20241201","dial": 1.209,"target": "C->CtoM30@Clean"},
@@ -23,6 +23,7 @@
         {"start_date": "20241201","dial": 0.62,"target": "M60->M60toDREO"},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoC_2025_10_02.txt","targets": ["M90->M90toC","M120->M120toC","M150->M150toC","M180->M180toC","M210->M210toC","M240->M240toC"],"cohort": "CAS","start_date": "20241101","dial": 0.894},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoC_2025_10_02.txt","targets": ["M90->M90toC","M120->M120toC","M150->M150toC","M180->M180toC","M210->M210toC","M240->M240toC"],"cohort": "CRT","start_date": "20241201","dial": 1.022},
+        {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoD_2025_10_02.txt","targets": ["M90->M90toD","M120->M120toD","M150->M150toD","M180->M180toD","M210->M210toD","M240->M240toD"],"cohort": "CAS","start_date": "20241101","dial": 1.75},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoM3_2025_10_02.txt","targets": ["M90->M90toM30","M120->M120toM30","M150->M150toM30","M180->M180toM30","M210->M210toM30","M240->M240toM30"],"cohort": "CAS","start_date": "20241101","dial": 1.031},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoM3_2025_10_02.txt","targets": ["M90->M90toM30","M120->M120toM30","M150->M150toM30","M180->M180toM30","M210->M210toM30","M240->M240toM30"],"cohort": "CRT","start_date": "20241201","dial": 1.106},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M9PtoM6_2025_10_02.txt","targets": ["M90->M90toM60","M120->M120toM60","M150->M150toM60","M180->M180toM60","M210->M210toM60","M240->M240toM60"],"cohort": "CAS","start_date": "20241101","dial": 0.935},
@@ -41,14 +42,15 @@
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M27PtoB_2025_10_02.txt","targets": ["M270P->M270PtoM240","M270P->M270PtoM270PB"],"cohort": "CAS","start_date": "20241101","dial": 0.523},
         {"model_detail": "data/STACR/ModelFiles/crt_1_8_0/gam_begg_stacr_M27PtoB_2025_10_02.txt","targets": ["M270P->M270PtoM240","M270P->M270PtoM270PB"],"cohort": "CRT","start_date": "20241201","dial": 0.906},
         {"cohort": "CAS","start_date": "20241101","dial": 1.32,"target": "M270P->M270PtoP"},
-        {"cohort": "CRT","start_date": "20241201","dial": 1.111,"target": "M270P->M270PtoP"},
+        {"cohort": "CRT","start_date": "20241201","dial": 1.09,"target": "M270P->M270PtoP"},
         {"start_date": "20241201","dial": 1.487,"target": "M270P->M270PtoFCLS"},
-        {"start_date": "20241201","dial": 1.65,"target": "M270P->M270PtoD"},
+        {"start_date": "20241201","dial": 1.75,"target": "M270P->M270PtoD"},
+        {"start_date": "20241201","dial": 0.939,"target": "FCLS->FCLStoC"},
         {"start_date": "20241201","dial": 1.104,"target": "FCLS->FCLStoB"},
-        {"start_date": "20241201","dial": 0.719,"target": "FCLS->FCLStoREO"},
+        {"start_date": "20241201","dial": 0.7,"target": "FCLS->FCLStoREO"},
         {"start_date": "20241201","dial": 1.139,"target": "FCLS->FCLStoD"},
-        {"cohort": "CAS","start_date": "20241201","dial": 0.73,"target": "REO->REOtoD"},
-        {"cohort": "CRT","start_date": "20241201","dial": 1.211,"target": "REO->REOtoD"}
+        {"cohort": "CAS","start_date": "20241101","dial": 0.772,"target": "REO->REOtoD"},
+        {"cohort": "CRT","start_date": "20241201","dial": 1.148,"target": "REO->REOtoD"}
     ],
-    "version": "v1.8.2"
+    "version": "V1.8.2"
 }
