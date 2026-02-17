@@ -1,0 +1,53 @@
+{
+    "name": "risk_diff",
+    "sheets": ["*"],
+    "exclude_sheets": [],
+    "header_row": 3,
+    "header_style": {
+        "font_bold": true,
+        "font_color": "#FFFFFF",
+        "fill_color": "#305496",
+        "alignment": "center",
+        "freeze": true,
+        "auto_filter": true
+    },
+    "column_formats": {
+        "Coupon": "0.00",
+        "Mark": "0.00",
+        "Yield": "0.00",
+        "Zspread": "#,##0",
+        "WAL": "0.0",
+        "Eff Dur": "0.0",
+        "Sprd Dur": "0.00",
+        "KRD 2Y": "0.0",
+        "KRD 5Y": "0.0",
+        "KRD 10Y": "0.0",
+        "FwdYield": "0.00",
+        "EffectiveYield": "0.00",
+        "Rem Def": "0.000",
+        "Cum loss": "0.000",
+        "Sev": "0.0",
+        "Writedown": "0.00"
+    },
+    "magnitude_format": {
+        "enabled": true,
+        "priority": "fallback",
+        "rules": [
+            {"min_abs": 100, "format": "#,##0"},
+            {"min_abs": 10, "format": "#,##0.0"},
+            {"min_abs": 0, "format": "0.00"}
+        ]
+    },
+    "conditional_format": [
+        {
+            "columns": ["Yield", "Zspread", "WAL", "Eff Dur", "Sprd Dur",
+                         "Rem Def", "Cum loss", "Sev", "Writedown",
+                         "KRD 2Y", "KRD 5Y", "KRD 10Y"],
+            "type": "3_color_scale",
+            "min_color": "#F8696B",
+            "mid_color": "#FFFFFF",
+            "max_color": "#63BE7B"
+        }
+    ],
+    "col_width": "auto"
+}

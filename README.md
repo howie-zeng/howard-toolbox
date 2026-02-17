@@ -23,6 +23,12 @@ howard-toolbox/
 │   ├── *_all_dials_spec.json # Spec files per product (STACR, HE, NONQM, MI)
 │   └── outputs/              # Excel outputs (dial ratio by deal)
 │
+├── formatter/                # Template-driven Excel formatting tool
+│   ├── format_excel.py       # Engine + CLI (scan, apply, auto-format)
+│   ├── templates/            # Saved JSON format specs
+│   │   └── risk_diff.json    # Risk diff report template
+│   └── README.md             # Detailed usage guide (AI agents: read this first)
+│
 ├── quant_workflows/          # Quantitative workflows and commands
 │   ├── quant_workflows_notebook.ipynb  # 18 organized sections
 │   └── README.md             # Comprehensive workflow documentation
@@ -101,7 +107,33 @@ Reads latest tracking files from network, outputs a multi-sheet Excel (`dial/out
 - `convert_cohort` defaults to true; set `"convert_cohort": false` on a line to prevent conversion
 - If the original model uses a flat-only dial (e.g., `"0.719x for 400"`), updates keep that flat-only format
 
-### 3. Quantitative Workflows (`quant_workflows/`)
+### 3. Excel Formatter (`formatter/`)
+
+Template-driven Excel formatting for management-quality reports. Scan any Excel file to auto-detect column types and generate a draft format template, then apply it for consistent output.
+
+**AI agents: read [`formatter/README.md`](formatter/README.md) before using this tool.**
+
+**Quick start:**
+```bash
+# Scan a file (understand its structure)
+python formatter/format_excel.py data.xlsx --scan --header-row 3
+
+# Apply a saved template
+python formatter/format_excel.py data.xlsx -t formatter/templates/risk_diff.json -o data_formatted.xlsx
+```
+
+**Features:**
+- JSON templates define all formatting rules (number formats, headers, colors, conditional formatting, column renames)
+- `--scan` auto-detects column types (date, text, float, integer, percentage) and suggests formats
+- Magnitude-based fallback: triple-digit numbers get 0 decimals, single-digit get 2, etc.
+- Header styling with freeze panes and auto-filter
+- 3-color-scale conditional formatting
+- Column rename (visual only, last step)
+- Auto column widths
+- `--inplace` with atomic write and `.bak` backup
+- Preserves Excel formulas (dual workbook loading)
+
+### 4. Quantitative Workflows (`quant_workflows/`)
 
 Comprehensive notebook with 18 sequentially organized sections:
 
@@ -149,6 +181,14 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
 - **Batch Analysis**: `dial/run.py` -- loops over deal types, reads dialed/undialed tracking files, computes implied dials, outputs formatted Excel.
 - **Notebook**: `dial/dial.ipynb` -- interactive command generator and analysis cells.
 - **Spec Files**: `*_all_dials_spec.json` -- product-specific dial configurations (STACR, HE, NONQM, MI).
+
+### Formatter Architecture
+
+- **CLI Entry Point**: `formatter/format_excel.py` -- scan files and apply templates.
+  - `--scan` mode: reads Excel with `data_only=True`, detects column types (date/text/float/integer/percentage), computes stats (min/max/median_abs), outputs JSON report + draft template.
+  - Apply mode: loads workbook twice (data_only for value sampling, normal for editing), applies formatting in strict order (number formats -> header style -> conditional formatting -> column renames -> auto-widths), saves output.
+- **Templates**: `formatter/templates/*.json` -- reusable formatting specs. All column keys reference original header names. See `formatter/README.md` for full field reference.
+- **Design Rules**: One template = one header structure. Duplicate headers apply to all matches. `--inplace` always creates `.bak` backup. Renaming is always the last step.
 
 ### Quant Workflows Architecture
 

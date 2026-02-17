@@ -1,0 +1,80 @@
+{
+    "name": "risk_diff_base",
+    "sheets": ["Base"],
+    "exclude_sheets": [],
+    "header_row": 3,
+    "super_header_style": {
+        "font_bold": true,
+        "font_color": "#FFFFFF",
+        "font_size": 11,
+        "fill_color": "#0F1D36",
+        "alignment": "center",
+        "border_style": "thin",
+        "border_color": "#0F1D36"
+    },
+    "header_style": {
+        "font_bold": true,
+        "font_color": "#FFFFFF",
+        "font_size": 10,
+        "fill_color": "#1B2A4A",
+        "alignment": "center",
+        "border_style": "medium",
+        "border_color": "#1B2A4A",
+        "freeze": true,
+        "auto_filter": false
+    },
+    "borders": {
+        "color": "#D9D9D9",
+        "style": "thin"
+    },
+    "group_by_column": {
+        "column": "Asset Subtype",
+        "colors": ["#E8EDF2", "#E7F0E5", "#FDF2E9", "#F0E6EF", "#E5ECF0", "#F5EADF", "#E6EDE8", "#F2E8E8"]
+    },
+    "section_dividers": [9, 18, 27],
+    "section_divider_color": "#1B2A4A",
+    "section_colors": ["#2C3E50", "#1B4332", "#1B2A4A", "#6B2C3E"],
+    "outer_border": {
+        "color": "#1B2A4A",
+        "style": "medium"
+    },
+    "column_formats": {
+        "Coupon": "0.00",
+        "Mark": "0.00",
+        "Yield": "0.00",
+        "Zspread": "#,##0",
+        "WAL": "0.0",
+        "Eff Dur": "0.0",
+        "Sprd Dur": "0.00",
+        "Rem Def": "0.00",
+        "Cum loss": "0.00",
+        "Sev": "0.0",
+        "Writedown": "0.00",
+        "KRD 2Y": "0.0",
+        "KRD 5Y": "0.0",
+        "KRD 10Y": "0.0",
+        "FwdYield": "0.00",
+        "EffectiveYield": "0.00"
+    },
+    "magnitude_format": {
+        "enabled": true,
+        "priority": "fallback",
+        "rules": [
+            {"min_abs": 100, "format": "#,##0"},
+            {"min_abs": 10,  "format": "#,##0.0"},
+            {"min_abs": 0,   "format": "0.00"}
+        ]
+    },
+    "conditional_format": [
+        {
+            "_comment": "Diff section only (cols Z:AH = 26:34). AI: re-scan and adjust col_indices per file.",
+            "col_indices": [27, 28, 29, 30, 31, 32, 33, 34, 35],
+            "type": "3_color_scale",
+            "min_color": "#F8696B",
+            "mid_color": "#FCFCFF",
+            "max_color": "#63BE7B"
+        }
+    ],
+    "col_width": "auto",
+    "hide_zero_columns": true
+}

@@ -91,50 +91,47 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Subject: Overview: Core files for adding a new product (LMSim)
+**Summary of Changes**
 
-Hi Team,
+- **STACR & CAS:** FCLS and REO dials are now using 12-month ratio
+- **Non-QM:** M270P and M90P dials are now using 12-month ratio; cap Non-QM Full Doc CtoP at 2.0
+- **Jumbo & HE:** No dial changes
+- **All sectors** (CAS, STACR, HE, Non-QM, MI): Dials now apply at full strength for 3 years, with decay over the following 2 years
 
-To add a new product with transition and cashflow simulation, here are the key areas of the codebase to modify.
-
-### 1. Asset Definition
-**Goal:** Define inputs and normalize raw data.
-*   `LMAsset/include/Asset.h`: Base fields.
-*   `LMAsset/include/ResiAsset.h` / `.cpp`: Residential logic (extend this or `Asset`).
-*   `LMAsset/src/*Loader.cpp`: Input parsing (see `StacrLoader.cpp` for reference).
-
-### 2. Cashflow Engine
-**Goal:** Generate monthly cashflows from the asset.
-*   `LMCashFlow/include/LoanCashFlow.h`: Data structures.
-*   `LMCashFlow/src/*`: logic implementation.
-*   `LMCashFlow/*Adaptor*`: The bridge between the asset and the model (e.g., `ResiAssetCashFlowAdaptor`).
-
-### 3. Transition Model
-**Goal:** Simulate state transitions (Current → Prepaid/Default).
-*   `LMModel/include/TransSimple.h`: Main simulation loop.
-*   `LMModel/include/TransState.h`: State definitions.
-*   `LMModel/include/ResiModelVariable.h`: Model variables (predictors).
-*   `LMModel/ResiModelVariableLoader.cpp`: Loads model coefficients from files.
-
-### 4. Wiring & Execution
-**Goal:** Hook it all together.
-*   `LMModel/src/ModelFactory.cpp`: Logic to select the new model type.
-*   `LMAssetVisitor/src/ResiAssetVisitor.cpp`: Instantiates and runs the model.
+Please see the attachment for full details.
 
 ---
 
-### Implementation Checklist
+**Risk Diff Results**
 
-1.  **Asset**: Create/Update Loader & Asset class.
-2.  **Cashflow**: Implement `CashFlowAdaptor` for the new product.
-3.  **Model**: Subclass `TransStateModel` (or reuse `TransSimple` if fits).
-4.  **Factory**: Register the new model in `ModelFactory`.
-5.  **Config**: Register new variables in `ResiModelVariableLoader`.
+![](2026-02-13-09-24-09.png)
 
-Let me know if you need help with a specific component.
+---
 
-Best,
-[Your Name]
+**CtoP Tracking** (see attachment for full details)
+
+<div><strong>STACR</strong></div>
+<div><img src="2026-02-13-09-19-42.png"></div>
+
+<div><strong>CAS</strong></div>
+<div><img src="2026-02-13-09-28-15.png"></div>
+
+<div><strong>Non-QM</strong></div>
+<div><img src="2026-02-13-09-28-35.png"></div>
+
+---
+
+**Proposed Dials** (all proposed dials attached)
+
+<div><strong>STACR</strong></div>
+<div><img src="2026-02-13-09-21-23.png"></div>
+
+<div><strong>CAS</strong></div>
+<div><img src="2026-02-13-09-21-32.png"></div>
+
+<div><strong>Non-QM</strong></div>
+<div><img src="2026-02-13-09-21-41.png"></div>
+
 """
 
 # -----------------------------------------------------------------------------
