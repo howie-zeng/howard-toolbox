@@ -927,4 +927,4 @@ if __name__ == "__main__":
     main()
 
 
-# python formatter/format_excel.py formatter/risk_diff_crt.xlsx -t formatter/templates/risk_diff_base.json -o formatter/risk_diff_crt_formatted.xlsx
+# python formatter/format_excel.py formatter/risk_diff.xlsx -t formatter/templates/risk_diff_base.json -o formatter/risk_diff_formatted.xlsx

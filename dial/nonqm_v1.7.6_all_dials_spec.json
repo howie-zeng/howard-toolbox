@@ -51,18 +51,19 @@
         {"model_detail": "data/NONQM/ModelFiles/nonqm_m9ptom3_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toM30","M120->M120toM30","M150->M150toM30","M180->M180toM30","M210->M210toM30","M240->M240toM30"],"start_date": "20241101","dial": 1.165},
         {"model_detail": "data/STACR/ModelFiles/m9ptom6_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toM60","M120->M120toM60","M150->M150toM60","M180->M180toM60","M210->M210toM60","M240->M240toM60"],"start_date": "20241101","dial": 1.346},
         {"model_detail": "data/STACR/ModelFiles/m9ptow_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toM120","M120->M120toM150","M150->M150toM180","M180->M180toM210","M210->M210toM240"],"start_date": "20241101","dial": 0.737},
+        {"start_date": "20241101","dial":0.8434941022515238,"target": "M240->M240toM270P"},
         {"model_detail": "data/NONQM/ModelFiles/m9ptol_crt_1.4.5_2022_12_09_SS_nonqm_dial.txt","targets": ["M90->M90toD","M120->M120toD","M150->M150toD","M180->M180toD","M210->M210toD","M240->M240toD"],"start_date": "20241101","dial": 0.25},
         {"model_detail": "data/NONQM/ModelFiles/m9ptol_crt_1.4.5_2022_12_09_REO_nonqm_dial.txt","targets": ["M90->M90toDREO","M120->M120toDREO","M150->M150toDREO","M180->M180toDREO","M210->M210toDREO","M240->M240toDREO"],"start_date": "20241101","dial": 0.25},
-        {"model_detail": "data/NONQM/ModelFiles/nonqm_m9ptob_crt_1.4.0_2022_09_01.txt","targets": ["M120->M120toM90","M150->M150toM120","M180->M180toM150","M210->M210toM180","M240->M240toM210"],"start_date": "20241101","dial": 1.606252324    },
+        {"model_detail": "data/NONQM/ModelFiles/nonqm_m9ptob_crt_1.4.0_2022_09_01.txt","targets": ["M120->M120toM90","M150->M150toM120","M180->M180toM150","M210->M210toM180","M240->M240toM210"],"start_date": "20241101","dial": 1.8689823912815438    },
         {"model_detail": "data/NONQM/ModelFiles/nonqm_m9ptop_crt_1.4.0_2022_08_31.txt","targets": ["M90->M90toP","M120->M120toP","M150->M150toP","M180->M180toP","M210->M210toP","M240->M240toP"],"start_date": "20241101","dial": 1.335975318},
         {"start_date": "20241101","dial": 0.25,"target": "M150->M150toD180"},
         {"start_date": "20241101","dial": 0.25,"target": "M270P->M270PtoC"},
-        {"start_date": "20241101","dial": 0.488,"target": "M270P->M270PtoM30"},
+        {"start_date": "20241101","dial": 0.49449930669672254,"target": "M270P->M270PtoM30"},
         {"model_detail": "data/STACR/ModelFiles/m27ptob_crt_1.4.0_2022_09_06.txt","targets": ["M270P->M270PtoM240","M270P->M270PtoM270PB"],"start_date": "20241101","dial": 0.25},
         {"start_date": "20241101","dial": 1.096,"target": "M270P->M270PtoP"},
         {"start_date": "20241101","dial": 0.25,"target": "M270P->M270PtoD"},
         {"start_date": "20241101","dial": 0.25,"target": "M270P->M270PtoDREO"},
-        {"start_date": "20241101","dial": 0.937585074,"target": "M270P->M270PtoM270PW"}
+        {"start_date": "20241101","dial": 0.6673380451629186,"target": "M270P->M270PtoM270PW"}
     ],
     "version": "v1.7.7"
 }

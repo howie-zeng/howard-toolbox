@@ -93,44 +93,23 @@ def normalize_local_images(markdown_text):
 MD_CONTENT = r"""
 **Summary of Changes**
 
-- **STACR & CAS:** FCLS and REO dials are now using 12-month ratio
-- **Non-QM:** M270P and M90P dials are now using 12-month ratio; cap Non-QM Full Doc CtoP at 2.0
-- **Jumbo & HE:** No dial changes
-- **All sectors** (CAS, STACR, HE, Non-QM, MI): Dials now apply at full strength for 3 years, with decay over the following 2 years
+- Changed ratio to spread with LLPA adjustment; LLPA also used in refi/turnover cutoff.
+- Changed 3y3m median to 6m1m median, from ratio to spread.
+- Dropped `cur_bal`; using inflation-adjusted original balance instead.
+- Servicer and state moved to a second-stage model.
+- Lowered the weight for the COVID period and slightly increased the weight for the post-COVID period.
 
-Please see the attachment for full details.
-
----
-
-**Risk Diff Results**
-
-![](2026-02-13-09-24-09.png)
+![](2026-02-23-17-06-29.png)
 
 ---
 
-**CtoP Tracking** (see attachment for full details)
+**Model Fits**
 
-<div><strong>STACR</strong></div>
-<div><img src="2026-02-13-09-19-42.png"></div>
+Fits attached below. I think we can start implementing the new model and running vectors.
 
-<div><strong>CAS</strong></div>
-<div><img src="2026-02-13-09-28-15.png"></div>
+![](2026-02-23-18-01-04.png)
 
-<div><strong>Non-QM</strong></div>
-<div><img src="2026-02-13-09-28-35.png"></div>
-
----
-
-**Proposed Dials** (all proposed dials attached)
-
-<div><strong>STACR</strong></div>
-<div><img src="2026-02-13-09-21-23.png"></div>
-
-<div><strong>CAS</strong></div>
-<div><img src="2026-02-13-09-21-32.png"></div>
-
-<div><strong>Non-QM</strong></div>
-<div><img src="2026-02-13-09-21-41.png"></div>
+![](2026-02-23-16-58-22.png)
 
 """
 
