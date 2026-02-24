@@ -91,25 +91,60 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-**Summary of Changes**
+Hi team,
 
-- Changed ratio to spread with LLPA adjustment; LLPA also used in refi/turnover cutoff.
-- Changed 3y3m median to 6m1m median, from ratio to spread.
-- Dropped `cur_bal`; using inflation-adjusted original balance instead.
-- Servicer and state moved to a second-stage model.
-- Lowered the weight for the COVID period and slightly increased the weight for the post-COVID period.
-
-![](2026-02-23-17-06-29.png)
+Update on the CRT prepay model pipeline — covers performance optimizations, new utility functions, and infrastructure improvements.
 
 ---
 
-**Model Fits**
+**1. Performance Optimizations**
 
-Fits attached below. I think we can start implementing the new model and running vectors.
+- **Burnout backfill vectorized (73x speedup)**: Replaced the per-loan backfill loop with a single `data.table` non-equi join + bulk column computation. Runtime dropped from ~63s to <1s per data split. Tieout verified: 177,153 rows, 0 absolute difference across all burnout columns.
+- **`fast_fit_model_v2`** / **`predict_w_cluster_v2`**: Both automatically subset data to only formula-referenced columns before passing to the cluster. Reduces memory and serialization overhead significantly for large datasets (10M+ rows).
+- **Model report generation** (`model_report_all_optimized`): Rewrote the reporting system with parallel processing for continuous variable plots via `doParallel`/`foreach` (~5–6x faster with 7 variables on 8 cores). Added automatic intermediate file cleanup on failure, native two-stage model support, and large-dataset sampling. Separated into dedicated `model_report_optimized.R`.
+- **King-Zeng undersampling** (`get_sample_undersampling`): Replaced the old `get_sample_over_sampling` with a fully vectorized `data.table` implementation. Eliminates `data.frame` conversion and `bind_rows` accumulation. Same math, cleaner edge-case handling, structured return with diagnostics.
 
-![](2026-02-23-18-01-04.png)
+---
 
-![](2026-02-23-16-58-22.png)
+**2. New Utility Functions**
+
+- **`apply_recency_weighting`**: Exponential decay weighting by observation date with configurable half-life, caps, and diagnostic plots.
+- **`get_stratified_random_sample`**: Stratified sampling for large datasets when full data exceeds memory/time budget for exploratory fitting.
+
+---
+
+**3. CRT Pipeline: End-to-End Workflow**
+
+The CRT model pipeline now runs as a sequence of standalone scripts, each producing outputs consumed by the next.
+
+**Step 1: Data Extraction** — `redshift_data/crt_get_data.R`
+- Pulls loan-level CRT data from Redshift, samples by vintage, unloads via S3
+- Output: `P:/CRT/cas_crt_YYYYMMDD.parquet`
+
+**Step 2: Feature Engineering** — `crt/Data_prep/crt_data_prep.R`
+- Splits raw data by loan ID, runs `prep_crt_data_v1.2` on each split
+- Computes HPI, CLTV, all incentive/burnout variants (ratio, payment, spread, LLPA-spread), HAMP/HARP eligibility, transition targets
+- Output: `P:/CRT/cas_crt_YYYYMMDD/prep_fannie_data_{i}_{date}_{version}.rds` (10 splits)
+
+**Step 3a: Turnover** — Undersample + Fit
+- `crt_turnover_undersample.R` — reads prep splits, filters by `inc_0_spread_llpa`, undersamples with KZ correction, builds training + tracking files
+- `crt_turnover_model.R` — fits turnover GAM, generates comparison report vs PROD
+
+**Step 3b: Refi** — Turnover Separation + Undersample + Fit
+- `crt_refi_data_prep.R` — loads turnover model, predicts turnover per loan, flags `isTurnover` within each (date, spread bucket) using s4 strategy
+- `crt_refi_undersample.R` — reads s4 output, drops turnovers from Cto0, undersamples, builds training + tracking files
+- `crt_refinance_model.R` — fits two-stage refi GAM (Stage 1: economic drivers, Stage 2: servicer + state), generates comparison report vs PROD
+
+**LLPA Grid** (prerequisite, run once or when grid changes) — `crt/crt_llpa.R`
+- Generates `support_data/crt_llpa_interpolated.txt` consumed by Step 2
+- Independent from Jumbo; edit `get_crt_llpa_base_grid()` to update CRT-specific values
+
+![](assets/crt_pipeline_diagram.png)
+
+All changes are on the CRT branch. Happy to walk through any of this in more detail.
+
+Best,
+Howard
 
 """
 
