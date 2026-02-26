@@ -91,60 +91,56 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi team,
+Adding JP's vectors for select deals. Please refer to the previous email for RateDown300, SuperBull, and SuperBear comparisons.
 
-Update on the CRT prepay model pipeline — covers performance optimizations, new utility functions, and infrastructure improvements.
+**Summary**
 
----
+- JP's turnover model looks fine, but has very strong seasonality — probably the same order of magnitude as before we dialed seasonality down to 60%.
+- For the refi model, I still don't see a need to adjust the burnout curve — they decay at about the same speed.
+- JP's vectors for high-WAC or recent-vintage deals are higher than ours, but even for recent vintages, JP vectors appear too high (even higher than YB).
+- **I would still recommend no dial for the new CRT model.** If we really want some form of dial, we could add a numeric dial that expires in 4 years.
 
-**1. Performance Optimizations**
+Model fits, tracking, and all vectors are attached. The CRT vector Excel includes all scenarios and their CPR — feel free to explore. Below I'm only showing the comparison.
 
-- **Burnout backfill vectorized (73x speedup)**: Replaced the per-loan backfill loop with a single `data.table` non-equi join + bulk column computation. Runtime dropped from ~63s to <1s per data split. Tieout verified: 177,153 rows, 0 absolute difference across all burnout columns.
-- **`fast_fit_model_v2`** / **`predict_w_cluster_v2`**: Both automatically subset data to only formula-referenced columns before passing to the cluster. Reduces memory and serialization overhead significantly for large datasets (10M+ rows).
-- **Model report generation** (`model_report_all_optimized`): Rewrote the reporting system with parallel processing for continuous variable plots via `doParallel`/`foreach` (~5–6x faster with 7 variables on 8 cores). Added automatic intermediate file cleanup on failure, native two-stage model support, and large-dataset sampling. Separated into dedicated `model_report_optimized.R`.
-- **King-Zeng undersampling** (`get_sample_undersampling`): Replaced the old `get_sample_over_sampling` with a fully vectorized `data.table` implementation. Eliminates `data.frame` conversion and `bind_rows` accumulation. Same math, cleaner edge-case handling, structured return with diagnostics.
+**Minimal Risk Impact**
 
----
+![](2026-02-26-16-31-51.png)
 
-**2. New Utility Functions**
+**CAS 2019-HRP1**
 
-- **`apply_recency_weighting`**: Exponential decay weighting by observation date with configurable half-life, caps, and diagnostic plots.
-- **`get_stratified_random_sample`**: Stratified sampling for large datasets when full data exceeds memory/time budget for exploratory fitting.
+![](2026-02-26-16-07-08.png) ![](2026-02-26-16-11-28.png)
 
----
+**STACR 2018-HQA2**
 
-**3. CRT Pipeline: End-to-End Workflow**
+![](2026-02-26-16-06-34.png) ![](2026-02-26-16-11-53.png)
 
-The CRT model pipeline now runs as a sequence of standalone scripts, each producing outputs consumed by the next.
+**STACR 2022-DNA2**
 
-**Step 1: Data Extraction** — `redshift_data/crt_get_data.R`
-- Pulls loan-level CRT data from Redshift, samples by vintage, unloads via S3
-- Output: `P:/CRT/cas_crt_YYYYMMDD.parquet`
+![](2026-02-26-16-06-20.png) ![](2026-02-26-16-12-19.png)
 
-**Step 2: Feature Engineering** — `crt/Data_prep/crt_data_prep.R`
-- Splits raw data by loan ID, runs `prep_crt_data_v1.2` on each split
-- Computes HPI, CLTV, all incentive/burnout variants (ratio, payment, spread, LLPA-spread), HAMP/HARP eligibility, transition targets
-- Output: `P:/CRT/cas_crt_YYYYMMDD/prep_fannie_data_{i}_{date}_{version}.rds` (10 splits)
+**CAS 2022-R06**
 
-**Step 3a: Turnover** — Undersample + Fit
-- `crt_turnover_undersample.R` — reads prep splits, filters by `inc_0_spread_llpa`, undersamples with KZ correction, builds training + tracking files
-- `crt_turnover_model.R` — fits turnover GAM, generates comparison report vs PROD
+![](2026-02-26-16-07-26.png) ![](2026-02-26-16-13-23.png)
 
-**Step 3b: Refi** — Turnover Separation + Undersample + Fit
-- `crt_refi_data_prep.R` — loads turnover model, predicts turnover per loan, flags `isTurnover` within each (date, spread bucket) using s4 strategy
-- `crt_refi_undersample.R` — reads s4 output, drops turnovers from Cto0, undersamples, builds training + tracking files
-- `crt_refinance_model.R` — fits two-stage refi GAM (Stage 1: economic drivers, Stage 2: servicer + state), generates comparison report vs PROD
+**STACR 2024-DNA3**
 
-**LLPA Grid** (prerequisite, run once or when grid changes) — `crt/crt_llpa.R`
-- Generates `support_data/crt_llpa_interpolated.txt` consumed by Step 2
-- Independent from Jumbo; edit `get_crt_llpa_base_grid()` to update CRT-specific values
+![](2026-02-26-16-07-47.png) ![](2026-02-26-16-13-44.png)
 
-![](assets/crt_pipeline_diagram.png)
+**STACR 2025-DNA2**
 
-All changes are on the CRT branch. Happy to walk through any of this in more detail.
+![](2026-02-26-16-08-21.png) ![](2026-02-26-16-14-00.png)
 
-Best,
-Howard
+**STACR 2024-HQA2**
+
+![](2026-02-26-16-09-31.png) ![](2026-02-26-16-14-43.png)
+
+**STACR 2024-DNA2**
+
+![](2026-02-26-16-09-48.png) ![](2026-02-26-16-15-02.png)
+
+**CAS 2025-R02**
+
+![](2026-02-26-16-08-36.png) ![](2026-02-26-16-14-23.png)
 
 """
 
