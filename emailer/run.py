@@ -85,7 +85,10 @@ def normalize_local_images(markdown_text):
         return match.group(0)
 
     return pattern.sub(replace_match, markdown_text)
+# NQM stats
 
+#         I         O         S 
+# 46.497065 50.292392  3.210543 
 
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
