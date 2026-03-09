@@ -3,8 +3,8 @@
 You are writing `MD_CONTENT` for an email body to be rendered by Howard Toolbox.
 
 ## General Rules
-1. **Output ONLY Markdown**. No explanations, no subject lines, no "Here is the code".
-2. **Body Only**. Do not include greetings ("Hi Dan") or signatures ("Best, Howard"). The tool adds headers/footers.
+1. **Output ONLY Markdown / HTML**. No explanations, no subject lines, no "Here is the code".
+2. **Include greetings and sign-offs in the content** if desired -- the tool does NOT add them automatically.
 3. **Professional Tone**. Concise, bulleted, clear.
 
 ## Formatting Guide
@@ -20,41 +20,31 @@ You are writing `MD_CONTENT` for an email body to be rendered by Howard Toolbox.
 - Math will be rendered as high-quality images using CodeCogs
 
 ### Images
-- Place images in the `assets/` folder
-- The emailer will normalize Markdown `![]()` links into `assets/` when possible
-- If you use HTML `<img>`, keep `src` in `assets/` or a valid relative path
-- Use `{{CLIPBOARD}}` to insert the current clipboard image (single image)
--- **Inline Images**: Images are inline by default:
+- Images can be referenced from anywhere in the `emailer/` folder -- the tool automatically copies them into `assets/` and rewrites the path.
+- Both Markdown `![](...)` and HTML `<img src="...">` are normalized.
+- Use `{{CLIPBOARD}}` to insert the current clipboard image (single image).
+- **Inline Images**: Images are inline by default:
   ```markdown
   ![](assets/img1.png) ![](assets/img2.png)
   ```
-
--- **Sizing**: Use HTML for explicit sizing:
+- **Sizing**: Use HTML for explicit sizing:
   ```html
-  <table>
-  <tr>
-    <td><img src="chart1.png" height="400"></td>
-    <td><img src="chart2.png" height="400"></td>
-  </tr>
-  </table>
+  <img src="chart.png" style="display:block;width:620px;max-width:100%;height:auto;" />
   ```
 
-### Outlook Line Breaks
-- To force label + image on separate lines in older Outlook, use HTML blocks:
-  ```html
-  <div><strong>STACR</strong></div>
-  <div><img src="assets/stacr.png"></div>
+### Outlook Line Breaks (Important)
+The renderer automatically inserts blank lines around standalone image lines to prevent Outlook from merging text and images onto the same line. However, for maximum safety:
+- **Always put a blank line between a text label and the image below it.**
+- When in doubt, use explicit HTML blocks:
+  ```
+  **Label**
+
+  <img src="screenshot.png" style="display:block;width:620px;max-width:100%;height:auto;" />
   ```
 
 ### Layout
 - **Tables**: Use standard Markdown tables for data.
-- **Code Blocks**: Use fenced code blocks with language tags for syntax highlighting style.
-  ```markdown
-  ```python
-  def hello():
-      print("world")
-  ```
-  ```
+- **Code Blocks**: Use fenced code blocks with language tags.
 - **Inline Code**: Use backticks for tech terms: `variable_name`.
 - **Horizontal Rules**: Use `---` to separate sections visually.
 - **Links**: Standard markdown `[text](url)` links are styled professionally.
@@ -70,12 +60,9 @@ The volatility model has converged.
 
 **Performance Charts**
 
-<table>
-<tr>
-<td><img src="assets/chart1.png" height="500"></td>
-<td><img src="assets/chart2.png" height="500"></td>
-</tr>
-</table>
+<img src="assets/chart1.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+
+<img src="assets/chart2.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
 **Formula**
 

@@ -100,6 +100,46 @@ def _preprocess_math(text):
     return text
 
 
+def _ensure_blank_lines_around_image_lines(text: str) -> str:
+    """
+    Outlook can place text and images on the same line if image lines are not
+    separated from surrounding text. Normalize standalone image lines so they
+    always have a blank line before and after them.
+    """
+    lines = text.splitlines()
+    normalized: list[str] = []
+    in_fenced_code = False
+
+    def is_standalone_image_line(line: str) -> bool:
+        stripped = line.strip()
+        return bool(
+            re.match(r'^!\[[^\]]*\]\([^)]+\)$', stripped)
+            or re.match(r'^<img\b[^>]*?/?>$', stripped, flags=re.IGNORECASE)
+        )
+
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fenced_code = not in_fenced_code
+            normalized.append(line)
+            continue
+
+        if not in_fenced_code and is_standalone_image_line(line):
+            if normalized and normalized[-1].strip():
+                normalized.append("")
+
+            normalized.append(line)
+
+            next_line = lines[idx + 1] if idx + 1 < len(lines) else ""
+            if next_line.strip():
+                normalized.append("")
+            continue
+
+        normalized.append(line)
+
+    return "\n".join(normalized)
+
+
 def render_markdown(
     markdown_text: str,
     copy: bool = True,
@@ -124,6 +164,7 @@ def render_markdown(
         base_path = os.getcwd()
 
     text = _preprocess_math(markdown_text)
+    text = _ensure_blank_lines_around_image_lines(text)
     raw_html = markdown.markdown(text, extensions=['tables', 'fenced_code', 'attr_list'])
     soup = BeautifulSoup(raw_html, 'html.parser')
     

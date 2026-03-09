@@ -48,43 +48,63 @@ def process_clipboard_images(markdown_text):
         return markdown_text.replace("{{CLIPBOARD}}", f"![](assets/{filename})")
 
 
+def _ensure_asset(path: str) -> str:
+    """
+    Given a local image path, ensure it lives in assets/.
+    Copies from SCRIPT_DIR if needed. Returns the (possibly rewritten) path.
+    """
+    if re.match(r'^(http|https|data):', path):
+        return path
+
+    if path.startswith("assets/"):
+        asset_path = os.path.join(SCRIPT_DIR, path)
+        if not os.path.exists(asset_path):
+            alt_src = os.path.join(SCRIPT_DIR, os.path.basename(path))
+            if os.path.exists(alt_src):
+                os.makedirs(ASSETS_DIR, exist_ok=True)
+                shutil.copy2(alt_src, asset_path)
+        return path
+
+    src_path = os.path.join(SCRIPT_DIR, path)
+    if os.path.exists(src_path):
+        os.makedirs(ASSETS_DIR, exist_ok=True)
+        dest_path = os.path.join(ASSETS_DIR, os.path.basename(path))
+        if not os.path.exists(dest_path):
+            shutil.copy2(src_path, dest_path)
+        return f"assets/{os.path.basename(path)}"
+
+    return path
+
+
 def normalize_local_images(markdown_text):
     """
-    Ensure images are loaded from assets/ per README.
-    If an image is referenced outside assets/, copy it into assets/ and rewrite the link.
+    Ensure all images (Markdown ![](…) and HTML <img src="…">) are loaded
+    from assets/. Copies files into assets/ and rewrites paths as needed.
     """
-    pattern = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+    # Handle Markdown images: ![alt](path)
+    md_pattern = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
 
-    def replace_match(match):
+    def replace_md(match):
         target = match.group(1).strip()
-        # Strip optional title portion (e.g., "path" "title")
         path = target.split()[0].strip('"').strip("'")
-
-        if re.match(r'^(http|https|data):', path):
-            return match.group(0)
-
-        # If already assets/, ensure file exists (copy from root if needed)
-        if path.startswith("assets/"):
-            asset_path = os.path.join(SCRIPT_DIR, path)
-            if not os.path.exists(asset_path):
-                alt_src = os.path.join(SCRIPT_DIR, os.path.basename(path))
-                if os.path.exists(alt_src):
-                    os.makedirs(ASSETS_DIR, exist_ok=True)
-                    shutil.copy2(alt_src, asset_path)
-            return match.group(0)
-
-        # If referenced from current folder (or parent), copy into assets/ and rewrite
-        src_path = os.path.join(SCRIPT_DIR, path)
-        if os.path.exists(src_path):
-            os.makedirs(ASSETS_DIR, exist_ok=True)
-            dest_path = os.path.join(ASSETS_DIR, os.path.basename(path))
-            if not os.path.exists(dest_path):
-                shutil.copy2(src_path, dest_path)
-            return match.group(0).replace(path, f"assets/{os.path.basename(path)}")
-
+        new_path = _ensure_asset(path)
+        if new_path != path:
+            return match.group(0).replace(path, new_path)
         return match.group(0)
 
-    return pattern.sub(replace_match, markdown_text)
+    result = md_pattern.sub(replace_md, markdown_text)
+
+    # Handle HTML images: <img src="path" ...>
+    html_pattern = re.compile(r'(<img\b[^>]*\bsrc\s*=\s*")([^"]+)("[^>]*>)', flags=re.IGNORECASE)
+
+    def replace_html(match):
+        prefix, path, suffix = match.group(1), match.group(2), match.group(3)
+        new_path = _ensure_asset(path)
+        return f"{prefix}{new_path}{suffix}"
+
+    result = html_pattern.sub(replace_html, result)
+
+    return result
 # NQM stats
 
 #         I         O         S 
@@ -93,59 +113,75 @@ def normalize_local_images(markdown_text):
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
-MD_CONTENT = r"""
-Adding JP's vectors for select deals. Please refer to the previous email for RateDown300, SuperBull, and SuperBear comparisons.
+MD_CONTENT = fr"""
+As requested, below is a comparison of the mapping outputs from Intex and CoreLogic.
 
-**Summary**
+Unless you would prefer otherwise, I plan to continue using CoreLogic for model fitting. Based on the examples below, I do not expect the choice between Intex and CoreLogic to materially change the results, and using CoreLogic keeps the workflow simpler. I can switch to Intex if that is preferred.
 
-- JP's turnover model looks fine, but has very strong seasonality — probably the same order of magnitude as before we dialed seasonality down to 60%.
-- For the refi model, I still don't see a need to adjust the burnout curve — they decay at about the same speed.
-- JP's vectors for high-WAC or recent-vintage deals are higher than ours, but even for recent vintages, JP vectors appear too high (even higher than YB).
-- **I would still recommend no dial for the new CRT model.** If we really want some form of dial, we could add a numeric dial that expires in 4 years.
+## COLT 2025-11
+CoreLogic appears closer to the actual mapping. Intex does not look as appropriate in this case.
 
-Model fits, tracking, and all vectors are attached. The CRT vector Excel includes all scenarios and their CPR — feel free to explore. Below I'm only showing the comparison.
+**Intex**
+<img src="2026-03-09-13-52-46.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**Minimal Risk Impact**
+**CoreLogic**
+<img src="2026-03-09-13-52-42.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-![](2026-02-26-16-31-51.png)
+**Actual**
+<img src="2026-03-09-13-51-46.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**CAS 2019-HRP1**
+## CROSS 2025-H10
+Intex appears to assign the wrong full doc type. CoreLogic looks more accurate.
 
-![](2026-02-26-16-07-08.png) ![](2026-02-26-16-11-28.png)
+**Intex**
+<img src="2026-03-09-13-46-14.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2018-HQA2**
+**CoreLogic**
+<img src="2026-03-09-13-46-08.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-![](2026-02-26-16-06-34.png) ![](2026-02-26-16-11-53.png)
+**Actual**
+<img src="2026-03-09-13-47-29.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2022-DNA2**
+## AOMT 2025-12
+Intex and CoreLogic appear to use the same mapping.
 
-![](2026-02-26-16-06-20.png) ![](2026-02-26-16-12-19.png)
+**Intex**
+<img src="2026-03-09-13-50-58.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**CAS 2022-R06**
+**CoreLogic**
+<img src="2026-03-09-13-50-52.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-![](2026-02-26-16-07-26.png) ![](2026-02-26-16-13-23.png)
+**Actual**
+<img src="2026-03-09-13-50-17.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2024-DNA3**
+## OBX 2026-NQM1
+Intex and CoreLogic appear to use the same mapping.
 
-![](2026-02-26-16-07-47.png) ![](2026-02-26-16-13-44.png)
+**Intex**
+<img src="2026-03-09-13-49-16.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2025-DNA2**
+**CoreLogic**
+<img src="2026-03-09-13-49-09.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-![](2026-02-26-16-08-21.png) ![](2026-02-26-16-14-00.png)
+**Actual**
+<img src="2026-03-09-13-48-24.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2024-HQA2**
+## VERUS 2025-11
+CoreLogic combines DSCR and investor into DSCR, and the investor loans also carry a DSCR ratio. Intex appears to map the 1-year doc type incorrectly. Although Intex provides more categories in this case, that added detail is not especially useful because we would combine those groups anyway.
 
-![](2026-02-26-16-09-31.png) ![](2026-02-26-16-14-43.png)
+**Intex**
+<img src="2026-03-09-13-56-14.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**STACR 2024-DNA2**
+**CoreLogic**
+<img src="2026-03-09-13-56-07.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-![](2026-02-26-16-09-48.png) ![](2026-02-26-16-15-02.png)
+**Actual**
+<img src="2026-03-09-13-54-30.png" style="display:block;width:620px;max-width:100%;height:auto;" />
 
-**CAS 2025-R02**
-
-![](2026-02-26-16-08-36.png) ![](2026-02-26-16-14-23.png)
-
+Please let me know if you would prefer that I use Intex instead.
 """
+
+
 
 # -----------------------------------------------------------------------------
 
