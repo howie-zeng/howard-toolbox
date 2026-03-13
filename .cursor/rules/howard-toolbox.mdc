@@ -1,17 +1,9 @@
 ---
-description: Hard constraints for howard-toolbox
+description: Project context for howard-toolbox
 alwaysApply: true
 ---
 
 # Howard Toolbox Rules
-
-## Constraints
-
-- **3-layer cap**: data / model / report. No framework layers unless requested.
-- **File budget**: Core Python files <= 12. Explain and propose merge if adding.
-- **Single entrypoint** per tool.
-- **No premature abstractions**: no base classes/interfaces unless 3+ implementations.
-- **Windows-first**: guard platform-specific imports.
 
 ## Context Loading
 
