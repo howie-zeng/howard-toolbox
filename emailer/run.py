@@ -114,28 +114,17 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = fr"""
-I have attached two PDFs with the full detail — one covers GNMA and Freddie Mac single-family data, the other covers NQM.
+Please see the attached PDF for details, including how the data is processed.
 
----
+High-DTI borrowers show a higher D90+ rate and take much longer to recover (left: WALA 6–60; right: WALA 60–120).
 
-**Freddie Mac Single Family**
+![](2026-03-13-18-24-01.png)
 
-In a market downturn, DTI has a significant effect on loan credit risk. The chart below shows the 90+ DPD rate by DTI bucket for Freddie Mac single-family loans originated since 2000, restricted to borrowers with FICO >= 790 (the highest credit quality tier). The gray dashed line on the right axis represents the U.S. unemployment rate.
+![](2026-03-13-18-24-18.png)
 
-During the 2008 financial crisis, **the >= 50% DTI cohort diverged sharply from lower-DTI buckets — peaking at roughly 3x the rate of the <= 35% DTI cohort.** Notably, it took significantly longer for high-DTI loans to recover and reconverge to the baseline, consistent with extended foreclosure timelines and modification re-defaults for borrowers with limited payment cushion.
+90+ delinquency rate by WALA: seasoned loans flatten out, while high-DTI loans show elevated delinquency rates within the same FICO bucket.
 
-If we anticipate a future unemployment spike — whether driven by AI-related labor displacement or other macro factors — **the data suggests that high-DTI loans carry elevated tail risk that is disproportionate to their spread in normal conditions.**
-
-![](2026-03-13-13-31-55.png)
-
----
-
-**Non-QM (NQM)**
-
-In the NQM securitized universe, the DTI effect on 60+ DPD is less pronounced. However, **we observe a moderate and statistically significant effect on 90+ DPD: the highest DTI bucket (>= 50%) defaults at approximately 2x the rate of the lowest DTI bucket (<= 35%)**, with the effect partially reverting with seasoning.
-
-![](2026-03-13-13-29-32.png)
-
+![](2026-03-13-18-22-24.png)
 """
 
 
