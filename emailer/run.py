@@ -114,71 +114,28 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = fr"""
-As requested, below is a comparison of the mapping outputs from Intex and CoreLogic.
+I have attached two PDFs with the full detail — one covers GNMA and Freddie Mac single-family data, the other covers NQM.
 
-Unless you would prefer otherwise, I plan to continue using CoreLogic for model fitting. Based on the examples below, I do not expect the choice between Intex and CoreLogic to materially change the results, and using CoreLogic keeps the workflow simpler. I can switch to Intex if that is preferred.
+---
 
-## COLT 2025-11
-CoreLogic appears closer to the actual mapping. Intex does not look as appropriate in this case.
+**Freddie Mac Single Family**
 
-**Intex**
-<img src="2026-03-09-13-52-46.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+In a market downturn, DTI has a significant effect on loan credit risk. The chart below shows the 90+ DPD rate by DTI bucket for Freddie Mac single-family loans originated since 2000, restricted to borrowers with FICO >= 790 (the highest credit quality tier). The gray dashed line on the right axis represents the U.S. unemployment rate.
 
-**CoreLogic**
-<img src="2026-03-09-13-52-42.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+During the 2008 financial crisis, **the >= 50% DTI cohort diverged sharply from lower-DTI buckets — peaking at roughly 3x the rate of the <= 35% DTI cohort.** Notably, it took significantly longer for high-DTI loans to recover and reconverge to the baseline, consistent with extended foreclosure timelines and modification re-defaults for borrowers with limited payment cushion.
 
-**Actual**
-<img src="2026-03-09-13-51-46.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+If we anticipate a future unemployment spike — whether driven by AI-related labor displacement or other macro factors — **the data suggests that high-DTI loans carry elevated tail risk that is disproportionate to their spread in normal conditions.**
 
-## CROSS 2025-H10
-Intex appears to assign the wrong full doc type. CoreLogic looks more accurate.
+![](2026-03-13-13-31-55.png)
 
-**Intex**
-<img src="2026-03-09-13-46-14.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+---
 
-**CoreLogic**
-<img src="2026-03-09-13-46-08.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+**Non-QM (NQM)**
 
-**Actual**
-<img src="2026-03-09-13-47-29.png" style="display:block;width:620px;max-width:100%;height:auto;" />
+In the NQM securitized universe, the DTI effect on 60+ DPD is less pronounced. However, **we observe a moderate and statistically significant effect on 90+ DPD: the highest DTI bucket (>= 50%) defaults at approximately 2x the rate of the lowest DTI bucket (<= 35%)**, with the effect partially reverting with seasoning.
 
-## AOMT 2025-12
-Intex and CoreLogic appear to use the same mapping.
+![](2026-03-13-13-29-32.png)
 
-**Intex**
-<img src="2026-03-09-13-50-58.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**CoreLogic**
-<img src="2026-03-09-13-50-52.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**Actual**
-<img src="2026-03-09-13-50-17.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-## OBX 2026-NQM1
-Intex and CoreLogic appear to use the same mapping.
-
-**Intex**
-<img src="2026-03-09-13-49-16.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**CoreLogic**
-<img src="2026-03-09-13-49-09.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**Actual**
-<img src="2026-03-09-13-48-24.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-## VERUS 2025-11
-CoreLogic combines DSCR and investor into DSCR, and the investor loans also carry a DSCR ratio. Intex appears to map the 1-year doc type incorrectly. Although Intex provides more categories in this case, that added detail is not especially useful because we would combine those groups anyway.
-
-**Intex**
-<img src="2026-03-09-13-56-14.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**CoreLogic**
-<img src="2026-03-09-13-56-07.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-**Actual**
-<img src="2026-03-09-13-54-30.png" style="display:block;width:620px;max-width:100%;height:auto;" />
-
-Please let me know if you would prefer that I use Intex instead.
 """
 
 
