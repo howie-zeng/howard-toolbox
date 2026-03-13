@@ -19,12 +19,13 @@ Before non-trivial work, read `.cursor/skills/howard-toolbox/SKILL.md` (repo)
 for full project knowledge. Domain corrections are in `.cursor/rules/memories.mdc`
 (auto-injected, no read needed).
 
-## Shared Drive
+## Repo Locations
 
-The canonical repo lives at `S:\QR\hzeng\howard-toolbox`. All company machines
-access this path. Skills and rules are tracked in the repo under `.cursor/`.
-To avoid duplicates, delete `~/.cursor/skills/` copies on machines where
-this workspace is open.
+The project is used across multiple environments:
+- **Company Machines**: The canonical repo lives at `S:\QR\hzeng\howard-toolbox`.
+- **Local Desktop**: The repo is synced via OneDrive at `E:\OneDrive\Github\howard-toolbox`. The local desktop also hosts the OpenClaw Personal Cognitive OS at `C:\Users\Howard\.openclaw`.
+
+Skills and rules are tracked in the repo under `.cursor/`. To avoid duplicates, delete `~/.cursor/skills/` copies on machines where this workspace is open.
 
 ## Memory Write Protocol
 
@@ -46,7 +47,7 @@ The agent may **proactively propose** memory updates. All writes require
 **Steps:**
 1. Determine target file from routing above.
 2. Show the proposed edit (diff) and wait for approval.
-3. Write to the repo (`S:\QR\hzeng\howard-toolbox`) first — it is the source of truth.
+3. Write to the correct repo path depending on the environment (`S:\QR\hzeng\howard-toolbox` on company machines, or `E:\OneDrive\Github\howard-toolbox` on local desktop) first — it is the source of truth.
 4. On DFS machines where `.cursor/` is locked, use git plumbing to update.
 5. Optionally mirror skill files to `~/.cursor/skills/<skill-name>/SKILL.md` for cross-workspace loading.
 
