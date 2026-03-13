@@ -1,5 +1,5 @@
 ---
-description: Hard constraints and memory write protocol for howard-toolbox
+description: Hard constraints for howard-toolbox
 alwaysApply: true
 ---
 
@@ -25,30 +25,5 @@ The project is used across multiple environments:
 - **Company Machines**: The canonical repo lives at `S:\QR\hzeng\howard-toolbox`.
 - **Local Desktop**: The repo is synced via OneDrive at `E:\OneDrive\Github\howard-toolbox`. The local desktop also hosts the OpenClaw Personal Cognitive OS at `C:\Users\Howard\.openclaw`.
 
-Skills and rules are tracked in the repo under `.cursor/`. To avoid duplicates, delete `~/.cursor/skills/` copies on machines where this workspace is open.
-
-## Memory Write Protocol
-
-The agent may **proactively propose** memory updates. All writes require
-**diff preview + user approval** before saving. Never write silently.
-
-**When to propose an update:**
-- The user corrects a mistake or says something like "remember this"
-- The user expresses a preference (even casually)
-- A domain fact or gotcha is discovered during work
-- A structural change was made to the codebase
-- The agent made an error that should not be repeated
-
-**Routing:**
-- Project domain fact/correction -> `.cursor/rules/memories.mdc`
-- Project structure/pattern change -> `.cursor/skills/howard-toolbox/SKILL.md`
-- Generic preference or agent mistake -> `.cursor/skills/personal-profile/SKILL.md`
-
-**Steps:**
-1. Determine target file from routing above.
-2. Show the proposed edit (diff) and wait for approval.
-3. Write to the correct repo path depending on the environment (`S:\QR\hzeng\howard-toolbox` on company machines, or `E:\OneDrive\Github\howard-toolbox` on local desktop) first — it is the source of truth.
-4. On DFS machines where `.cursor/` is locked, use git plumbing to update.
-5. Optionally mirror skill files to `~/.cursor/skills/<skill-name>/SKILL.md` for cross-workspace loading.
-
-Consolidation follows the same protocol (diff + approval). Never write silently.
+Project skills and rules are tracked in the repo under `.cursor/`.
+Global skills (`personal-profile`) live at `~/.cursor/skills/`.
