@@ -13,6 +13,9 @@ dial/outputs/
 __pycache__/
 *.pyc
 
+# Cursor skills (kept globally at ~/.cursor/skills/, not in repo)
+.cursor/skills/
+
 # OS files
 Thumbs.db
 .DS_Store

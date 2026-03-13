@@ -22,8 +22,8 @@ for full project knowledge. Domain corrections are in `.cursor/rules/memories.md
 ## Shared Drive
 
 The canonical repo lives at `S:\QR\hzeng\howard-toolbox`. All company machines
-access this path. Copies of skills live at `~/.cursor/skills/howard-toolbox/`
-and `~/.cursor/skills/personal-profile/` for cross-workspace loading.
+access this path. Skills live at `~/.cursor/skills/` (global, not in repo).
+Rules live in the repo at `.cursor/rules/`.
 
 ## Memory Write Protocol
 
@@ -45,7 +45,7 @@ The agent may **proactively propose** memory updates. All writes require
 **Steps:**
 1. Determine target file from routing above.
 2. Show the proposed edit (diff) and wait for approval.
-3. Write to the repo (`S:\QR\hzeng\howard-toolbox`) first — it is the source of truth.
-4. Mirror skill files to `~/.cursor/skills/<skill-name>/SKILL.md` for cross-workspace loading.
+3. Rules/memories → write to the repo `.cursor/rules/` on `S:\QR\hzeng\howard-toolbox`.
+4. Skills → write directly to `~/.cursor/skills/<skill-name>/SKILL.md` (not tracked in repo).
 
 Consolidation follows the same protocol (diff + approval). Never write silently.
