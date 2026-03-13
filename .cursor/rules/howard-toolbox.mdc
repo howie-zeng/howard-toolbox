@@ -1,0 +1,51 @@
+---
+description: Hard constraints and memory write protocol for howard-toolbox
+alwaysApply: true
+---
+
+# Howard Toolbox Rules
+
+## Constraints
+
+- **3-layer cap**: data / model / report. No framework layers unless requested.
+- **File budget**: Core Python files <= 12. Explain and propose merge if adding.
+- **Single entrypoint** per tool.
+- **No premature abstractions**: no base classes/interfaces unless 3+ implementations.
+- **Windows-first**: guard platform-specific imports.
+
+## Context Loading
+
+Before non-trivial work, read `.cursor/skills/howard-toolbox/SKILL.md` (repo)
+for full project knowledge. Domain corrections are in `.cursor/rules/memories.mdc`
+(auto-injected, no read needed).
+
+## Shared Drive
+
+The canonical repo lives at `S:\QR\hzeng\howard-toolbox`. All company machines
+access this path. Copies of skills live at `~/.cursor/skills/howard-toolbox/`
+and `~/.cursor/skills/personal-profile/` for cross-workspace loading.
+
+## Memory Write Protocol
+
+The agent may **proactively propose** memory updates. All writes require
+**diff preview + user approval** before saving. Never write silently.
+
+**When to propose an update:**
+- The user corrects a mistake or says something like "remember this"
+- The user expresses a preference (even casually)
+- A domain fact or gotcha is discovered during work
+- A structural change was made to the codebase
+- The agent made an error that should not be repeated
+
+**Routing:**
+- Project domain fact/correction -> `.cursor/rules/memories.mdc`
+- Project structure/pattern change -> `.cursor/skills/howard-toolbox/SKILL.md`
+- Generic preference or agent mistake -> `.cursor/skills/personal-profile/SKILL.md`
+
+**Steps:**
+1. Determine target file from routing above.
+2. Show the proposed edit (diff) and wait for approval.
+3. Write only after user confirms.
+4. After writing a skill file, also copy it to `~/.cursor/skills/<skill-name>/SKILL.md`.
+
+Consolidation follows the same protocol (diff + approval). Never write silently.
