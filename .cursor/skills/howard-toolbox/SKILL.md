@@ -17,8 +17,10 @@ of truth for project knowledge. The repo lives at `S:\QR\hzeng\howard-toolbox`;
 ## Update Instructions
 
 The agent may proactively propose updates to this file. All writes require a
-diff preview and user approval before saving. After writing, copy this file to
-`~/.cursor/skills/howard-toolbox/SKILL.md`. Consolidate if this file exceeds ~120 lines.
+diff preview and user approval before saving. Write to the repo
+(`S:\QR\hzeng\howard-toolbox`) first — it is the source of truth. Then mirror
+to `~/.cursor/skills/howard-toolbox/SKILL.md` for cross-workspace loading.
+Consolidate if this file exceeds ~120 lines.
 
 ## Project Structure
 

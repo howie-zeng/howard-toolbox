@@ -27,7 +27,8 @@ description: >-
 ## Update Instructions
 
 The agent may proactively propose updates to this file. All writes require a
-diff preview and user approval before saving. After writing, copy this file to
-`~/.cursor/skills/personal-profile/SKILL.md`.
+diff preview and user approval before saving. Write to the repo
+(`S:\QR\hzeng\howard-toolbox`) first — it is the source of truth. Then mirror
+to `~/.cursor/skills/personal-profile/SKILL.md` for cross-workspace loading.
 
 Consolidate if this file exceeds ~50 entries: merge duplicates, compress related items.

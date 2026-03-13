@@ -45,7 +45,7 @@ The agent may **proactively propose** memory updates. All writes require
 **Steps:**
 1. Determine target file from routing above.
 2. Show the proposed edit (diff) and wait for approval.
-3. Write only after user confirms.
-4. After writing a skill file, also copy it to `~/.cursor/skills/<skill-name>/SKILL.md`.
+3. Write to the repo (`S:\QR\hzeng\howard-toolbox`) first — it is the source of truth.
+4. Mirror skill files to `~/.cursor/skills/<skill-name>/SKILL.md` for cross-workspace loading.
 
 Consolidation follows the same protocol (diff + approval). Never write silently.
