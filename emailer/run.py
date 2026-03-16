@@ -9,15 +9,13 @@ import os
 import datetime
 import re
 import shutil
-from PIL import ImageGrab
 
-from render import render_markdown
+from render import render_markdown, copy_to_clipboard
 
 # Get the directory where this script lives
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(SCRIPT_DIR, "assets")
 OUTPUTS_DIR = os.path.join(SCRIPT_DIR, "outputs")
-STRICT_IMAGES = False
 
 
 def process_clipboard_images(markdown_text):
@@ -26,6 +24,8 @@ def process_clipboard_images(markdown_text):
     """
     if "{{CLIPBOARD}}" not in markdown_text:
         return markdown_text
+
+    from PIL import ImageGrab
 
     print("Checking clipboard for image...")
     img = ImageGrab.grabclipboard()
@@ -105,26 +105,23 @@ def normalize_local_images(markdown_text):
     result = html_pattern.sub(replace_html, result)
 
     return result
-# NQM stats
-
-#         I         O         S 
-# 46.497065 50.292392  3.210543 
 
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = fr"""
-Please see the attached PDF for details, including how the data is processed.
+**Project Update**
 
-High-DTI borrowers show a higher D90+ rate and take much longer to recover (left: WALA 6–60; right: WALA 60–120).
+**NQM:**
 
-![](2026-03-13-18-24-01.png)
+- Adjusted the LLPA model so that the spread across doc types is monotonic.
+- Sent out the first pass of the NQM model. Now splitting the model into turnover and refi, and still fine-tuning the turnover model. Should be able to send out an update soon.
 
-![](2026-03-13-18-24-18.png)
+**Next steps:**
 
-90+ delinquency rate by WALA: seasoned loans flatten out, while high-DTI loans show elevated delinquency rates within the same FICO bucket.
+- Continue iterating on the turnover model.
+- Add the refi model implementation and begin running iterations.
 
-![](2026-03-13-18-22-24.png)
 """
 
 
@@ -139,18 +136,15 @@ if __name__ == "__main__":
     final_content = normalize_local_images(final_content)
     
     print("Formatting email...")
-    render_markdown(
+    html = render_markdown(
         final_content,
-        copy=True,
         output_path=os.path.join(OUTPUTS_DIR, "latest_email.html"),
         base_path=SCRIPT_DIR,
-        strict_images=STRICT_IMAGES,
     )
+    copy_to_clipboard(html)
+    print("[OK] Copied markdown email to clipboard")
     print("\n---------------------------------------------------------")
     print("Done! The HTML is in your clipboard.")
     print("1. Go to Outlook/Gmail")
     print("2. Paste (Ctrl+V)")
     print("---------------------------------------------------------")
-
-
-# python emailer\run.py

@@ -187,6 +187,6 @@ def create_crt_pipeline_diagram(output_path):
 
 
 if __name__ == "__main__":
-    output_dir = r"c:\Users\hzeng\Desktop\howard-toolbox\emailer\assets"
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
     os.makedirs(output_dir, exist_ok=True)
     create_crt_pipeline_diagram(os.path.join(output_dir, "crt_pipeline_diagram.png"))

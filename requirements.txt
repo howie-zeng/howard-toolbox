@@ -11,3 +11,7 @@ numpy
 
 # emailer/generate_diagram.py
 matplotlib
+
+# dev tools
+ruff
+pytest

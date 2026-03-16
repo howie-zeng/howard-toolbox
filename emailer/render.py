@@ -2,26 +2,60 @@
 
 import os
 import re
+import html
 import urllib.parse
 import base64
 import mimetypes
-from pathlib import Path
 from typing import Optional
 
-import win32clipboard
+try:
+    import win32clipboard
+except ImportError:
+    win32clipboard = None
+
 import markdown
 from bs4 import BeautifulSoup, Tag
 
-DEFAULT_IMG_STYLE = (
-    "vertical-align:middle;"
-    "margin:4px 6px 4px 0;"
-)
+STYLES = {
+    "container": (
+        "font-family:'Times New Roman',Times,serif;line-height:1.6;"
+        "color:#333;max-width:700px;font-size:16px;"
+    ),
+    "img_default": "vertical-align:middle;margin:4px 6px 4px 0;",
+    "heading": "margin-top:24px;margin-bottom:16px;font-weight:700;color:#2c3e50;",
+    "table": "border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #eee;",
+    "thead": "background-color:#f8f9fa;",
+    "th": "padding:12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#34495e;",
+    "td": "padding:12px;border-bottom:1px solid #eee;color:#555;",
+    "blockquote": (
+        "border-left:4px solid #3498db;margin:16px 0;padding:8px 16px;"
+        "background-color:#f0f7fb;color:#555;font-style:italic;"
+    ),
+    "pre": (
+        "background-color:#f6f8fa;border-radius:6px;padding:16px;"
+        "font-family:Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace;"
+        "font-size:14px;line-height:1.45;overflow:auto;border:1px solid #d0d7de;"
+    ),
+    "pre_code": "font-family:inherit;color:#24292f;",
+    "inline_code": (
+        "background-color:rgba(175,184,193,0.2);border-radius:6px;"
+        "padding:0.2em 0.4em;font-family:Consolas,Monaco,monospace;"
+        "font-size:85%;"
+    ),
+    "link": "color:#0969da;text-decoration:none;font-weight:500;",
+    "list": "padding-left:24px;margin-top:0;margin-bottom:16px;",
+    "li": "margin-bottom:4px;",
+    "hr": "height:1px;background-color:#d0d7de;border:none;margin:24px 0;",
+}
 
 
 def copy_to_clipboard(html_fragment: str) -> None:
     """
     Copy HTML to Windows clipboard in HTML Format for Outlook/Gmail.
     """
+    if win32clipboard is None:
+        raise RuntimeError("win32clipboard required; install pywin32 on Windows")
+
     full_html = (
         "<html><body>"
         "<!--StartFragment-->"
@@ -77,7 +111,7 @@ def _math_to_image_tag(match, display=False):
     if display:
         style = "display:block;margin:16px auto;max-width:100%;height:auto;"
         
-    return f'<img src="{src}" style="{style}" alt="{latex}" />'
+    return f'<img src="{src}" style="{style}" alt="{html.escape(latex)}" />'
 
 
 def _preprocess_math(text):
@@ -142,20 +176,16 @@ def _ensure_blank_lines_around_image_lines(text: str) -> str:
 
 def render_markdown(
     markdown_text: str,
-    copy: bool = True,
     output_path: Optional[str] = None,
     base_path: Optional[str] = None,
-    strict_images: bool = False,
 ) -> str:
     """
     Render raw markdown to HTML with email-friendly formatting.
     
     Args:
         markdown_text: Raw markdown string
-        copy: If True, copy HTML to clipboard automatically
         output_path: Optional file path to save HTML
         base_path: Base path to resolve relative image links
-        strict_images: If True, raise on missing local images
     
     Returns:
         Rendered HTML string
@@ -178,6 +208,8 @@ def render_markdown(
                 try:
                     with open(abs_path, "rb") as f:
                         data = f.read()
+                        if len(data) > 2_000_000:
+                            print(f"Warning: {src} is {len(data)/1e6:.1f}MB -- large images slow Outlook paste")
                         encoded = base64.b64encode(data).decode('utf-8')
                         mime_type, _ = mimetypes.guess_type(abs_path)
                         if not mime_type:
@@ -190,7 +222,7 @@ def render_markdown(
         
         current_style = img.get('style', '')
         if 'display' not in current_style:
-            img['style'] = f"display:inline-block;{DEFAULT_IMG_STYLE}{current_style}"
+            img['style'] = f"display:inline-block;{STYLES['img_default']}{current_style}"
         
         if not (img.get('width') or img.get('height') or 'width' in current_style or 'height' in current_style):
             img['style'] += "max-width:100%;height:auto;"
@@ -209,16 +241,16 @@ def render_markdown(
             table['border'] = '0'
             table['cellpadding'] = '0'
             table['cellspacing'] = '0'
-            table['style'] = "border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #eee;"
+            table['style'] = STYLES["table"]
             
             if table.thead:
-                table.thead['style'] = "background-color:#f8f9fa;"
+                table.thead['style'] = STYLES["thead"]
             
             for th in table.find_all('th'):
-                th['style'] = "padding:12px;text-align:left;border-bottom:2px solid #ddd;font-weight:600;color:#34495e;"
+                th['style'] = STYLES["th"]
                 
             for td in table.find_all('td'):
-                td['style'] = "padding:12px;border-bottom:1px solid #eee;color:#555;"
+                td['style'] = STYLES["td"]
         else:
             table['style'] = table.get('style', '') + ";border-collapse:collapse;border:none;"
             for td in table.find_all('td'):
@@ -226,68 +258,51 @@ def render_markdown(
 
     # --- Process Blockquotes ---
     for bq in soup.find_all('blockquote'):
-        bq['style'] = "border-left:4px solid #3498db;margin:16px 0;padding:8px 16px;background-color:#f0f7fb;color:#555;font-style:italic;"
+        bq['style'] = STYLES["blockquote"]
 
     # --- Process Headers ---
     for h_name in ['h1', 'h2', 'h3']:
         for h in soup.find_all(h_name):
-            h['style'] = "margin-top:24px;margin-bottom:16px;font-weight:700;color:#2c3e50;"
+            h['style'] = STYLES["heading"]
 
     # --- Process Code Blocks ---
     for pre in soup.find_all('pre'):
-        pre['style'] = (
-            "background-color:#f6f8fa;border-radius:6px;padding:16px;"
-            "font-family:Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace;"
-            "font-size:14px;line-height:1.45;overflow:auto;border:1px solid #d0d7de;"
-        )
+        pre['style'] = STYLES["pre"]
         if pre.code:
-            pre.code['style'] = "font-family:inherit;color:#24292f;"
+            pre.code['style'] = STYLES["pre_code"]
 
     # --- Process Inline Code ---
     for code in soup.find_all('code'):
         if code.parent.name != 'pre':
-            code['style'] = (
-                "background-color:rgba(175,184,193,0.2);border-radius:6px;"
-                "padding:0.2em 0.4em;font-family:Consolas,Monaco,monospace;"
-                "font-size:85%;"
-            )
+            code['style'] = STYLES["inline_code"]
 
     # --- Process Links ---
     for a in soup.find_all('a'):
-        a['style'] = "color:#0969da;text-decoration:none;font-weight:500;"
+        a['style'] = STYLES["link"]
 
     # --- Process Lists ---
     for list_tag in soup.find_all(['ul', 'ol']):
-        list_tag['style'] = "padding-left:24px;margin-top:0;margin-bottom:16px;"
+        list_tag['style'] = STYLES["list"]
     
     for li in soup.find_all('li'):
-        li['style'] = "margin-bottom:4px;"
+        li['style'] = STYLES["li"]
 
     # --- Process Horizontal Rules ---
     for hr in soup.find_all('hr'):
-        hr['style'] = "height:1px;background-color:#d0d7de;border:none;margin:24px 0;"
+        hr['style'] = STYLES["hr"]
 
     if missing_images:
-        if strict_images:
-            missing_list = "\n".join(f"- {item}" for item in missing_images)
-            raise FileNotFoundError(
-                "Missing local image files:\n" + missing_list
-            )
         print("Warning: Missing local image files (not embedded):")
         for item in missing_images:
             print(f" - {item}")
 
     # Wrap in container
     container = f"""
-<div style="font-family:'Times New Roman',Times,serif;line-height:1.6;color:#333;max-width:700px;font-size:16px;">
+<div style="{STYLES['container']}">
     {str(soup)}
 </div>
     """
 
-    if copy:
-        copy_to_clipboard(container)
-        print("✓ Copied markdown email to clipboard")
-        
     if output_path:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(container)
