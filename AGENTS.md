@@ -8,6 +8,8 @@
 - Prefers concise, polished email prose; draft notes should be rewritten to be send-ready
 - When reviewing code or text: flag functional issues first, then clarity, then style
 - Wants conclusions stated first, supporting charts and data after
+- When revising email content, always read `emailer/ai_instructions.md` first for formatting rules
+- "Revise for management" means: conclusions first, less technical jargon, cleaner section headers
 
 ## Learned Workspace Facts
 
@@ -20,3 +22,4 @@
 - The emailer markdown pipeline only recognizes `![](...)` or HTML `<img>` tags, not bare filenames
 - Standard markdown renderer collapses consecutive lines without blank separators into one paragraph; use bullets or blank lines
 - Unicode characters (e.g. checkmark) crash on cp1252 Windows console; use ASCII alternatives in console output
+- `emailer/ai_instructions.md` defines image syntax, math formatting, and Outlook spacing rules for `MD_CONTENT`

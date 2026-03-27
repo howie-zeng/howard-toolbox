@@ -10,18 +10,17 @@ description: >-
 
 # Howard Toolbox
 
-Productivity tools for quantitative research. The repo lives at
-`S:\QR\hzeng\howard-toolbox`. Skills and rules are tracked in the repo under
-`.cursor/`. To avoid duplicates, delete global copies from `~/.cursor/skills/`
-on machines where this workspace is open.
+Productivity tools for quantitative research. This is the canonical source
+of truth for project knowledge. The repo lives at `S:\QR\hzeng\howard-toolbox`;
+`~/.cursor/skills/howard-toolbox` is a copy kept in sync for cross-workspace loading.
 
 ## Update Instructions
 
 The agent may proactively propose updates to this file. All writes require a
-diff preview and user approval before saving. Write to the repo
-(`S:\QR\hzeng\howard-toolbox\.cursor\skills\`) first — it is the source of truth.
-On machines where `.cursor/` is locked (DFS), use git plumbing to update.
-Consolidate if this file exceeds ~120 lines.
+diff preview and user approval before saving. Write to the S drive first
+(`S:\QR\hzeng\howard-toolbox\.cursor\skills\howard-toolbox\SKILL.md`), then
+copy to `~/.cursor/skills/howard-toolbox/SKILL.md`. Consolidate if this file
+exceeds ~120 lines.
 
 ## Project Structure
 
@@ -30,7 +29,8 @@ howard-toolbox/
 ├── emailer/          # Markdown -> HTML email with clipboard support
 │   ├── run.py        # Entry point (edit MD_CONTENT, run, paste)
 │   ├── render.py     # MD -> HTML, base64 images, win32clipboard
-│   └── generate_diagram.py  # Matplotlib flowcharts
+│   ├── generate_diagram.py  # Matplotlib flowcharts
+│   └── ai_instructions.md   # AI prompt guide for email formatting
 │
 ├── dial/             # Model dial calibration & overrides
 │   ├── update_dials.py  # CLI: generate specs, apply dial overrides
@@ -53,6 +53,7 @@ howard-toolbox/
 ### emailer
 - **Workflow**: Edit `MD_CONTENT` in `run.py` -> run -> paste from clipboard.
 - `render.py`: markdown lib -> BeautifulSoup post-processing -> inline styles -> base64 image embed -> win32clipboard HTML Format.
+- `ai_instructions.md`: AI prompt guide for formatting `MD_CONTENT` (image syntax, math, Outlook spacing).
 - `{{CLIPBOARD}}` tag captures current OS clipboard image at runtime.
 - Images auto-normalize into `assets/`. LaTeX converts to CodeCogs `<img>` tags.
 - Platform: Windows-only (`win32clipboard`, `PIL.ImageGrab`).

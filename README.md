@@ -11,9 +11,12 @@ howard-toolbox/
 │   ├── run.py                # Main entry point (edit MD_CONTENT here)
 │   ├── render.py             # MD -> HTML rendering, base64 images, clipboard
 │   ├── generate_diagram.py   # Matplotlib simulation flowchart generator
-│   ├── ai_instructions.md    # Prompt guide for AI-assisted email writing
+│   ├── ai_instructions.md    # AI prompt guide for email formatting
 │   ├── assets/               # Image assets (auto-managed)
 │   └── outputs/              # Generated HTML files
+│
+├── tests/                    # Smoke tests
+│   └── test_smoke.py         # Import tests for all modules
 │
 ├── dial/                     # Dial calibration & model JSON updates
 │   ├── update_dials.py       # CLI: generate specs and apply dial overrides
@@ -34,6 +37,8 @@ howard-toolbox/
 │   └── README.md             # Comprehensive workflow documentation
 │
 ├── .gitignore
+├── AGENTS.md                 # Continual-learning memory (auto-mined from chats)
+├── pyproject.toml            # ruff linter config
 ├── README.md                 # This file
 └── requirements.txt          # Python dependencies
 ```
@@ -258,6 +263,15 @@ export GITHUB_TOKEN="your_token_here"
 ---
 
 ## Recent Updates
+
+### March 2026
+- Added `emailer/ai_instructions.md` -- AI prompt guide for consistent email formatting (image syntax, math, Outlook spacing rules)
+- Added `pyproject.toml` with `ruff` config and `tests/test_smoke.py` for automated linting and smoke tests
+- Added `AGENTS.md` at repo root -- continual-learning memory bootstrapped from past chat transcripts
+- Added `.cursor/rules/workflow.mdc` -- Plan Mode nudge and workflow guardrails
+- Added rule priorities to all `.mdc` files (90/70/40) to prevent conflicts
+- Fixed Unicode checkmark crash on cp1252 Windows console in `render.py` (replaced with ASCII `[OK]`)
+- Added `ruff` and `pytest` to `requirements.txt`
 
 ### February 2026
 - Code review: fixed operator precedence bug in `dial_utils.py` section boundary detection

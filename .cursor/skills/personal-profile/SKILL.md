@@ -15,6 +15,7 @@ description: >-
 - Use bullet points and clear sections in responses.
 - Start responses with a 1-3 line plan before diving into details.
 - Give full runnable code unless explicitly asked for a snippet.
+- When working from an attached plan file, treat the plan as the execution spec: show the plan first if asked, do not edit the plan file unless explicitly requested, and do not recreate plan todos that already exist.
 
 ## Mistakes to Avoid
 
