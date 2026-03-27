@@ -110,17 +110,9 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = fr"""
-**Project Update**
 
-**NQM:**
-
-- Adjusted the LLPA model so that the spread across doc types is monotonic.
-- Sent out the first pass of the NQM model. Now splitting the model into turnover and refi, and still fine-tuning the turnover model. Should be able to send out an update soon.
-
-**Next steps:**
-
-- Continue iterating on the turnover model.
-- Add the refi model implementation and begin running iterations.
+Extreme Outlier in the dataset,
+2026-03-26-16-04-25.png
 
 """
 
