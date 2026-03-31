@@ -110,9 +110,20 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = fr"""
+**Summary of Changes**
 
-Extreme Outlier in the dataset,
-2026-03-26-16-04-25.png
+- **Dropped `PercentPriceLe90`** -- tends to be noisy when fitting without WAP
+- **Fit WAP by rating** -- Single-A is more sensitive to WAP, which is consistent with expectations
+- **Floored `AAAFactor` at 0.95** to stabilize the shape
+- **Lowered DOF for `DeskTier`**
+
+**Distribution of AAAFactor**
+
+![](2026-03-30-15-29-18.png)
+
+**Model Fits**
+
+![](2026-03-30-15-18-47.png)
 
 """
 

@@ -18,11 +18,11 @@
 
 - NQM CtoP uses Begg competing-risk (Cto0, CtoM3, CtoC); split into turnover (non-positive incentive) and refi (positive incentive) sub-models; scripts under `C/CtoP/script/1.4/Fixed/` with shared `C/` config/dataprep; CtoC report needs `annulize = FALSE` (monthly ~97-98% annualizes to flat 100%)
 - `add_nqm_model_features()` `model_type` must match the model ("turnover", "refi", etc.) — there is no "Cto0" branch
-- Non-QM LLPA uses a GAM (not a static FICO x LTV grid); doc groups FULL (Full Doc + Tax Returns), BANKSTAT, DSCR, ALT (Asset Depletion + VOE), PL_CPA (P&L/CPA), OTHER; LLPA on lag1 rates; SATO and incentive use lag0/lowest-weekly; export via `build_sim_model_from_list()` with adaptive smooth (`bs='ad'`) auto-skip; time smooth endpoints appended per doc group for C++ decay; 2 SD residual trimming standard for SATO
+- Non-QM LLPA uses a GAM (not a static FICO x LTV grid); doc groups FULL (Full Doc + Tax Returns), BANKSTAT, DSCR, ALT (Asset Depletion + VOE), PL_CPA (P&L/CPA), OTHER; LLPA on lag1 rates; SATO and incentive use lag0/lowest-weekly
 - Incentive pipeline is spread-based: `inc_0_spread_llpa`, `sato_lag0_spread_llpa`, `burnout_lag0_spread_llpa`; `full_index_spread_fade15` replaced `full_index_inc_fade15`; turnover incentive capping targets `c_inc_0_spread_llpa`
 - Production C++ scoring uses logit (sigmoid); align R GAM/link with logit (not cloglog) where outputs feed that pipeline
 - Turnover prepayment penalty: `inc_regime_f` includes `pp_active_Y`; `new_m2ppexp_f` bins months-to-PP-expiry for `pp_penalty == 1` (No PP plus ordered buckets through 4+)
-- Model extract pipeline: `build_sim_model()` / `build_sim_model_from_list()` export R models to C++ text; `variable_mapping_{product}_test.csv` maps R names to C++ names; CSV OLD column needs spaces stripped (not `make.names()` — `check.names=FALSE` preserves curve column names through assembly/write/read); `verify_model_txt()` validates all entries post-extraction; extract sources `C/config.R` for model paths
+- Model extract pipeline: `build_sim_model()` in `Model_extract/nonqm_extract_model_text.R` exports R `.RData` models to C++ text; `variable_mapping_{product}_test.csv` maps R coefficient names to production C++ variable names
 - Fixed Balloon loans are ARM (`fix_f = "ARM"`) via NON_QM_FIX_MAP but often margin=0 — treat margin=0 as missing for ARM reset calculations
 - DSCR doc_map: loans with `dscr_ratio` should be "DSCR" when doc_map is NA, "NO DATA", or "OTHER"; `dscr_valid_f` and `doc_type_2` can be near-collinear in GAM (bam contrast errors)
 - ROUNDING_RULES in `resi_settings.R` must have a matching pattern for any new continuous variable used in reports
