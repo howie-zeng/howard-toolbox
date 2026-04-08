@@ -1,0 +1,12 @@
+---
+description: Workflow guardrails for complex tasks
+alwaysApply: true
+priority: 40
+---
+
+# Workflow Guardrails
+
+- For tasks touching 3+ files, start in Plan Mode before writing code.
+- For unfamiliar modules, read the relevant SKILL.md before editing.
+- Use `@file` / `@folder` references to scope context precisely.
+- After substantive edits, run `ruff check` and `pytest` before claiming done.

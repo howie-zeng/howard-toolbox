@@ -1,0 +1,21 @@
+# Cursor Session Memories
+
+Domain gotchas and corrections specific to Cursor IDE sessions on this repo.
+For durable cross-session knowledge, see `workspace/AGENTS.md` (Learned Preferences / Learned Workspace Facts).
+
+## Dev Environment
+
+- PowerShell is the default shell on Howard's Windows machine. Never use `&&` for chaining; use `;` or separate tool calls.
+- PowerShell `>` redirect writes UTF-16 by default. Use Python `open(encoding='utf-8')` for UTF-8 files.
+- Do not use `sed`, `awk`, or `find` in PowerShell. Use proper file-editing tools and `rg`/`Glob`/`Grep`.
+
+## Architecture Gotchas
+
+- OpenClaw's current "learning" system is mostly observability/measurement. The briefing tuner is the main closed-loop adaptation path. When asked to add learning features, first close existing write-back loops before adding new memory layers.
+- The single canonical memory surface is `workspace/AGENTS.md` (Learned sections). Do not create separate learnings files.
+
+## Entry Rules
+
+- Deduplicate before adding.
+- Generalize from the specific correction: `[Mistake] -> [Correct Behavior] -> [Underlying Rule]`.
+- Keep entries durable and action-guiding, not tied to a single moment.

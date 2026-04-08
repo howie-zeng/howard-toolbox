@@ -109,22 +109,24 @@ def normalize_local_images(markdown_text):
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
-MD_CONTENT = fr"""
-**Summary of Changes**
+MD_CONTENT = r"""
+Hi Andrew,
 
-- **Dropped `PercentPriceLe90`** -- tends to be noisy when fitting without WAP
-- **Fit WAP by rating** -- Single-A is more sensitive to WAP, which is consistent with expectations
-- **Floored `AAAFactor` at 0.95** to stabilize the shape
-- **Lowered DOF for `DeskTier`**
+In general, prepayment behavior on FIGRE loans looks insensitive to remaining draw term for seasoned loans. For recent vintages, though, CPR appears to pick up after the draw term ends.
 
-**Distribution of AAAFactor**
+![](2026-04-07-12-05-26.png) ![](2026-04-07-12-24-47.png)
 
-![](2026-03-30-15-29-18.png)
+I also checked whether the elevated CPR lines up with current rate levels for those vintages; it does not appear to.
 
-**Model Fits**
+**CPR by WAC — vintage before 2023**
 
-![](2026-03-30-15-18-47.png)
+![](2026-04-07-12-20-38.png)
 
+**CPR by WAC — 2023 and later**
+
+![](2026-04-07-12-20-46.png)
+
+![](2026-04-07-12-25-25.png)
 """
 
 

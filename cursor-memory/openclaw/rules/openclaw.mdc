@@ -1,0 +1,49 @@
+---
+description: OpenClaw — Howard's personal Cognitive OS. Rules for maintaining and evolving the codebase.
+alwaysApply: true
+---
+
+# OpenClaw
+
+Solo project. One developer. Every decision should optimize for: **can Howard debug this at 11pm after a long day?**
+
+## The System
+
+Fetch scripts pull data from APIs → write JSON to `workspace/data/` → pipelines compose them into reports. `common.py` is the shared foundation. That's the whole architecture. Don't add layers.
+
+## Hard Rules
+
+- **`common.py` is the source of truth** for paths, JSON I/O, ticker loading, and Google OAuth. Never redefine these in individual scripts. If you need something common, add it there.
+- **Every fetcher output must have `fetched_at`**. Downstream scripts rely on this for staleness checks.
+- **Never swallow errors silently**. `except Exception: pass` is banned unless there's a comment explaining exactly why. At minimum log to stderr.
+- **Config over code**. Mappings, scoring weights, allowlists, thresholds → `workspace/config/*.json`. If you're hardcoding a dict longer than 5 entries, it belongs in config.
+- **All network calls need `timeout=`**. No exceptions. A hung HTTP request kills the entire cron pipeline.
+- **`save_json(name, data)`** — don't handwrite `json.dumps` + `mkdir` + `write_text`. It's already solved.
+
+## Adding a New Fetcher
+
+1. Create `fetch_<name>.py`, import from `common`
+2. Write to `data/<name>.json` via `save_json`
+3. Register it in `run_all.py` under `FETCHERS` or `SLOW_FETCHERS`
+4. Add a line to `smoke_test.py`
+5. If it produces data the dashboard should show, update `morning_dashboard.py` and `archive_daily.py`
+
+## What NOT to Do
+
+- No base classes, registries, plugin systems, or dependency injection. The agent is the orchestrator.
+- No adding `workspace/scripts/` subdirectories. Flat is intentional.
+- No new pip dependencies without a concrete reason. Each one is a future maintenance burden.
+- Don't refactor working code just because it's not "clean enough". Fix before build.
+- Don't create new markdown docs unless Howard asks. The project already has plenty.
+
+## When Debugging
+
+Ask for the error message first. Propose the most likely root cause, not the most interesting one. When a fetcher fails, check in this order: (1) network/auth, (2) API response shape changed, (3) data file missing or corrupt, (4) actual code bug.
+
+## Python
+
+- 3.11+ required
+- `from __future__ import annotations` on every file
+- Type hints on function signatures
+- `stdout` for progress, `stderr` for errors
+- UTF-8 everywhere: `encoding="utf-8"` on all file reads/writes

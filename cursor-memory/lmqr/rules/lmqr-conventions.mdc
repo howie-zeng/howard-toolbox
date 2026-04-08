@@ -1,0 +1,35 @@
+---
+description: LMQR project coding conventions and data access patterns
+alwaysApply: true
+---
+
+# LMQR Conventions
+
+## Data Access
+
+- All DB access via `lmdata/lmdb.py` — never create ad-hoc connections.
+  - Redshift: `executeSQLRedshiftDF("padb", sql)` for SELECT, `executeSQL(db="padb", sql_query=q)` for DML.
+  - SQL Server: `executeSQLTableDF("libremax", sql)` for SELECT.
+  - BigQuery: `google.cloud.bigquery.Client()` with `dv01_config.SA_FILE_PATH`.
+- Batch Redshift inserts via manual SQL with `_fmt()` helper (no `to_sql`).
+- Redshift: cannot alias-reference in same SELECT; avoid reserved words as CTE names.
+
+## Table Rebuilds
+
+Use temp-table-swap pattern to avoid lock contention:
+1. Build into `{table}_tmp`
+2. Atomic `DROP {table}` + `ALTER TABLE {table}_tmp RENAME TO {table}`
+
+## Retry & Error Handling
+
+- Azure file share ops: always retry on `OSError` (transient mount drops).
+- Network `glob.glob()`: list directory once, index in memory — never glob repeatedly.
+- Date arithmetic: normalize to 1st-of-month before `relativedelta` to avoid month-end bugs.
+- Error messages must be actionable (include paths, values, what was expected).
+
+## Code Style
+
+- Ruff: py311, line-length 120, rules E/F/I.
+- Type hints on all function signatures. f-strings. `pathlib.Path` for new code.
+- Comments explain *why*, not *what*. No narration comments.
+- Config-driven: table names, model versions, scenarios belong in `*_config.py` files.

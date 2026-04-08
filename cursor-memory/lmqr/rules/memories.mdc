@@ -1,0 +1,15 @@
+---
+name: memories
+description: Durable corrections, gotchas, and learnings for LMQR
+---
+
+## CLO LightGBM
+
+- **All plots in DM space**: Target is `DM_Maturity`. Never label axes as "Risk Spread" — user corrected this.
+- **Prod comparison = inner join**: Always filter to bonds present in both LGBM and Prod predictions before computing comparative metrics. Comparing different bond universes is misleading.
+- **Weighting = time-decay x listing-type**: Both components must always be multiplied together. `_subset_weights` had a bug where the fallback path only applied time-decay.
+- **LightGBM non-determinism**: `n_jobs=-1` + subsampling causes small run-to-run variation. Acceptable for research; `deterministic=True` costs 2-5x runtime.
+- **Walk-forward `use_existing_wt`**: Must be `args.equal_weight`, not hardcoded `True`. Otherwise per-anchor time-decay recomputation is silently skipped.
+- **`np.random.seed()` unnecessary**: `TPESampler(seed=...)` handles Optuna reproducibility. Global numpy seed mutation removed.
+- **SHAP colors**: red = high feature value, blue = low. Users asked for this to be explained in subtitles.
+- **EUR_LoanBottomQ_WAP**: Bottom-quartile European leveraged loan WAP — a market-wide stress indicator, not deal-specific. Trades ~81-89 (always below par), so use learned median anchor, not fixed 100.
