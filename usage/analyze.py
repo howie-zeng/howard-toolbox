@@ -9,21 +9,21 @@ Usage:
 Examples:
     python usage/analyze.py ~/Downloads/usage-events-2026-04-09.csv
     python usage/analyze.py usage.csv --since 2026-01-01
-    python usage/analyze.py usage.csv --out report.html
+    python usage/analyze.py usage.csv --name Yiming --out report.html
 """
 import argparse
 import sys
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
-def fmt_num(n):
+def fmt_num(n: float) -> str:
     if n >= 1_000_000_000:
         return f"{n/1_000_000_000:.2f}B"
     elif n >= 1_000_000:
@@ -33,7 +33,7 @@ def fmt_num(n):
     return str(int(n))
 
 
-def fig_to_div(fig, fig_id=""):
+def fig_to_div(fig: go.Figure, fig_id: str = "") -> str:
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id=fig_id)
 
 
@@ -198,7 +198,6 @@ def chart_heatmap(df, tz_offset: int = -4):
     order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     df_local = df.copy()
     df_local["local_hour"] = (df_local["hour"] + tz_offset) % 24
-    shifted_day = (df_local["hour"] + tz_offset) < 0
     day_map = {d: i for i, d in enumerate(order)}
     inv_map = {i: d for d, i in day_map.items()}
     df_local["local_weekday"] = df_local.apply(
@@ -282,7 +281,6 @@ def chart_top_models(df):
 
 def chart_distribution(df):
     """Log-scale x-axis histogram for heavily skewed token distribution."""
-    import numpy as np
     nonzero = df[df["Total Tokens"] > 0]["Total Tokens"]
     log_vals = np.log10(nonzero)
 
