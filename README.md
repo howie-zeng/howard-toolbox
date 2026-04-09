@@ -36,6 +36,9 @@ howard-toolbox/
 │   ├── quant_workflows_notebook.ipynb  # 18 organized sections
 │   └── README.md             # Comprehensive workflow documentation
 │
+├── usage/                    # Cursor API usage analysis
+│   └── analyze.py            # CLI: CSV -> interactive HTML dashboard
+│
 ├── .gitignore
 ├── AGENTS.md                 # Continual-learning memory (auto-mined from chats)
 ├── pyproject.toml            # ruff linter config
@@ -138,7 +141,29 @@ python formatter/format_excel.py data.xlsx -t formatter/templates/risk_diff.json
 - `--inplace` with atomic write and `.bak` backup
 - Preserves Excel formulas (dual workbook loading)
 
-### 4. Quantitative Workflows (`quant_workflows/`)
+### 4. Usage Analyzer (`usage/`)
+
+Generates a self-contained interactive HTML report from a Cursor usage-events CSV export.
+
+**Quick start:**
+```bash
+python usage/analyze.py ~/Downloads/usage-events-2026-04-09.csv --since 2026-01-01
+```
+
+**Features:**
+- 11 interactive Plotly charts: daily volume by model family, 7-day rolling trend, stacked token breakdown (cache/input/output), model distribution donuts, activity heatmap (ET), cache efficiency, max mode adoption, billing kind, log-scale request size distribution, monthly summary
+- KPI dashboard with total requests, tokens, cache hit rate, trend
+- Auto-generated insight boxes (top model, peak activity, 30-day trend)
+- Monthly and per-model summary tables
+- `--name` flag personalizes the report title (default: Howard)
+- `--since` filters old data; `--out` sets output path
+
+**CLI flags:**
+- `--since YYYY-MM-DD` -- only include events on or after this date
+- `--name Name` -- personalize the report title (default: Howard)
+- `--out path.html` -- output path (default: `<csv_dir>/<name>_cursor_usage.html`)
+
+### 5. Quantitative Workflows (`quant_workflows/`)
 
 Comprehensive notebook with 18 sequentially organized sections:
 
@@ -194,6 +219,16 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
   - Apply mode: loads workbook twice (data_only for value sampling, normal for editing), applies formatting in strict order (number formats -> header style -> conditional formatting -> column renames -> auto-widths), saves output.
 - **Templates**: `formatter/templates/*.json` -- reusable formatting specs. All column keys reference original header names. See `formatter/README.md` for full field reference.
 - **Design Rules**: One template = one header structure. Duplicate headers apply to all matches. `--inplace` always creates `.bak` backup. Renaming is always the last step.
+
+### Usage Analyzer Architecture
+
+- **CLI Entry Point**: `usage/analyze.py` -- loads CSV, builds charts, renders HTML.
+  - `load_data()`: reads CSV, parses dates, classifies models into families, coerces numeric columns.
+  - 11 chart functions (`chart_daily_volume`, `chart_trend`, etc.) each return a Plotly figure.
+  - `build_report()`: computes KPIs, aggregates, calls all chart functions, assembles HTML with inline Plotly divs.
+  - Plotly.js loaded from CDN (no local dependency in the output HTML).
+- **Dependencies**: `pandas`, `plotly`, `numpy`. Output HTML is self-contained.
+- **Timezone**: Heatmap converts UTC to ET (UTC-4) by default.
 
 ### Quant Workflows Architecture
 
@@ -263,6 +298,10 @@ export GITHUB_TOKEN="your_token_here"
 ---
 
 ## Recent Updates
+
+### April 2026
+- Added `usage/analyze.py` -- Cursor API usage analyzer that generates interactive HTML dashboards from usage-events CSV exports (11 Plotly charts, KPI cards, insight boxes, summary tables)
+- `--name` flag for personalized reports; `--since` to filter date range
 
 ### March 2026
 - Added `emailer/ai_instructions.md` -- AI prompt guide for consistent email formatting (image syntax, math, Outlook spacing rules)

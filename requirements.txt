@@ -12,6 +12,9 @@ numpy
 # emailer/generate_diagram.py
 matplotlib
 
+# usage/analyze.py
+plotly
+
 # dev tools
 ruff
 pytest
