@@ -110,23 +110,41 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi Andrew,
+Hi Team,
 
-In general, prepayment behavior on FIGRE loans looks insensitive to remaining draw term for seasoned loans. For recent vintages, though, CPR appears to pick up after the draw term ends.
+**Key Observations**
 
-![](2026-04-07-12-05-26.png) ![](2026-04-07-12-24-47.png)
+- **Jumbo** — Historical tracking shows we are consistently over-predicting CtoP. We will likely need to remove the dial.
+- **HELOC** — No action needed. CtoM3 tracking is off, but adjusting the dial would change the yield dramatically.
+- **NQM** — No action needed.
+- **STACR / CAS** — Tracking well. The one-month outlier is becoming less impactful as more data comes in. Jumbo had a similar pattern, but there we chose to dial the media and incentive curves heavily based on that outlier month.
 
-I also checked whether the elevated CPR lines up with current rate levels for those vintages; it does not appear to.
+---
 
-**CPR by WAC — vintage before 2023**
+**Jumbo CtoP**
 
-![](2026-04-07-12-20-38.png)
+![](2026-04-09-12-29-13.png)
 
-**CPR by WAC — 2023 and later**
+**STACR CtoP**
 
-![](2026-04-07-12-20-46.png)
+![](2026-04-09-12-33-28.png)
 
-![](2026-04-07-12-25-25.png)
+**CAS CtoP**
+
+![](2026-04-09-12-34-07.png)
+
+**NQM CtoP**
+
+![](2026-04-09-12-31-23.png)
+
+**HELOC CtoP**
+
+![](2026-04-09-12-31-46.png)
+
+**HELOC CtoM3**
+
+![](2026-04-09-12-32-51.png)
+
 """
 
 

@@ -13,6 +13,7 @@
 - Store SQL queries in separate files from analysis scripts; put ad-hoc analysis under `Residential/non_qm/adhoc/`
 - When presenting model output, pass only one `model_list` at a time to report functions; for insample reports use `ed_fit_full` (all data) with Begg normalization applied, dropping excluded states; default `use_parallel = TRUE` in optimized reporting where supported
 - Keep time-series and overlay chart styling on one consistent path; avoid separate overlay-only palette/linetype helper layers unless necessary
+- "Revise for management" means conclusions/takeaways first, less technical jargon, executive-style bullets with summary at top
 
 ## Learned Workspace Facts
 
@@ -28,3 +29,5 @@
 - ROUNDING_RULES in `resi_settings.R` must have a matching pattern for any new continuous variable used in reports
 - NQM burnout window 60 months (`burnout_inv_b2_60`); `inc_fade_period` 36; seasonality categorical (`month_f`); prefer `months_since_m30p` over `mc_age_ratio`; exclude COVID 2020-02–2020-06 from insample reports; foreign national `lmt.foreign` 0–3, not binary
 - Data sources: loan-level `lps.lp_stat`, `lps.lp_dy`, `lps.lp_loss`; NQM rates `Libremax..MonthlyNQMRate`; HPI joins for inflation-adjusted o_bal
+- Emailer revision: always read `emailer/ai_instructions.md` first for formatting rules (image syntax, Outlook spacing, bold headers, code blocks) before editing email content
+- Bare `.png` filenames pasted by the user must be wrapped in `![](...)` or `<img>` syntax for the emailer pipeline; `_ensure_asset` copies to `assets/` and rewrites paths
