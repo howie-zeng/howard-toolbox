@@ -22,16 +22,15 @@ Fetch scripts pull data from APIs → write JSON to `workspace/data/` → pipeli
 
 ## Adding a New Fetcher
 
-1. Create `fetch_<name>.py`, import from `common`
+1. Create `scripts/fetch/fetch_<name>.py` with the sys.path bootstrap line, import from `common`
 2. Write to `data/<name>.json` via `save_json`
-3. Register it in `run_all.py` under `FETCHERS` or `SLOW_FETCHERS`
-4. Add a line to `smoke_test.py`
-5. If it produces data the dashboard should show, update `morning_dashboard.py` and `archive_daily.py`
+3. Register it in `config/pipelines.json` under `fetchers.fast` or `fetchers.slow`
+4. Add a line to `config/pipelines.json` under `smoke_tests.default`
+5. If it produces data the dashboard should show, update `report_morning_text.py` and `archive_daily.py`
 
 ## What NOT to Do
 
 - No base classes, registries, plugin systems, or dependency injection. The agent is the orchestrator.
-- No adding `workspace/scripts/` subdirectories. Flat is intentional.
 - No new pip dependencies without a concrete reason. Each one is a future maintenance burden.
 - Don't refactor working code just because it's not "clean enough". Fix before build.
 - Don't create new markdown docs unless Howard asks. The project already has plenty.
