@@ -110,40 +110,18 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi Team,
+Per your request, I updated the model as follows:
 
-**Key Observations**
+- Added back `NumMosToReinv`
+- Dropped `attach`, `equitynav`, and `dealbalfactor`
+- Added back low MVOC bonds and capped size at `4mm`
+- Raised the WAP floor to narrow the error band at the low end
 
-- **Jumbo** — Historical tracking shows we are consistently over-predicting CtoP. We will likely need to remove the dial.
-- **HELOC** — No action needed. CtoM3 tracking is off, but adjusting the dial would change the yield dramatically.
-- **NQM** — No action needed.
-- **STACR / CAS** — Tracking well. The one-month outlier is becoming less impactful as more data comes in. Jumbo had a similar pattern, but there we chose to dial the media and incentive curves heavily based on that outlier month.
+Data prior to 2025 may take a day or two to fetch, but the updated model includes data from `2025-01-01` onward.
 
----
+Let me know if you have any comments. I will compare this model against prod next.
 
-**Jumbo CtoP**
-
-![](2026-04-09-12-29-13.png)
-
-**STACR CtoP**
-
-![](2026-04-09-12-33-28.png)
-
-**CAS CtoP**
-
-![](2026-04-09-12-34-07.png)
-
-**NQM CtoP**
-
-![](2026-04-09-12-31-23.png)
-
-**HELOC CtoP**
-
-![](2026-04-09-12-31-46.png)
-
-**HELOC CtoM3**
-
-![](2026-04-09-12-32-51.png)
+![](2026-04-14-17-38-11.png)
 
 """
 
