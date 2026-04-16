@@ -110,19 +110,17 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Per your request, I updated the model as follows:
+Please see attached for the equal-weight model fit and performance.
 
-- Added back `NumMosToReinv`
-- Dropped `attach`, `equitynav`, and `dealbalfactor`
-- Added back low MVOC bonds and capped size at `4mm`
-- Raised the WAP floor to narrow the error band at the low end
+| Config | New RMSE | New MAE | % Improved | BBB MAE | BB MAE |
+|---|---|---|---|---|---|
+| 2025+ data, `half_life=30` (original) | **0.803** | **0.507** | **63%** | 0.266 | 1.152 |
+| 2024+ data, `half_life=90` | 0.911 | 0.635 | 59% | 0.370 | 1.335 |
+| 2024+ data, `half_life=30` | 0.979 | 0.706 | 50% | 0.444 | 1.382 |
+| 2024+ data, equal-weight | 1.158 | 0.920 | 32% | 0.688 | 1.556 |
+| Old model (unchanged) | 0.859 | 0.646 | — | 0.581 | 0.791 |
 
-Data prior to 2025 may take a day or two to fetch, but the updated model includes data from `2025-01-01` onward.
-
-Let me know if you have any comments. I will compare this model against prod next.
-
-![](2026-04-14-17-38-11.png)
-
+Equal-weighting over the 2024+ sample performs the worst of the configurations tested — consistent with the earlier finding that giving older data more weight degrades fit. The 2025+ / `half_life=30` baseline remains best.
 """
 
 
