@@ -16,7 +16,6 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -107,21 +106,35 @@ def load_data(csv_path: str, since: str | None = None) -> pd.DataFrame:
 # ── Charts ──────────────────────────────────────────────────────────────────
 
 def chart_daily_volume(df, family_counts, daily_agg):
-    """Stacked daily requests by model family + 7-day rolling-average line overlay."""
-    daily = df.groupby(["date", "model_family"]).size().reset_index(name="requests")
+    """Stacked daily tokens by model family + 7-day request average overlay."""
+    daily = (
+        df.groupby(["date", "model_family"])["Total Tokens"]
+        .sum()
+        .reset_index(name="tokens")
+    )
     fig = go.Figure()
     for fam in family_counts.index:
         sub = daily[daily["model_family"] == fam]
         fig.add_trace(go.Bar(
-            x=sub["date"], y=sub["requests"], name=fam,
+            x=sub["date"], y=sub["tokens"], name=fam,
             marker_color=FAMILY_COLORS.get(fam, "#999"),
         ))
     fig.add_trace(go.Scatter(
         x=daily_agg["date"], y=daily_agg["req_7d"], name="7-day avg",
         mode="lines", line=dict(color="#111827", width=2.5),
+        yaxis="y2",
+        hovertemplate="%{x}<br>7-day avg requests: %{y:.1f}<extra></extra>",
     ))
     fig.update_layout(
-        barmode="stack", xaxis_title="", yaxis_title="Requests",
+        barmode="stack",
+        xaxis_title="",
+        yaxis_title="Tokens",
+        yaxis2=dict(
+            title="Requests (7-day avg)",
+            overlaying="y",
+            side="right",
+            showgrid=False,
+        ),
         height=420, legend=LEGEND_H, **CHART_LAYOUT,
     )
     return fig
@@ -447,8 +460,6 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     total_output = df["Output Tokens"].sum()
     total_cache_read = df["Cache Read"].sum()
     avg_daily_events = total_events / max(n_active_days, 1)
-    avg_tokens_per_req = total_tokens / max(total_events, 1)
-
     family_counts = df["model_family"].value_counts()
 
     daily_agg = df.groupby("date").agg(
@@ -539,7 +550,6 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     busiest = daily_agg.loc[daily_agg["requests"].idxmax()]
     busiest_str = pd.Timestamp(busiest["date"]).strftime("%b %d, %Y")
     busiest_count = int(busiest["requests"])
-    top_model = top_cost_model_name if top_cost_model_name != "n/a" else df["Model"].value_counts().index[0]
     cache_overall = total_cache_read / max(total_input + total_cache_read, 1) * 100
     max_mode_pct = (df["Max Mode"] == "Yes").sum() / total_events * 100
     median_output = df[df["Output Tokens"] > 0]["Output Tokens"].median()
@@ -551,7 +561,6 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     recent_daily = len(recent_30) / max(recent_30["date"].nunique(), 1)
     older_daily = len(older) / max(older["date"].nunique(), 1)
     trend_pct = ((recent_daily - older_daily) / max(older_daily, 1)) * 100
-    trend_arrow = "&#9650;" if trend_pct > 0 else "&#9660;" if trend_pct < 0 else "&#9644;"
     trend_color = "#10B981" if trend_pct > 0 else "#EF4444" if trend_pct < 0 else "#6B7280"
     mom_color = "#EF4444" if mom_pct > 0 else "#10B981" if mom_pct < 0 else "#6B7280"
 

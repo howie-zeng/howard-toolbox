@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Cursor Session Memories
 
 Domain gotchas and corrections specific to Cursor IDE sessions on this repo.
@@ -8,6 +11,9 @@ For durable cross-session knowledge, see `workspace/AGENTS.md` (Learned Preferen
 - PowerShell is the default shell on Howard's Windows machine. Never use `&&` for chaining; use `;` or separate tool calls.
 - PowerShell `>` redirect writes UTF-16 by default. Use Python `open(encoding='utf-8')` for UTF-8 files.
 - Do not use `sed`, `awk`, or `find` in PowerShell. Use proper file-editing tools and `rg`/`Glob`/`Grep`.
+- Running Python/bash one-liners over SSH from PowerShell is consistently fragile (quoting, `$` expansion, escaping). Preferred pattern: SCP a temp script to `/tmp/` on the server, execute it, then delete.
+- Never output placeholder values like `<your-repo-url>` in commands — always fill in actual values. Howard will try to run them literally.
+- When giving SSH-related instructions, always specify which machine (local Windows vs remote server) should execute the command.
 
 ## Architecture Gotchas
 
