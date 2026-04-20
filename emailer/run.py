@@ -110,17 +110,30 @@ def normalize_local_images(markdown_text):
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Please see attached for the equal-weight model fit and performance.
+Hi Glenn,
 
-| Config | New RMSE | New MAE | % Improved | BBB MAE | BB MAE |
-|---|---|---|---|---|---|
-| 2025+ data, `half_life=30` (original) | **0.803** | **0.507** | **63%** | 0.266 | 1.152 |
-| 2024+ data, `half_life=90` | 0.911 | 0.635 | 59% | 0.370 | 1.335 |
-| 2024+ data, `half_life=30` | 0.979 | 0.706 | 50% | 0.444 | 1.382 |
-| 2024+ data, equal-weight | 1.158 | 0.920 | 32% | 0.688 | 1.556 |
-| Old model (unchanged) | 0.859 | 0.646 | — | 0.581 | 0.791 |
+Quick update:
 
-Equal-weighting over the 2024+ sample performs the worst of the configurations tested — consistent with the earlier finding that giving older data more weight degrades fit. The 2025+ / `half_life=30` baseline remains best.
+**Summary**
+
+CLO models ready for release, NQM on New Sim 2 nearing completion; several items pending approval or feedback.
+
+**Recently Finished**
+
+- **Eur A-AAA CLO**: New model with momentum feature and new decaying weight complete; ready for release (pending approval)
+- **Eur Delevered CLO**: Added 2024 data; did not improve recent performance; ready for release (pending feedback)
+
+**Working On Now**
+
+- **NQM on New Sim 2**: Implementation nearly complete; remaining work is test and tieout
+
+**Blocking Issues**
+
+- **NQM release** -- once the new NQM implementation is done, will need Jay to release the new NQM Sim
+- **Eur A-AAA CLO** -- awaiting release approval
+- **Eur BB CLO** -- awaiting direction: continue with LightGBM, or revert to R SCAM model
+- **Eur Delevered CLO** -- awaiting release feedback
+
 """
 
 
