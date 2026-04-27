@@ -51,6 +51,7 @@ Hi Glenn,
 I recommend switching this back from `mgcv::gam` / `mgcv::bam` to `pyGAM`.
 
 During the backfill, I sampled one fitted output to sanity-check the model behavior. The smooths looked materially wavier than expected, which makes the result harder to interpret and control.
+The smooths look highly oscillatory, almost wave-like, which may be visually interesting but makes the model behavior harder to justify in production.
 
 The main reasons I would prefer the Python path are:
 
@@ -64,7 +65,8 @@ The main reasons I would prefer the Python path are:
 
 ![](2026-04-27-16-09-56.png)
 
-If there are no objections, I will proceed with `pyGAM` for the backfill and keep the R results as a reference check.
+If there are no objections, I will move back to `pyGAM` instead of `mgcv::gam` / `mgcv::bam`.
+Happy to discuss.
 """
 
 
