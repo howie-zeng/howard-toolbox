@@ -1,0 +1,5 @@
+S:/QR/jli/roll-rate-model/build/CMakeFiles/simengine.dir
+S:/QR/jli/roll-rate-model/build/CMakeFiles/sim_main.dir
+S:/QR/jli/roll-rate-model/build/CMakeFiles/debug_calc.dir
+S:/QR/jli/roll-rate-model/build/CMakeFiles/ALL_BUILD.dir
+S:/QR/jli/roll-rate-model/build/CMakeFiles/ZERO_CHECK.dir

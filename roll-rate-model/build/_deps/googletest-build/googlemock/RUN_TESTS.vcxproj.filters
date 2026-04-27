@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\CMakeFiles\34e9f7735a12831b86dbab0a6155fcae\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{60A3BEA9-2F40-31C2-B442-644DBE71853B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

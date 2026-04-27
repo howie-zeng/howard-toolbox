@@ -1,0 +1,10 @@
+^S:\QR\JLI\ROLL-RATE-MODEL\BUILD\CMAKEFILES\5ABE744D5547CEBB72B0B97F004AF065\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SS:/QR/jli/roll-rate-model -BS:/QR/jli/roll-rate-model/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file S:/QR/jli/roll-rate-model/build/roll_rate_model.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

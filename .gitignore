@@ -9,6 +9,9 @@
 emailer/outputs/
 dial/outputs/
 
+# Smooth notebook: local model baselines and edited model copies
+smooth/local_models/
+
 # Python
 __pycache__/
 *.pyc

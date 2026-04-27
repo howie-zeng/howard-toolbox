@@ -1,110 +1,46 @@
+"""Generate a fancy email from raw markdown.
+
+Edit ``MD_CONTENT`` below and run::
+
+    python emailer/run.py
+
+The rendered HTML will be copied to the Windows clipboard, ready to paste
+into Outlook or Gmail.
+
+CLI flags::
+
+    --md-file PATH      Read markdown body from a file instead of MD_CONTENT.
+                        Relative image paths resolve from the file's folder.
+    --preview           Open the rendered HTML in the default browser.
+    --no-clipboard      Render to file only; skip the clipboard copy.
+    --no-resize         Embed images at original size (skip auto-resize).
 """
-Script to generate a fancy email from raw markdown.
-Just edit the MD_CONTENT variable below and run this script.
 
-Usage: python run.py
-"""
+from __future__ import annotations
 
-import os
-import datetime
-import re
-import shutil
+import argparse
+import webbrowser
+from pathlib import Path
 
-from render import render_markdown, copy_to_clipboard
+try:
+    from .render import (
+        EMAILER_DIR,
+        copy_to_clipboard,
+        normalize_local_images,
+        process_clipboard_images,
+        render_markdown,
+    )
+except ImportError:  # running as `python emailer/run.py`
+    from render import (  # type: ignore[no-redef]
+        EMAILER_DIR,
+        copy_to_clipboard,
+        normalize_local_images,
+        process_clipboard_images,
+        render_markdown,
+    )
 
-# Get the directory where this script lives
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(SCRIPT_DIR, "assets")
-OUTPUTS_DIR = os.path.join(SCRIPT_DIR, "outputs")
+OUTPUTS_DIR = EMAILER_DIR / "outputs"
 
-
-def process_clipboard_images(markdown_text):
-    """
-    Look for {{CLIPBOARD}} tag. If found, save clipboard image to assets/ and replace tag.
-    """
-    if "{{CLIPBOARD}}" not in markdown_text:
-        return markdown_text
-
-    from PIL import ImageGrab
-
-    print("Checking clipboard for image...")
-    img = ImageGrab.grabclipboard()
-    
-    if img is None:
-        print("Warning: {{CLIPBOARD}} tag found, but no image in clipboard.")
-        return markdown_text.replace("{{CLIPBOARD}}", "**[NO IMAGE IN CLIPBOARD]**")
-
-    os.makedirs(ASSETS_DIR, exist_ok=True)
-
-    filename = f"paste_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-    filepath = os.path.join(ASSETS_DIR, filename)
-    
-    if isinstance(img, list):
-        print(f"Clipboard contains file paths: {img}")
-        return markdown_text.replace("{{CLIPBOARD}}", f"**[CLIPBOARD WAS FILE PATH: {img[0]}]**")
-    else:
-        img.save(filepath, "PNG")
-        print(f"Saved clipboard image to {filepath}")
-        return markdown_text.replace("{{CLIPBOARD}}", f"![](assets/{filename})")
-
-
-def _ensure_asset(path: str) -> str:
-    """
-    Given a local image path, ensure it lives in assets/.
-    Copies from SCRIPT_DIR if needed. Returns the (possibly rewritten) path.
-    """
-    if re.match(r'^(http|https|data):', path):
-        return path
-
-    if path.startswith("assets/"):
-        asset_path = os.path.join(SCRIPT_DIR, path)
-        if not os.path.exists(asset_path):
-            alt_src = os.path.join(SCRIPT_DIR, os.path.basename(path))
-            if os.path.exists(alt_src):
-                os.makedirs(ASSETS_DIR, exist_ok=True)
-                shutil.copy2(alt_src, asset_path)
-        return path
-
-    src_path = os.path.join(SCRIPT_DIR, path)
-    if os.path.exists(src_path):
-        os.makedirs(ASSETS_DIR, exist_ok=True)
-        dest_path = os.path.join(ASSETS_DIR, os.path.basename(path))
-        if not os.path.exists(dest_path):
-            shutil.copy2(src_path, dest_path)
-        return f"assets/{os.path.basename(path)}"
-
-    return path
-
-
-def normalize_local_images(markdown_text):
-    """
-    Ensure all images (Markdown ![](…) and HTML <img src="…">) are loaded
-    from assets/. Copies files into assets/ and rewrites paths as needed.
-    """
-    # Handle Markdown images: ![alt](path)
-    md_pattern = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
-
-    def replace_md(match):
-        target = match.group(1).strip()
-        path = target.split()[0].strip('"').strip("'")
-        new_path = _ensure_asset(path)
-        if new_path != path:
-            return match.group(0).replace(path, new_path)
-        return match.group(0)
-
-    result = md_pattern.sub(replace_md, markdown_text)
-
-    # Handle HTML images: <img src="path" ...>
-    html_pattern = re.compile(r'(<img\b[^>]*\bsrc\s*=\s*")([^"]+)("[^>]*>)', flags=re.IGNORECASE)
-
-    def replace_html(match):
-        prefix, path, suffix = match.group(1), match.group(2), match.group(3)
-        new_path = _ensure_asset(path)
-        return f"{prefix}{new_path}{suffix}"
-
-    result = html_pattern.sub(replace_html, result)
-
-    return result
 
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
@@ -112,51 +48,108 @@ def normalize_local_images(markdown_text):
 MD_CONTENT = r"""
 Hi Glenn,
 
-Quick update:
+I recommend switching this back from `mgcv::gam` / `mgcv::bam` to `pyGAM`.
 
-**Summary**
+During the backfill, I sampled one fitted output to sanity-check the model behavior. The smooths looked materially wavier than expected, which makes the result harder to interpret and control.
 
-CLO models ready for release, NQM on New Sim 2 nearing completion; several items pending approval or feedback.
+The main reasons I would prefer the Python path are:
 
-**Recently Finished**
+- **Integration:** R would add a separate language/framework into the existing CLO system, while the current workflow is already Python-based.
+- **Model control:** `pyGAM` gives us the monotonic constraints we need. I do not think `mgcv` gives us the same control, and without that constraint the fitted smooths can become harder to interpret.
+- **Runtime / simplicity:** SCAM is conceptually closer to `pyGAM`, but it is slower and still keeps us on the R path. Since the surrounding pipeline is already in Python, `pyGAM` seems like the cleaner implementation choice.
 
-- **Eur A-AAA CLO**: New model with momentum feature and new decaying weight complete; ready for release (pending approval)
-- **Eur Delevered CLO**: Added 2024 data; did not improve recent performance; ready for release (pending feedback)
+**Example**
 
-**Working On Now**
+`mgcv::bam | hl30_td | 2024-01-01 to 2025-05-23`
 
-- **NQM on New Sim 2**: Implementation nearly complete; remaining work is test and tieout
+![](2026-04-27-16-09-56.png)
 
-**Blocking Issues**
-
-- **NQM release** -- once the new NQM implementation is done, will need Jay to release the new NQM Sim
-- **Eur A-AAA CLO** -- awaiting release approval
-- **Eur BB CLO** -- awaiting direction: continue with LightGBM, or revert to R SCAM model
-- **Eur Delevered CLO** -- awaiting release feedback
-
+If there are no objections, I will proceed with `pyGAM` for the backfill and keep the R results as a reference check.
 """
-
 
 
 # -----------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    os.makedirs(ASSETS_DIR, exist_ok=True)
-    os.makedirs(OUTPUTS_DIR, exist_ok=True)
-    
-    final_content = process_clipboard_images(MD_CONTENT)
-    final_content = normalize_local_images(final_content)
-    
-    print("Formatting email...")
-    html = render_markdown(
-        final_content,
-        output_path=os.path.join(OUTPUTS_DIR, "latest_email.html"),
-        base_path=SCRIPT_DIR,
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="python emailer/run.py",
+        description="Render markdown to an Outlook-ready HTML email.",
     )
-    copy_to_clipboard(html)
-    print("[OK] Copied markdown email to clipboard")
+    parser.add_argument(
+        "--md-file",
+        type=Path,
+        default=None,
+        help="Read markdown body from PATH (relative image paths resolve from its folder).",
+    )
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="Open the rendered HTML in the default browser.",
+    )
+    parser.add_argument(
+        "--no-clipboard",
+        action="store_true",
+        help="Skip copying HTML to the Windows clipboard (useful for CI / preview only).",
+    )
+    parser.add_argument(
+        "--no-resize",
+        action="store_true",
+        help="Embed images at their original size (skip auto-resize).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    if args.md_file is not None:
+        md_path = args.md_file.expanduser().resolve()
+        if not md_path.is_file():
+            parser.error(f"--md-file not found: {md_path}")
+        content = md_path.read_text(encoding="utf-8")
+        base_dir = md_path.parent
+        source_desc = str(md_path)
+    else:
+        content = MD_CONTENT
+        base_dir = EMAILER_DIR
+        source_desc = "MD_CONTENT (inline)"
+
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    content = process_clipboard_images(content)
+    content = normalize_local_images(content, base_dir=base_dir)
+
+    print(f"Formatting email from {source_desc} ...")
+    output_path = OUTPUTS_DIR / "latest_email.html"
+    html = render_markdown(
+        content,
+        output_path=str(output_path),
+        base_path=str(EMAILER_DIR),
+        resize_images=not args.no_resize,
+    )
+
+    if not args.no_clipboard:
+        copy_to_clipboard(html)
+        print("[OK] Copied rendered email to clipboard")
+    else:
+        print(f"[OK] Rendered HTML written to {output_path}")
+
+    if args.preview:
+        webbrowser.open(output_path.as_uri())
+        print(f"[OK] Opened preview in browser: {output_path}")
+
     print("\n---------------------------------------------------------")
-    print("Done! The HTML is in your clipboard.")
-    print("1. Go to Outlook/Gmail")
-    print("2. Paste (Ctrl+V)")
+    if not args.no_clipboard:
+        print("Done! The HTML is in your clipboard.")
+        print("1. Go to Outlook/Gmail")
+        print("2. Paste (Ctrl+V)")
+    else:
+        print(f"Output file: {output_path}")
     print("---------------------------------------------------------")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

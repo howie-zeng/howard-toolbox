@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\f922fb1daff5f3cccd80e4daa70d09fe\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{CDC48901-F219-3B4E-8194-14BD0B2682D3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

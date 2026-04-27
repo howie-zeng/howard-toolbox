@@ -12,6 +12,9 @@ numpy
 # emailer/generate_diagram.py
 matplotlib
 
+# smooth/smooth_utils.py (curve interpolation)
+scipy
+
 # usage/analyze.py
 plotly
 

@@ -1,0 +1,5 @@
+if(EXISTS "S:/QR/jli/roll-rate-model/build/tests[1]_tests.cmake")
+  include("S:/QR/jli/roll-rate-model/build/tests[1]_tests.cmake")
+else()
+  add_test(tests_NOT_BUILT tests_NOT_BUILT)
+endif()

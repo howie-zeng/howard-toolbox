@@ -1,0 +1,64 @@
+{
+  "input_dir": "input",
+  "coef_version": "BASE_v2",
+
+  "status_to_roll": {
+    "C":   ["C", "D1M", "D2M", "D3M", "D4M", "PIF", "LIQ"],
+    "D1M": ["D1M", "C", "D2M", "D3M", "D4M", "PIF", "LIQ"],
+    "D2M": ["D2M", "C", "D1M", "D3M", "D4M", "PIF", "LIQ"],
+    "D3M": ["D3M", "C", "D1M", "D2M", "D4M", "PIF", "LIQ"],
+    "D4M": ["D4M", "C", "D1M", "D2M", "D3M", "PIF", "LIQ"]
+  },
+
+  "model_base": "S:/QR/jli/GitHub/RCode/MPL/trans_model",
+  "r_script": "tools/dump_gam_to_coef.R",
+  "rscript_exe": "C:/Program Files/R/R-4.3.2/bin/Rscript.exe",
+  "gam_models": [
+    {
+      "from_status": "C",
+      "output_file": "fromC.txt",
+      "models": [
+        {"path": "from0/ALL/models/PROD_V1_ctd1_BASE_v2_prod.RData", "to_status": "D1M"},
+        {"path": "from0/ALL/models/PROD_V1_ctp_BASE_v2_prod.RData",  "to_status": "PIF"}
+      ]
+    },
+    {
+      "from_status": "D1M",
+      "output_file": "fromD1M.txt",
+      "models": [
+        {"path": "from1/ALL/models/PROD_V1_d1tC_BASE_prod.RData",    "to_status": "C"},
+        {"path": "from1/ALL/models/PROD_V1_d1td2_BASE_prod.RData",   "to_status": "D2M"},
+        {"path": "from1/ALL/models/PROD_V1_d1td3p_BASE_prod.RData",  "to_status": "D3M"},
+        {"path": "from1/ALL/models/PROD_V1_d1tCO_BASE_prod.RData",   "to_status": "LIQ"}
+      ]
+    },
+    {
+      "from_status": "D2M",
+      "output_file": "fromD2M.txt",
+      "models": [
+        {"path": "from2/ALL/models/PROD_V1_d2tC_BASE_prod.RData",   "to_status": "C"},
+        {"path": "from2/ALL/models/PROD_V1_d2td1_BASE_prod.RData",  "to_status": "D1M"},
+        {"path": "from2/ALL/models/PROD_V1_d2td3p_BASE_prod.RData", "to_status": "D3M"},
+        {"path": "from2/ALL/models/PROD_V1_d2tCO_BASE_prod.RData",  "to_status": "LIQ"}
+      ]
+    },
+    {
+      "from_status": "D3M",
+      "output_file": "fromD3M.txt",
+      "models": [
+        {"path": "from3/ALL/models/PROD_V1_d3tC_BASE_prod.RData",   "to_status": "C"},
+        {"path": "from3/ALL/models/PROD_V1_d3td2_BASE_prod.RData",  "to_status": "D2M"},
+        {"path": "from3/ALL/models/PROD_V1_d3td4_BASE_prod.RData",  "to_status": "D4M"},
+        {"path": "from3/ALL/models/PROD_V1_d3tCO_BASE_prod.RData",  "to_status": "LIQ"}
+      ]
+    },
+    {
+      "from_status": "D4M",
+      "output_file": "fromD4M.txt",
+      "models": [
+        {"path": "from4/ALL/models/PROD_V1_d4tC_BASE_prod.RData",   "to_status": "C"},
+        {"path": "from4/ALL/models/PROD_V1_d4tCO_BASE_prod.RData",  "to_status": "LIQ"}
+      ]
+    }
+  ]
+}

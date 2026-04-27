@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/f922fb1daff5f3cccd80e4daa70d09fe/googletest-populate.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/07b3e6a36675fcb8ffbe90b9bb088ee4/googletest-populate-complete.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-build.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-configure.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-download.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-install.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-mkdir.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-patch.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-test.rule"
+		},
+		{
+			"file" : "S:/QR/jli/roll-rate-model/build/_deps/googletest-subbuild/CMakeFiles/fed18c17e9545fa2dd23894c8a060828/googletest-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"googletest-populate"
+		],
+		"name" : "googletest-populate"
+	}
+}

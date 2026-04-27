@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\fed18c17e9545fa2dd23894c8a060828\googletest-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\07b3e6a36675fcb8ffbe90b9bb088ee4\googletest-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\f922fb1daff5f3cccd80e4daa70d09fe\googletest-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="S:\QR\jli\roll-rate-model\build\_deps\googletest-subbuild\CMakeFiles\googletest-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{CDC48901-F219-3B4E-8194-14BD0B2682D3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
