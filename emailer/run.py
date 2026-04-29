@@ -46,27 +46,13 @@ OUTPUTS_DIR = EMAILER_DIR / "outputs"
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi Glenn,
+Hi Gloria,
 
-I recommend switching this back from `mgcv::gam` / `mgcv::bam` to `pyGAM`.
+Thanks for the update. I wanted to clarify the sequencing. My understanding is that H-1B and green card processes can sometimes proceed in parallel. Is there a company policy or legal reason that the H-1B process needs to be completed before the green card process can begin?
 
-During the backfill, I sampled one fitted output to sanity-check the model behavior. The smooths looked materially wavier than expected, which makes the result harder to interpret and control.
-The smooths look highly oscillatory, almost wave-like, which may be visually interesting but makes the model behavior harder to justify in production.
+If the green card process cannot be started in parallel, could you confirm whether my H-1B will be filed with premium processing? I understand that this is often standard, but I wanted to make sure.
 
-The main reasons I would prefer the Python path are:
-
-- **Integration:** R would add a separate language/framework into the existing CLO system, while the current workflow is already Python-based.
-- **Model control:** `pyGAM` gives us the monotonic constraints we need. I do not think `mgcv` gives us the same control, and without that constraint the fitted smooths can become harder to interpret.
-- **Runtime / simplicity:** SCAM is conceptually closer to `pyGAM`, but it is slower and still keeps us on the R path. Since the surrounding pipeline is already in Python, `pyGAM` seems like the cleaner implementation choice.
-
-**Example**
-
-`mgcv::bam | hl30_td | 2024-01-01 to 2025-05-23`
-
-![](2026-04-27-16-09-56.png)
-
-If there are no objections, I will move back to `pyGAM` instead of `mgcv::gam` / `mgcv::bam`.
-Happy to discuss.
+Could you also share the expected timeline for when the green card process would begin?
 """
 
 

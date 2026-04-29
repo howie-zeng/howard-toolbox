@@ -6,7 +6,10 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from dial_utils import dial_schedule, trim_float
+if __package__:
+    from .dial_utils import dial_schedule, trim_float
+else:
+    from dial_utils import dial_schedule, trim_float
 
 DEFAULT_INPUT = Path("data/STACR/stacr_v1.8.0.json")
 DEFAULT_OUTPUT: Optional[Path] = None
