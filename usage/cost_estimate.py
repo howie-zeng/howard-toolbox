@@ -3,13 +3,13 @@ Compute imputed Cursor usage cost from a usage-events CSV.
 
 Pricing sourced from https://cursor.com/docs/models-and-pricing
 All prices are USD per 1M tokens. Max Mode = Yes adds 20% upcharge on
-individual plans. Sonnet/Grok get 2x when input exceeds 200k tokens.
-Fast variants (OpenAI/Anthropic) price at 2x the base model.
+legacy request-based plans. Sonnet/Grok get 2x when input exceeds 200k tokens.
+GPT-5.4/GPT-5.5 long context starts above 272k input tokens. Fast variants
+(OpenAI/Anthropic) price at 2x the base model.
 """
 
 import argparse
 import re
-from pathlib import Path
 
 import pandas as pd
 
@@ -45,6 +45,7 @@ BASE_PRICES = {
     "gpt-5.4":             (2.50, None, 0.25, 15.00),
     "gpt-5.4-mini":        (0.75, None, 0.075, 4.50),
     "gpt-5.4-nano":        (0.20, None, 0.02, 1.25),
+    "gpt-5.5":             (5.00, None, 0.50, 30.00),
     "grok-4.20":           (2.00, None, 0.20, 6.00),
     "kimi-k2.5":           (0.60, None, 0.10, 3.00),
     "auto":                (1.25, 1.25, 0.25, 6.00),  # Auto pool rates
@@ -52,6 +53,12 @@ BASE_PRICES = {
 
 # Sonnet variants and Grok: 2x when input > 200k tokens
 LONG_CONTEXT_2X = {"claude-4-sonnet-1m", "claude-4.5-sonnet", "claude-4.6-sonnet", "grok-4.20"}
+
+# GPT-5.4/GPT-5.5 long-context pricing: input doubles and output is 1.5x.
+GPT_LONG_CONTEXT = {
+    "gpt-5.4": (272_000, 2.0, 1.5),
+    "gpt-5.5": (272_000, 2.0, 1.5),
+}
 
 
 def map_model(raw: str) -> tuple[str, bool]:
@@ -65,8 +72,9 @@ def map_model(raw: str) -> tuple[str, bool]:
 
     # Strip reasoning-effort / thinking suffixes (high, medium, xhigh, thinking, preview)
     for suffix in ("-xhigh-thinking", "-max-thinking", "-high-thinking",
-                   "-xhigh", "-high", "-medium", "-low", "-thinking",
-                   "-preview"):
+                   "-thinking-xhigh", "-thinking-max", "-thinking-high",
+                   "-extra-high", "-xhigh", "-high", "-medium", "-low",
+                   "-thinking", "-preview"):
         if m_clean.endswith(suffix):
             m_clean = m_clean[: -len(suffix)]
 
@@ -88,6 +96,10 @@ def map_model(raw: str) -> tuple[str, bool]:
     # Normalize claude-4.x-opus / sonnet / haiku
     if re.match(r"claude-\d\.\d+-(opus|sonnet|haiku)", m_clean):
         return (m_clean, is_fast)
+    # Cursor exports some Claude labels as claude-opus-4-7 instead of claude-4.7-opus.
+    if match := re.match(r"claude-(opus|sonnet|haiku)-(\d)-(\d+)$", m_clean):
+        family, major, minor = match.groups()
+        return (f"claude-{major}.{minor}-{family}", is_fast)
 
     # Composer
     if m_clean.startswith("composer"):
@@ -113,16 +125,13 @@ def map_model(raw: str) -> tuple[str, bool]:
     return ("auto", False)  # safe fallback
 
 
-def price_row(
+def rates_for_event(
     input_with_cw: int,
     input_wo_cw: int,
-    cache_read: int,
-    output: int,
     base_key: str,
     is_fast: bool,
-    max_mode: bool,
-) -> float:
-    """Return USD cost for a single event."""
+) -> tuple[float, float, float, float]:
+    """Return effective per-1M token rates for one event."""
     p_in, p_cw, p_cr, p_out = BASE_PRICES.get(base_key, BASE_PRICES["auto"])
     if p_cw is None:
         p_cw = p_in  # cache write == input rate for non-Anthropic models
@@ -142,6 +151,33 @@ def price_row(
         p_cw *= 2
         p_cr *= 2
         p_out *= 2
+    if base_key in GPT_LONG_CONTEXT:
+        threshold, input_multiplier, output_multiplier = GPT_LONG_CONTEXT[base_key]
+        if total_input > threshold:
+            p_in *= input_multiplier
+            p_cw *= input_multiplier
+            p_cr *= input_multiplier
+            p_out *= output_multiplier
+
+    return p_in, p_cw, p_cr, p_out
+
+
+def price_row(
+    input_with_cw: int,
+    input_wo_cw: int,
+    cache_read: int,
+    output: int,
+    base_key: str,
+    is_fast: bool,
+    max_mode: bool,
+) -> float:
+    """Return USD cost for a single event."""
+    p_in, p_cw, p_cr, p_out = rates_for_event(
+        input_with_cw,
+        input_wo_cw,
+        base_key,
+        is_fast,
+    )
 
     cost = (
         (input_wo_cw or 0) / 1e6 * p_in

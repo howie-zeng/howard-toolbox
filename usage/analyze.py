@@ -21,7 +21,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cost_estimate import compute_costs, map_model
+from cost_estimate import compute_costs, map_model, rates_for_event
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -399,18 +399,18 @@ def chart_cost_breakdown(df):
     paid = df[df["Kind"] == "User API Key"].copy()
     if paid.empty:
         return go.Figure()
-    # Attribute each row's cost to its token components using the per-row
-    # effective rates implied by map_model.
-    from cost_estimate import BASE_PRICES  # local import to avoid top-level churn
+    # Attribute each row's cost to its token components using the same per-row
+    # effective rates as the headline cost calculation.
     labels = ["Cache Write (input cached)", "Input (uncached)", "Cache Read", "Output"]
     totals = [0.0, 0.0, 0.0, 0.0]
     for _, r in paid.iterrows():
         base, is_fast = map_model(r["Model"])
-        p_in, p_cw, p_cr, p_out = BASE_PRICES.get(base, BASE_PRICES["auto"])
-        if p_cw is None:
-            p_cw = p_in
-        if is_fast and base != "claude-4.6-opus-fast":
-            p_in, p_cw, p_cr, p_out = p_in*2, p_cw*2, p_cr*2, p_out*2
+        p_in, p_cw, p_cr, p_out = rates_for_event(
+            r["Input (w/ Cache Write)"],
+            r["Input (w/o Cache Write)"],
+            base,
+            is_fast,
+        )
         totals[0] += r["Input (w/ Cache Write)"] / 1e6 * p_cw
         totals[1] += r["Input (w/o Cache Write)"] / 1e6 * p_in
         totals[2] += r["Cache Read"] / 1e6 * p_cr
@@ -532,16 +532,16 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     projected_monthly = burn_daily * 30
 
     # ── Cache savings: tokens served from cache at cache-read rate vs input rate ─
-    from cost_estimate import BASE_PRICES
     cache_savings = 0.0
     cache_read_cost_total = 0.0
     for _, r in paid_df.iterrows():
         base, is_fast = map_model(r["Model"])
-        p_in, p_cw, p_cr, p_out = BASE_PRICES.get(base, BASE_PRICES["auto"])
-        if p_cw is None:
-            p_cw = p_in
-        if is_fast and base != "claude-4.6-opus-fast":
-            p_in, p_cr = p_in * 2, p_cr * 2
+        p_in, _, p_cr, _ = rates_for_event(
+            r["Input (w/ Cache Write)"],
+            r["Input (w/o Cache Write)"],
+            base,
+            is_fast,
+        )
         cr_tokens = r["Cache Read"] or 0
         cache_read_cost_total += cr_tokens / 1e6 * p_cr
         cache_savings += cr_tokens / 1e6 * (p_in - p_cr)
