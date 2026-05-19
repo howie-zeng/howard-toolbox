@@ -42,18 +42,77 @@ except ImportError:  # running as `python emailer/run.py`
 OUTPUTS_DIR = EMAILER_DIR / "outputs"
 
 
+# ARM % by Deal as of Latest Reporting Date:
+# | Date       | Deal Name        | Pool ID | ARM %  |
+# |------------|------------------|---------|--------|
+# | 2026-05-01 | ADMT 2023-NQM3   | ES8     | 0.57   |
+# | 2026-05-01 | ADMT 2024-NQM1   | EVD     | 0.19   |
+# | 2026-05-01 | BRAVO 2021-NQM1  | Q4Y     | 65.25  |
+# | 2026-05-01 | CHNGE 2022-1     | B9U     | 17.77  |
+# | 2026-05-01 | CHNGE 2022-2     | B9V     | 9.3    |
+# | 2026-05-01 | CHNGE 2023-4     | ESU     | 16.58  |
+# | 2026-05-01 | COLT 2022-3      | B4O     | 22.59  |
+# | 2026-05-01 | JPMMT 2025-VIS2  | GIK     | 13.31  |
+# | 2026-04-01 | NYMT 2025-INV2   | GXD     | 6.42   |
+# | 2026-05-01 | VERUS 2022-1     | B3A     | 6.34   |
+# | 2026-05-01 | VERUS 2022-3     | B4U     | 5.54   |
+# | 2026-05-01 | VISIO 2023-1     | ENU     | 20.94  |
+
+
 # -----------------------------------------------------------------------------
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi Gloria,
+Hi Glenn,
 
-Thanks for the update. I wanted to clarify the sequencing. My understanding is that H-1B and green card processes can sometimes proceed in parallel. Is there a company policy or legal reason that the H-1B process needs to be completed before the green card process can begin?
+Please see below for the updated model fit.
 
-If the green card process cannot be started in parallel, could you confirm whether my H-1B will be filed with premium processing? I understand that this is often standard, but I wanted to make sure.
+**Updates based on our discussion**
 
-Could you also share the expected timeline for when the green card process would begin?
+- Dropped bonds with missing size instead of filling missing size with 3mm.
+- Reduced the flexibility of the Crossover smooth so the curve is more stable and the confidence band is tighter.
+- Dropped NumMosToReinv from the model, as the term was unstable.
+- Dropped WAP, as it is no longer significant in the updated fit.
+
+**Updated model fit**
+
+![](2026-05-19-16-24-34.png)
 """
+
+
+# MD_CONTENT = r"""
+# Hi Intex Support Team,
+
+# I have a few questions about the dates shown on the collateral stats payment page. We are trying to understand what those dates represent and how they relate to the latest payment date shown in the investor reports.
+
+# **Example 1: ACHM 2023-HE1**
+
+# For ACHM 2023-HE1, Intex shows the most recent collateral stats date as March 2026, while the investor report shows the most recent payment date as April 2026.
+
+# ![](2026-05-11-17-40-49.png)
+
+# ![](2026-05-11-17-40-56.png)
+
+
+# **Example 2: VISIO 2023-1 (ENU) and VERUS 2022-1 (B3A)**
+
+# Both deals have an April 2026 payment date. However, on the Intex collateral stats page, VERUS 2022-1 shows April 2026 as the most recent date, while VISIO 2023-1 shows March 2026 as the most recent date.
+
+# ![](2026-05-11-17-46-06.png)
+
+# ![](2026-05-11-17-46-31.png)
+
+# ![](2026-05-11-17-42-17.png)
+
+# ![](2026-05-11-17-42-53.png)
+
+# Could you help clarify:
+
+# - What does the most recent date on the collateral stats payment page represent?
+# - Why can it differ from the latest payment date in the investor report for some deals but not others?
+# - Why would two deals with the same April 2026 payment date show different most recent dates on the collateral stats page?
+
+# """
 
 
 # -----------------------------------------------------------------------------

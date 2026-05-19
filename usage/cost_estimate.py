@@ -3,8 +3,9 @@ Compute imputed Cursor usage cost from a usage-events CSV.
 
 Pricing sourced from https://cursor.com/docs/models-and-pricing
 All prices are USD per 1M tokens. Max Mode = Yes adds 20% upcharge on
-legacy request-based plans. Sonnet/Grok get 2x when input exceeds 200k tokens.
-GPT-5.4/GPT-5.5 long context starts above 272k input tokens. Fast variants
+legacy request-based plans. Claude 4 Sonnet 1M/Grok 4.20 get 2x when
+input exceeds 200k tokens. GPT-5.4/GPT-5.5 long context starts above
+272k input tokens and doubles input/cache pricing. Fast variants
 (OpenAI/Anthropic) price at 2x the base model.
 """
 
@@ -51,13 +52,13 @@ BASE_PRICES = {
     "auto":                (1.25, 1.25, 0.25, 6.00),  # Auto pool rates
 }
 
-# Sonnet variants and Grok: 2x when input > 200k tokens
-LONG_CONTEXT_2X = {"claude-4-sonnet-1m", "claude-4.5-sonnet", "claude-4.6-sonnet", "grok-4.20"}
+# Current Cursor docs only call out 2x >200k input for Claude 4 Sonnet 1M and Grok 4.20.
+LONG_CONTEXT_2X = {"claude-4-sonnet-1m", "grok-4.20"}
 
-# GPT-5.4/GPT-5.5 long-context pricing: input doubles and output is 1.5x.
+# GPT-5.4/GPT-5.5 long-context pricing: input/cache pricing doubles.
 GPT_LONG_CONTEXT = {
-    "gpt-5.4": (272_000, 2.0, 1.5),
-    "gpt-5.5": (272_000, 2.0, 1.5),
+    "gpt-5.4": (272_000, 2.0),
+    "gpt-5.5": (272_000, 2.0),
 }
 
 
@@ -128,6 +129,7 @@ def map_model(raw: str) -> tuple[str, bool]:
 def rates_for_event(
     input_with_cw: int,
     input_wo_cw: int,
+    cache_read: int,
     base_key: str,
     is_fast: bool,
 ) -> tuple[float, float, float, float]:
@@ -144,20 +146,19 @@ def rates_for_event(
         p_cr *= 2
         p_out *= 2
 
-    # Long-context surcharge for Sonnet/Grok when input > 200k
-    total_input = (input_with_cw or 0) + (input_wo_cw or 0)
+    # Long-context thresholds key off prompt input size, including cached input.
+    total_input = (input_with_cw or 0) + (input_wo_cw or 0) + (cache_read or 0)
     if base_key in LONG_CONTEXT_2X and total_input > 200_000:
         p_in *= 2
         p_cw *= 2
         p_cr *= 2
         p_out *= 2
     if base_key in GPT_LONG_CONTEXT:
-        threshold, input_multiplier, output_multiplier = GPT_LONG_CONTEXT[base_key]
+        threshold, input_multiplier = GPT_LONG_CONTEXT[base_key]
         if total_input > threshold:
             p_in *= input_multiplier
             p_cw *= input_multiplier
             p_cr *= input_multiplier
-            p_out *= output_multiplier
 
     return p_in, p_cw, p_cr, p_out
 
@@ -175,6 +176,7 @@ def price_row(
     p_in, p_cw, p_cr, p_out = rates_for_event(
         input_with_cw,
         input_wo_cw,
+        cache_read,
         base_key,
         is_fast,
     )

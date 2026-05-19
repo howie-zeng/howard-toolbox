@@ -35,6 +35,51 @@ def fmt_num(n: float) -> str:
     return str(int(n))
 
 
+def month_over_month_projection(
+    monthly_values: pd.Series,
+    max_date: pd.Timestamp,
+) -> tuple[float, float, float, float, bool, int, int]:
+    """Compare the latest month to the prior month, projecting partial months."""
+    if monthly_values.empty:
+        return 0.0, 0.0, 0.0, 0.0, False, 0, 0
+
+    monthly_values = monthly_values.sort_index()
+    latest_ym = pd.Timestamp(monthly_values.index[-1])
+    month_end = (latest_ym + pd.offsets.MonthEnd(0)).date()
+    latest_month_days_in_month = month_end.day
+
+    if max_date.to_period("M") == latest_ym.to_period("M"):
+        latest_month_days_elapsed = min(max_date.date().day, month_end.day)
+        latest_month_is_partial = max_date.date() < month_end
+    else:
+        latest_month_days_elapsed = latest_month_days_in_month
+        latest_month_is_partial = False
+
+    latest_month_value = float(monthly_values.iloc[-1])
+    prior_month_value = float(monthly_values.iloc[-2]) if len(monthly_values) >= 2 else 0.0
+    if latest_month_is_partial and latest_month_days_elapsed > 0:
+        latest_month_projected = (
+            latest_month_value / latest_month_days_elapsed * latest_month_days_in_month
+        )
+    else:
+        latest_month_projected = latest_month_value
+
+    mom_pct = (
+        (latest_month_projected - prior_month_value) / prior_month_value * 100
+        if prior_month_value else 0.0
+    )
+
+    return (
+        latest_month_value,
+        prior_month_value,
+        latest_month_projected,
+        mom_pct,
+        latest_month_is_partial,
+        latest_month_days_elapsed,
+        latest_month_days_in_month,
+    )
+
+
 def fig_to_div(fig: go.Figure, fig_id: str = "") -> str:
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id=fig_id)
 
@@ -408,6 +453,7 @@ def chart_cost_breakdown(df):
         p_in, p_cw, p_cr, p_out = rates_for_event(
             r["Input (w/ Cache Write)"],
             r["Input (w/o Cache Write)"],
+            r["Cache Read"],
             base,
             is_fast,
         )
@@ -498,32 +544,29 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         top_cost_model_name, top_cost_model_val, top_cost_model_pct = "n/a", 0.0, 0.0
 
     monthly_paid = paid_df.groupby("year_month")["Cost"].sum().sort_index()
+    monthly_tokens = df.groupby("year_month")["Total Tokens"].sum().sort_index()
     max_date = df["Date"].max()
 
     # MoM comparison — if the latest month is only partially elapsed, annualize
     # it to a full-month equivalent so the comparison is apples-to-apples.
-    latest_month_is_partial = False
-    latest_month_days_elapsed = 0
-    latest_month_days_in_month = 0
-    if len(monthly_paid) >= 2:
-        latest_ym = pd.Timestamp(monthly_paid.index[-1])
-        month_end = (latest_ym + pd.offsets.MonthEnd(0)).date()
-        latest_month_days_in_month = month_end.day
-        latest_month_days_elapsed = min(max_date.date().day, month_end.day)
-        latest_month_is_partial = max_date.date() < month_end
-        latest_month_cost = float(monthly_paid.iloc[-1])
-        prior_month_cost = float(monthly_paid.iloc[-2])
-        if latest_month_is_partial and latest_month_days_elapsed > 0:
-            latest_month_projected = (latest_month_cost
-                                      / latest_month_days_elapsed
-                                      * latest_month_days_in_month)
-        else:
-            latest_month_projected = latest_month_cost
-        mom_pct = ((latest_month_projected - prior_month_cost)
-                   / max(prior_month_cost, 1e-9) * 100)
-    else:
-        latest_month_cost = float(monthly_paid.iloc[-1]) if len(monthly_paid) else 0.0
-        prior_month_cost, mom_pct, latest_month_projected = 0.0, 0.0, latest_month_cost
+    (
+        latest_month_cost,
+        prior_month_cost,
+        latest_month_projected,
+        spend_mom_pct,
+        latest_month_is_partial,
+        latest_month_days_elapsed,
+        latest_month_days_in_month,
+    ) = month_over_month_projection(monthly_paid, max_date)
+    (
+        latest_month_tokens,
+        prior_month_tokens,
+        latest_month_tokens_projected,
+        token_mom_pct,
+        latest_token_month_is_partial,
+        _latest_token_month_days_elapsed,
+        _latest_token_month_days_in_month,
+    ) = month_over_month_projection(monthly_tokens, max_date)
 
     # Burn-rate projection: average daily paid spend over the last 14 days × 30
     recent_14 = paid_df[paid_df["Date"] >= (max_date - timedelta(days=14))]
@@ -539,6 +582,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         p_in, _, p_cr, _ = rates_for_event(
             r["Input (w/ Cache Write)"],
             r["Input (w/o Cache Write)"],
+            r["Cache Read"],
             base,
             is_fast,
         )
@@ -562,7 +606,8 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     older_daily = len(older) / max(older["date"].nunique(), 1)
     trend_pct = ((recent_daily - older_daily) / max(older_daily, 1)) * 100
     trend_color = "#10B981" if trend_pct > 0 else "#EF4444" if trend_pct < 0 else "#6B7280"
-    mom_color = "#EF4444" if mom_pct > 0 else "#10B981" if mom_pct < 0 else "#6B7280"
+    token_mom_color = "#EF4444" if token_mom_pct > 0 else "#10B981" if token_mom_pct < 0 else "#6B7280"
+    spend_mom_color = "#EF4444" if spend_mom_pct > 0 else "#10B981" if spend_mom_pct < 0 else "#6B7280"
 
     # ── Charts ─────────────────────────────────────────────────────────────
     figs = {
@@ -726,12 +771,12 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         <div class="sub">@ {burn_daily:,.0f}/day (last 14d)</div>
     </div>
     <div class="kpi-card">
-        <div class="label">MoM Change</div>
-        <div class="value" style="color:{mom_color}">{mom_pct:+.0f}%</div>
+        <div class="label">MoM Tokens</div>
+        <div class="value" style="color:{token_mom_color}">{token_mom_pct:+.0f}%</div>
         <div class="sub">{
-            f"proj ${latest_month_projected:,.0f} vs ${prior_month_cost:,.0f}"
-            if latest_month_is_partial
-            else f"${latest_month_cost:,.0f} vs ${prior_month_cost:,.0f}"
+            f"proj {fmt_num(latest_month_tokens_projected)} vs {fmt_num(prior_month_tokens)}"
+            if latest_token_month_is_partial
+            else f"{fmt_num(latest_month_tokens)} vs {fmt_num(prior_month_tokens)}"
         }</div>
     </div>
     <div class="kpi-card">
@@ -773,7 +818,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
                {pd.Timestamp(monthly_paid.index[-1]).strftime("%b %Y") if len(monthly_paid) else "n/a"}{
                    f" (day {latest_month_days_elapsed}/{latest_month_days_in_month}, projected ${latest_month_projected:,.0f} for full month)"
                    if latest_month_is_partial else ""
-               } is running <strong style="color:{mom_color}">{mom_pct:+.0f}%</strong>
+               } is running <strong style="color:{spend_mom_color}">{spend_mom_pct:+.0f}%</strong>
                vs the prior month (${prior_month_cost:,.0f}).</p>
         </div>
         <div class="insight-box">

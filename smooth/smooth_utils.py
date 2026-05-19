@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from scipy.interpolate import CubicSpline, PchipInterpolator, interp1d
 
 PROTECTED_DRIVES: tuple[str, ...] = ("N:",)
@@ -187,6 +189,104 @@ def curve_to_df(curve: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame({"x": curve["x"], "y": curve["y"]})
 
 
+def plot_curve(
+    model: dict[str, Any],
+    name: str,
+    selector_value: str | None = None,
+    group: str | None = None,
+    ax: Axes | None = None,
+    show: bool = True,
+) -> Axes:
+    """Plot one smooth curve from a loaded model JSON."""
+    curve = find_curve(
+        model,
+        name=name,
+        selector_value=selector_value,
+        group=group,
+    )
+    df_curve = curve_to_df(curve)
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(9, 6))
+
+    label = selector_value if selector_value is not None else name
+    ax.plot(df_curve["x"], df_curve["y"], linewidth=2.2, label=label)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_title(name if selector_value is None else f"{name}: {selector_value}")
+    ax.grid(True, linestyle="--", alpha=0.6)
+    if selector_value is not None:
+        ax.legend(frameon=True, fontsize=10, loc="best")
+
+    if show:
+        plt.tight_layout()
+        plt.show()
+
+    return ax
+
+
+def plot_model_curves(
+    model: dict[str, Any],
+    contains: str | None = None,
+    ncols: int = 2,
+    figsize_per_plot: tuple[float, float] = (6.5, 4.2),
+    show: bool = True,
+) -> np.ndarray:
+    """Plot every smooth in a model, overlaying interaction variants by selector value."""
+    items = list(iter_curves(model))
+    if contains is not None:
+        contains_lower = contains.lower()
+        items = [item for item in items if contains_lower in item["name"].lower()]
+
+    if not items:
+        raise ValueError(f"No curves found for contains={contains!r}")
+
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for item in items:
+        grouped.setdefault((item["group"], item["name"]), []).append(item)
+
+    ncols = min(ncols, len(grouped))
+    nrows = int(np.ceil(len(grouped) / ncols))
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows),
+        squeeze=False,
+    )
+    axes_flat = axes.ravel()
+
+    for ax, ((group_name, curve_name), curve_items) in zip(
+        axes_flat,
+        grouped.items(),
+        strict=False,
+    ):
+        selector_field = curve_items[0]["selector_field"]
+        for item in curve_items:
+            curve = item["curve"]
+            label = item["selector_value"] if item["selector_value"] is not None else curve_name
+            ax.plot(curve["x"], curve["y"], linewidth=2.0, label=label)
+
+        title = curve_name
+        if group_name == "interaction":
+            title = f"{curve_name}\nby {selector_field}"
+
+        ax.set_title(title)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.grid(True, linestyle="--", alpha=0.6)
+        if len(curve_items) > 1:
+            ax.legend(frameon=True, fontsize=9, loc="best")
+
+    for ax in axes_flat[len(grouped) :]:
+        ax.set_visible(False)
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+
+    return axes
+
+
 def update_curve(
     model: dict[str, Any],
     name: str,
@@ -252,7 +352,7 @@ def rebuild_curve(
 ) -> pd.DataFrame:
     """Rebuild a smooth curve from control points using the chosen interpolation."""
     controls = sorted(controls, key=lambda point: point[0])
-    x_ctrl, y_ctrl = map(np.array, zip(*controls))
+    x_ctrl, y_ctrl = map(np.array, zip(*controls, strict=False))
 
     if method == "linear":
         interpolator = interp1d(x_ctrl, y_ctrl, kind="linear", fill_value="extrapolate")
