@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LAN Gomoku</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">LAN Gomoku</p>
+          <h1>Room Board</h1>
+          <p class="subtitle">Local network match. Enter a display name, claim a seat, and play.</p>
+        </div>
+        <div class="hero-controls">
+          <label class="theme-switch">
+            <span>Quiet</span>
+            <input id="themeToggle" type="checkbox" />
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>Classic</span>
+          </label>
+          <div class="connection-card">
+            <span id="connectionDot" class="dot"></span>
+            <span id="connectionText">Connecting...</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-layout">
+        <div class="board-card">
+          <div class="board-topline">
+            <div>
+              <span class="label">Room</span>
+              <strong id="roomLabel">...</strong>
+            </div>
+            <div>
+              <span class="label">Turn</span>
+              <strong id="turnLabel">Black</strong>
+            </div>
+            <div>
+              <span class="label">Move</span>
+              <strong id="moveLabel">0</strong>
+            </div>
+          </div>
+          <div class="board-shell">
+            <div id="board" class="board" aria-label="Gomoku board"></div>
+          </div>
+          <div id="statusBanner" class="status-banner">Enter a name and claim a seat to start.</div>
+        </div>
+
+        <aside class="panel">
+          <section class="panel-section join-section">
+            <h2>Join</h2>
+            <label for="nameInput">Display name</label>
+            <div class="join-row">
+              <input id="nameInput" maxlength="24" autocomplete="nickname" placeholder="Your name" />
+              <button id="joinButton">Join</button>
+            </div>
+            <p id="youLabel" class="muted">You are not joined yet.</p>
+          </section>
+
+          <section class="panel-section">
+            <h2>Seats</h2>
+            <div class="seat-grid">
+              <button id="blackSeat" class="seat black-seat" data-color="black">
+                <span class="stone-mini black"></span>
+                <span>
+                  <strong>Black</strong>
+                  <small id="blackName">Open seat</small>
+                </span>
+              </button>
+              <button id="whiteSeat" class="seat white-seat" data-color="white">
+                <span class="stone-mini white"></span>
+                <span>
+                  <strong>White</strong>
+                  <small id="whiteName">Open seat</small>
+                </span>
+              </button>
+            </div>
+            <p id="spectatorLabel" class="muted">Spectators: 0</p>
+          </section>
+
+          <section class="panel-section">
+            <h2>LAN Link</h2>
+            <div class="link-box">
+              <input id="shareLink" readonly />
+              <button id="copyButton">Copy</button>
+            </div>
+            <div id="lanHints" class="lan-hints"></div>
+          </section>
+
+          <section class="panel-section">
+            <h2>Match</h2>
+            <button id="undoButton" class="secondary-button" disabled>Request undo</button>
+            <p id="undoLabel" class="muted">Undo is available after a move.</p>
+            <button id="rematchButton" class="primary-button" disabled>Request rematch</button>
+            <p id="rematchLabel" class="muted">Rematch appears after a win or draw.</p>
+          </section>
+
+          <section class="panel-section history-section">
+            <h2>Move History</h2>
+            <ol id="moveHistory" class="move-history"></ol>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

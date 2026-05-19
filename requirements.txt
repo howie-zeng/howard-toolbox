@@ -18,6 +18,10 @@ scipy
 # usage/analyze.py
 plotly
 
+# gomoku
+fastapi
+uvicorn[standard]
+
 # dev tools
 ruff
 pytest

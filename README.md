@@ -38,6 +38,12 @@ howard-toolbox/
 ├── usage/                    # Cursor API usage analysis
 │   └── analyze.py            # CLI: CSV -> interactive HTML dashboard
 │
+├── gomoku/                   # LAN-only browser Gomoku game
+│   ├── run.py                # CLI entry point: python -m gomoku.run
+│   ├── server.py             # FastAPI/WebSocket room server
+│   ├── game.py               # Pure Gomoku rules engine
+│   └── static/               # HTML/CSS/JS frontend
+│
 ├── .gitignore
 ├── AGENTS.md                 # Continual-learning memory (auto-mined from chats)
 ├── pyproject.toml            # ruff linter config
@@ -194,6 +200,19 @@ jupyter notebook quant_workflows/quant_workflows_notebook.ipynb
 ```
 
 **See `[quant_workflows/README.md](quant_workflows/README.md)` for full documentation.**
+
+### 6. LAN Gomoku (`gomoku/`)
+
+Runs a browser-based 五子棋 game for two players on the same WiFi / local network.
+
+**Quick start:**
+
+```powershell
+python -m pip install -r requirements.txt
+python -m gomoku.run --host 0.0.0.0 --port 8000
+```
+
+The host opens `http://localhost:8000`; coworkers open the LAN URL printed by the command. See `[gomoku/README.md](gomoku/README.md)` for firewall and IP fallback notes.
 
 ---
 

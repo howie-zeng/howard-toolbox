@@ -1,0 +1,1 @@
+"""LAN Gomoku game package."""
