@@ -63,56 +63,48 @@ OUTPUTS_DIR = EMAILER_DIR / "outputs"
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi Glenn,
+Team,
 
-Please see below for the updated model fit.
+I cleaned up how the resi pipeline computes `reporting_month` and redesigned the tracking workflow. Summary below.
 
-**Updates based on our discussion**
+**Background**
 
-- Dropped bonds with missing size instead of filling missing size with 3mm.
-- Reduced the flexibility of the Crossover smooth so the curve is more stable and the confidence band is tighter.
-- Dropped NumMosToReinv from the model, as the term was unstable.
-- Dropped WAP, as it is no longer significant in the updated fit.
+Each resi product's reporting month was previously computed with hardcoded `DATEADD(MONTH, N, ...)` literals. Those offsets were duplicated across roughly 14 SQL config templates across unload, stats, and transition flows, plus a few Python download paths. That duplication was fragile.
 
-**Updated model fit**
+**What changed**
 
-![](2026-05-19-16-24-34.png)
+- Added one source of truth for reporting-month offsets in `agencydata/config/resi_date_offsets.py`.
+- The config defines, by product, the offset `R` where `reporting_month = factor_month + R`.
+- It also generates the SQL / BigQuery month expressions used by stats, unload, transition, and DV01/Figure BigQuery configs.
+- All relevant templates now pull from this config instead of hardcoding the month shift.
+
+Offsets:
+
+| Product / source | Offset |
+|---|---:|
+| CAS | +2 |
+| STACR | +1 |
+| MIR | +2 |
+| SBT | +2 |
+| SPI | +1 |
+| FNM | +7 |
+| NONQM / JUMBO / HELOC-CoreLogic | +0 |
+| HELOC-Figure | +1 |
+
+The tracking report now keys off `factor_month`. It previously built the month axis by shifting `factor_date` per deal type, which was fragile. It now derives the axis from `factor_month + R` using the same shared config.
+
+**Automation**
+
+The old all-in-one monthly run is now two readiness-gated jobs that watch for data and run themselves:
+
+- A daily **Unload** job checks each product's source data and kicks off the data load as soon as a new complete month is available (and alerts if a source is overdue).
+- A **Tracking** job then checks whether that product's data is fully in and, once it is, runs the tracking and reports for it.
+
+Both do real work **at most once per product per month**, only on or after the first business day, weekdays — and skip quietly when nothing is ready. So tracking keeps itself current per product, with no manual kickoffs, and is safe to run daily (idempotent).
+
+
+Happy to walk through any of it.
 """
-
-
-# MD_CONTENT = r"""
-# Hi Intex Support Team,
-
-# I have a few questions about the dates shown on the collateral stats payment page. We are trying to understand what those dates represent and how they relate to the latest payment date shown in the investor reports.
-
-# **Example 1: ACHM 2023-HE1**
-
-# For ACHM 2023-HE1, Intex shows the most recent collateral stats date as March 2026, while the investor report shows the most recent payment date as April 2026.
-
-# ![](2026-05-11-17-40-49.png)
-
-# ![](2026-05-11-17-40-56.png)
-
-
-# **Example 2: VISIO 2023-1 (ENU) and VERUS 2022-1 (B3A)**
-
-# Both deals have an April 2026 payment date. However, on the Intex collateral stats page, VERUS 2022-1 shows April 2026 as the most recent date, while VISIO 2023-1 shows March 2026 as the most recent date.
-
-# ![](2026-05-11-17-46-06.png)
-
-# ![](2026-05-11-17-46-31.png)
-
-# ![](2026-05-11-17-42-17.png)
-
-# ![](2026-05-11-17-42-53.png)
-
-# Could you help clarify:
-
-# - What does the most recent date on the collateral stats payment page represent?
-# - Why can it differ from the latest payment date in the investor report for some deals but not others?
-# - Why would two deals with the same April 2026 payment date show different most recent dates on the collateral stats page?
-
-# """
 
 
 # -----------------------------------------------------------------------------

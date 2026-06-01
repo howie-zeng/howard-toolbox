@@ -138,6 +138,17 @@ deal_type = "JUMBO2_0"
 # Run the cell to generate commands
 ```
 
+Current LMSim vector commands use `-purpose` rather than the old
+`-dbsavefromdll_json*` flags. For forward-projection / position-only runs, use
+the tracking purpose convention:
+
+```powershell
+python lmsimvectors\lm_sim_pub_main.py -as_of_date 20260519 -mode batch-ray `
+  -request_mode forward_proj -purpose NQM_SIM2_V1_tracking `
+  -scenarios_batch "default+opera" -deal_type NONQM `
+  -position_only -position_asofdate 20260519 -ray_cluster east
+```
+
 ### Debug a Simulation Issue
 ```python
 # Go to Section 10 - Debug Operations
@@ -278,6 +289,10 @@ purpose = "PROD"
 # See Section 9 for ready-to-use commands
 ```
 
+For forward projection, the notebook builds `tracking_purpose = f"{purpose}_tracking"`
+and passes it with `-purpose`. The base purpose is still used for non-forward
+modes such as ECA.
+
 ### Pattern 3: Risk Run for Portfolio
 ```python
 # Step 1: Get CUSIPs (Section 10 has common lists)
@@ -286,6 +301,9 @@ cusips = CRT_CUSIPS  # or define your own
 # Step 2: Generate risk run
 cmd = generate_risk_run(date, "RATE_HEDGE", cusips, purpose)
 ```
+
+Section 10 includes reusable CUSIP lists for CRT, HELOC, MIR, Jumbo, and NQM.
+Use `NQM_CUSIPS` for the current NQM risk-run package.
 
 ---
 

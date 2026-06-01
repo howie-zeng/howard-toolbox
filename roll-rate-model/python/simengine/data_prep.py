@@ -130,7 +130,7 @@ FIELD_VALUE_MAPS = {
 DERIVED_FIELD_NAMES = {
     "int_rate", "age", "age_pct", "oterm_f",
     "pmt_day", "days_to_month_end", "month_group",
-    "vint_qtr", "lending_environment", "platform_type_f",
+    "vint_qtr", "lending_environment",
     "_fico_bkt", "_coupon_at_vintage",
     # c_* fields auto-added from model coef scan
 }
@@ -145,7 +145,6 @@ DERIVED_FIELD_DEPS = {
     "month_group":           ["days_to_month_end"],
     "vint_qtr":              ["orig_dt"],
     "lending_environment":   ["orig_dt"],
-    "platform_type_f":       [],  # defaults to "A" if platform_f missing
     "_fico_bkt":             ["ofico"],
     "_coupon_at_vintage":    ["ofico", "orig_dt"],
     # c_* deps auto-added: c_X -> [X]

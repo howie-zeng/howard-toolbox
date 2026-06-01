@@ -1,7 +1,7 @@
 {
   "deal_name": "upst_2026_2",
   "input_dir": "input",
-  "scenario": "NEW",
+  "scenario": "new",
   "coef_version": "DIALED_v3",
 
   "macro": {

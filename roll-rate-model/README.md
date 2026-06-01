@@ -173,9 +173,11 @@ Loan prep applies:
 - DV01-style field renames, for example `dv01_id` to `loan_id`.
 - Status value mapping, for example `30 - 59 Days Delinquent` to `D1M`.
 - Categorical value normalization for home ownership, employment, and purpose.
-- Derived model fields like `int_rate`, `age_pct`, `oterm_f`, `vint_qtr`, `term_fico`, and `platform_type_f`.
+- Derived model fields like `int_rate`, `age_pct`, `oterm_f`, `vint_qtr`, and `term_fico`.
 - Macro lookup fields such as CPI inflation and FICO-bucket coupon incentives.
 - `v_*` flags for missing smooth variables.
+
+`platform_type_f` is no longer derived in the Python registry; current coefficient sets should rely on fields present in the input tape or on the remaining derived fields above.
 
 Prepared loans are written to:
 
@@ -306,6 +308,22 @@ output/<deal_name>/<scenario>/dump/dump.csv
 
 The dump file records loan-path snapshots around transition evaluation and is useful for debugging probability calculations, feature evolution, and cashflow outcomes.
 
+### Deal HTML reports
+
+After a run produces `sim_results.xlsx`, generate a compact HTML report with:
+
+```powershell
+python python\generate_deal_report.py --deal par_2026_1 --scenario base
+```
+
+The report reads:
+
+```text
+output/<deal_name>/<scenario>/sim_results.xlsx
+```
+
+and writes an HTML summary under `python/deal_report/`. Use this for quick review of portfolio and grouped simulation results without opening the workbook manually.
+
 ## C++ Engine
 
 The C++ source is organized around these modules:
@@ -338,6 +356,7 @@ The Python engine mirrors much of the C++ logic and is useful for inspection, da
 - `python/simengine/dump.py`: Python debug dump helpers.
 - `python/simengine/model_report.py`: interactive HTML coefficient report.
 - `python/simengine/register_vars.py`: Python variable registry for time-varying fields.
+- `python/generate_deal_report.py`: HTML report CLI for `sim_results.xlsx`.
 
 Run it with:
 

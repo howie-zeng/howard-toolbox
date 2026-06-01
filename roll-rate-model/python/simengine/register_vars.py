@@ -640,37 +640,6 @@ def reg_lending_environment(reg: VarRegistry):
     ))
 
 
-def reg_platform_type_f(reg: VarRegistry):
-    """platform_type_f = platform grouped into types A/B.
-
-    Default mapping: Prosper=A, Marlette=A, Upgrade=B, Upstart=A.
-    If not derivable (platform_f missing), defaults to 'A'.
-    """
-    _MAP = {"Prosper": "A", "Marlette": "A", "Upgrade": "B", "Upstart": "A"}
-    _warned = [False]
-
-    def init(loan, ctx):
-        pf = loan.get("platform_f") or loan.get("platform")
-        if pf is None:
-            if not _warned[0]:
-                print("    platform_type_f: no platform_f found, defaulting all to 'A'")
-                _warned[0] = True
-            return "A"
-        val = _MAP.get(str(pf).strip(), "A")
-        if str(pf).strip() not in _MAP and not _warned[0]:
-            print(f"    platform_type_f: unknown platform '{pf}', defaulting to 'A'")
-            _warned[0] = True
-        return val
-
-    reg.register(VarDef(
-        name="platform_type_f",
-        kind=VarKind.STATIC,
-        deps=["platform_f"],
-        default="A",
-        init_fn=init,
-    ))
-
-
 def reg_fico_bkt(reg: VarRegistry):
     """_fico_bkt = FICO bucket string from ofico (e.g. '[650-680)').
 
@@ -748,7 +717,6 @@ def build_default_registry() -> VarRegistry:
     reg_term_platform(reg)
     reg_vint_qtr(reg)
     reg_lending_environment(reg)
-    reg_platform_type_f(reg)
     reg_fico_bkt(reg)
     reg_coupon_at_vintage(reg)
 

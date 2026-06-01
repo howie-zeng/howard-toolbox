@@ -49,6 +49,12 @@ For sensitive management emails or recipients who may challenge wording:
   ```html
   <img src="chart.png" style="display:block;width:620px;max-width:100%;height:auto;" />
   ```
+- **Adjacent plot groups**: When showing multiple related plots for one deal/scenario,
+  use inline HTML with explicit widths so Outlook does not stack them vertically:
+  ```html
+  <img src="plot1.png" width="210" style="width:210px;height:auto;vertical-align:top;margin:4px 6px 4px 0;" /> <img src="plot2.png" width="210" style="width:210px;height:auto;vertical-align:top;margin:4px 6px 4px 0;" /> <img src="plot3.png" width="210" style="width:210px;height:auto;vertical-align:top;margin:4px 0 4px 0;" />
+  ```
+  For four plots in one row, use `width="155"` / `width:155px`.
 
 ### Outlook Line Breaks (Important)
 The renderer automatically inserts blank lines around standalone image lines to prevent Outlook from merging text and images onto the same line. However, for maximum safety:
@@ -66,6 +72,17 @@ The renderer automatically inserts blank lines around standalone image lines to 
 - **Inline Code**: Use backticks for tech terms: `variable_name`.
 - **Horizontal Rules**: Use `---` to separate sections visually.
 - **Links**: Standard markdown `[text](url)` links are styled professionally.
+
+### Model / Vector Result Emails
+- Lead with the conclusion and recommendation first, e.g. `**Recommendation: release the new model.**`
+- Highlight the important comparison in bold: model winner, scenario sensitivity, and deal-level exceptions.
+- Add a color legend before plots when model colors matter. Use inline HTML spans:
+  ```html
+  **Legend:** <span style="color:#f28c28;font-weight:700;">Orange = New</span>; <span style="color:#1f77b4;font-weight:700;">Blue = Prod</span>; <span style="color:#808080;font-weight:700;">Grey = JPM</span>.
+  ```
+- Use small Markdown tables for observed CPR / tracking ratios instead of prose lists.
+- Group each deal as: bold deal heading -> one-sentence takeaway -> CPR/tracking table -> adjacent plots.
+- Keep plot labels and scenario notes short so readers can scan the email quickly.
 
 ## CLI Flags
 

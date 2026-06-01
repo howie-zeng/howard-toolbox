@@ -21,15 +21,44 @@ These folders are intentionally gitignored:
 
 ## Data Sources
 
-Preferred first source is offline parser test pickles from LMQR. They contain saved parse results with an email object, parse status, and parsed dataframe for successful cases.
+Default workflow uses a flat local CSV export so the project can run in the default Howard Toolbox Python environment, without LMQR runtime dependencies.
 
-Potential source path:
+Expected local file:
 
 ```text
-S:/QR/GitHub/LibreMax-QR/master/LMQR/colorparser/test
+llm_clo_parser/data/frozen_eval.csv
 ```
 
-Production parser references:
+Minimum columns:
+
+- `sample_id`
+- `text`
+
+Recommended columns:
+
+- `source_kind`
+- `dealer`
+- `listing_type`
+- `price_type`
+- `asset_type`
+- `as_of_datetime`
+- `listing_datetime`
+- `is_excel`
+- `ticker`
+- `cusip`
+- `tranche`
+- `side`
+- `bid_price`
+- `offer_price`
+- `bid_spread`
+- `offer_spread`
+- `bid_size`
+- `offer_size`
+- `rating`
+- `wal`
+- `yield`
+
+LMQR remains the read-only source for understanding the original parser and for creating the CSV export outside this tool:
 
 - `S:/QR/GitHub/LibreMax-QR/master/LMQR/colorparser/test/compare_parser_to_pickles.py`
 - `S:/QR/GitHub/LibreMax-QR/master/LMQR/NLP_Parsers/nlp_utils.py`
@@ -40,19 +69,30 @@ Production parser references:
 
 ## Commands
 
-Inventory available offline parser pickles:
+Export the cached CLO training data to the local CSV bridge:
+
+```powershell
+python llm_clo_parser/run.py export-train-pkl `
+  --input "S:/QR/Models/NLP_Parse/train_new/train_pkl.pkl" `
+  --asset-class CLO `
+  --output llm_clo_parser/data/frozen_eval.csv
+```
+
+By default this exports labeled rows only. Add `--include-negative` if you also want unlabeled context/header rows.
+
+Inventory the local CSV export:
+
+```powershell
+python llm_clo_parser/run.py inventory-csv --input llm_clo_parser/data/frozen_eval.csv
+```
+
+Optional legacy diagnostic for offline parser pickles. This may require LMQR runtime dependencies such as `exchangelib`:
 
 ```powershell
 python llm_clo_parser/run.py inventory-pickles --sector clo
 ```
 
-Use an explicit pickle directory if needed:
-
-```powershell
-python llm_clo_parser/run.py inventory-pickles --sector clo --pickle-dir "S:/path/to/pickles"
-```
-
-Later commands will add dataset freezing, extraction, evaluation, and reporting.
+Later commands will add extraction, evaluation, and reporting.
 
 ## Model Setup
 

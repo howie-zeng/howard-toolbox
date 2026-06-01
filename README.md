@@ -44,6 +44,16 @@ howard-toolbox/
 │   ├── game.py               # Pure Gomoku rules engine
 │   └── static/               # HTML/CSS/JS frontend
 │
+├── llm_clo_parser/           # Offline CLO color parsing benchmark
+│   ├── run.py                # CLI wrapper for preprocessing commands
+│   ├── preprocess.py         # CSV inventory and training-pickle export helpers
+│   └── README.md             # Local-data workflow and model setup
+│
+├── roll-rate-model/          # MPL roll-rate Monte Carlo simulator
+│   ├── python/               # Python reference simulator and report helpers
+│   ├── src/                  # C++ simulation engine
+│   └── README.md             # Build/run/report workflow
+│
 ├── .gitignore
 ├── AGENTS.md                 # Continual-learning memory (auto-mined from chats)
 ├── pyproject.toml            # ruff linter config
@@ -214,6 +224,32 @@ python -m gomoku.run --host 0.0.0.0 --port 8000
 
 The host opens `http://localhost:8000`; coworkers open the LAN URL printed by the command. See `[gomoku/README.md](gomoku/README.md)` for firewall and IP fallback notes.
 
+### 7. LLM CLO Parser (`llm_clo_parser/`)
+
+Offline benchmark scaffold for parsing CLO dealer color and bond-offer text into structured fields.
+
+**Quick start:**
+
+```powershell
+python llm_clo_parser/run.py export-train-pkl --asset-class CLO
+python llm_clo_parser/run.py inventory-csv --input llm_clo_parser/data/frozen_eval.csv
+```
+
+The project uses a local CSV bridge (`llm_clo_parser/data/frozen_eval.csv`) so it can run without importing LMQR runtime dependencies. LMQR parser code remains read-only reference material.
+
+### 8. Roll Rate Model (`roll-rate-model/`)
+
+Monte Carlo loan-status simulator for MPL-style loans with Python and C++ execution paths.
+
+**Quick start:**
+
+```powershell
+python roll-rate-model\python\data_prep_for_sim.py --config roll-rate-model\config\default.json --skip-dump
+python roll-rate-model\python\run.py --config roll-rate-model\config\default.json --mode auto --dup 1 --scen base
+```
+
+See `[roll-rate-model/README.md](roll-rate-model/README.md)` for C++ build/run commands and report generation.
+
 ---
 
 ## For AI Agents / Developers
@@ -268,6 +304,20 @@ The host opens `http://localhost:8000`; coworkers open the LAN URL printed by th
 - **Section Markers**: Visual separators for easy navigation
 - **Security**: Environment variables for credentials (no hardcoded tokens)
 - **No External Dependencies**: Self-contained, just needs Jupyter
+- **LMSim CLI**: Current vector commands use `-purpose`; forward projection purposes should use the `{purpose}_tracking` suffix.
+
+### LLM CLO Parser Architecture
+
+- **CLI Entry Point**: `llm_clo_parser/run.py` delegates to preprocessing commands.
+- **Local Data Contract**: `llm_clo_parser/data/frozen_eval.csv` needs at least `sample_id` and `text`.
+- **Export Flow**: `export-train-pkl` reads the read-only cached NLP training pickle and writes a local CSV bridge.
+- **Inventory Flow**: `inventory-csv` validates row counts, required columns, blank text, source-kind counts, and label fill counts.
+
+### Roll Rate Model Architecture
+
+- **Prep**: `python/data_prep_for_sim.py` prepares raw deal loans and optional R GAM coefficient dumps.
+- **Simulation**: C++ engine is the fast path; Python runner is the reference/inspection path.
+- **Reports**: `python/generate_deal_report.py` builds HTML reports from `output/<deal>/<scenario>/sim_results.xlsx`.
 
 ---
 
