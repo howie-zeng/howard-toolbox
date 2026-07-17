@@ -55,11 +55,16 @@ BASE_PRICES = {
 # Current Cursor docs only call out 2x >200k input for Claude 4 Sonnet 1M and Grok 4.20.
 LONG_CONTEXT_2X = {"claude-4-sonnet-1m", "grok-4.20"}
 
-# GPT-5.4/GPT-5.5 long-context pricing: input/cache pricing doubles.
+# GPT-5.4/GPT-5.5 long-context pricing: input/cache pricing doubles. Cursor
+# usage CSV rows can aggregate multiple underlying calls, so the report uses a
+# conservative primary estimate and keeps row-threshold pricing as a high case.
 GPT_LONG_CONTEXT = {
     "gpt-5.4": (272_000, 2.0),
     "gpt-5.5": (272_000, 2.0),
 }
+
+GPT_LONG_CONTEXT_CONSERVATIVE = "conservative"
+GPT_LONG_CONTEXT_ROW_THRESHOLD = "row_threshold"
 
 
 def map_model(raw: str) -> tuple[str, bool]:
@@ -132,8 +137,15 @@ def rates_for_event(
     cache_read: int,
     base_key: str,
     is_fast: bool,
+    gpt_long_context_policy: str = GPT_LONG_CONTEXT_CONSERVATIVE,
 ) -> tuple[float, float, float, float]:
     """Return effective per-1M token rates for one event."""
+    if gpt_long_context_policy not in {
+        GPT_LONG_CONTEXT_CONSERVATIVE,
+        GPT_LONG_CONTEXT_ROW_THRESHOLD,
+    }:
+        raise ValueError(f"Unknown GPT long-context policy: {gpt_long_context_policy}")
+
     p_in, p_cw, p_cr, p_out = BASE_PRICES.get(base_key, BASE_PRICES["auto"])
     if p_cw is None:
         p_cw = p_in  # cache write == input rate for non-Anthropic models
@@ -153,7 +165,10 @@ def rates_for_event(
         p_cw *= 2
         p_cr *= 2
         p_out *= 2
-    if base_key in GPT_LONG_CONTEXT:
+    if (
+        gpt_long_context_policy == GPT_LONG_CONTEXT_ROW_THRESHOLD
+        and base_key in GPT_LONG_CONTEXT
+    ):
         threshold, input_multiplier = GPT_LONG_CONTEXT[base_key]
         if total_input > threshold:
             p_in *= input_multiplier
@@ -171,6 +186,7 @@ def price_row(
     base_key: str,
     is_fast: bool,
     max_mode: bool,
+    gpt_long_context_policy: str = GPT_LONG_CONTEXT_CONSERVATIVE,
 ) -> float:
     """Return USD cost for a single event."""
     p_in, p_cw, p_cr, p_out = rates_for_event(
@@ -179,6 +195,7 @@ def price_row(
         cache_read,
         base_key,
         is_fast,
+        gpt_long_context_policy=gpt_long_context_policy,
     )
 
     cost = (
@@ -194,9 +211,11 @@ def price_row(
     return cost
 
 
-def compute_costs(df: pd.DataFrame) -> pd.Series:
-    """Return a per-row USD cost series. Only `User API Key` events are charged;
-    `Included` / `Aborted` / `Errored` events cost $0.
+def compute_cost_estimates(df: pd.DataFrame) -> pd.DataFrame:
+    """Return per-row primary and high cost estimates.
+
+    Only `User API Key` events are charged; `Included` / `Aborted` / `Errored`
+    events cost $0.
 
     Expects the usual Cursor CSV columns: `Kind`, `Model`, `Max Mode`,
     `Input (w/ Cache Write)`, `Input (w/o Cache Write)`, `Cache Read`,
@@ -212,10 +231,16 @@ def compute_costs(df: pd.DataFrame) -> pd.Series:
     fast = mapping.map(lambda t: t[1])
 
     is_paid = df["Kind"] == "User API Key"
-    costs = pd.Series(0.0, index=df.index)
+    estimates = pd.DataFrame(
+        {
+            "Cost Primary": pd.Series(0.0, index=df.index),
+            "Cost High": pd.Series(0.0, index=df.index),
+        },
+        index=df.index,
+    )
     if is_paid.any():
         sub_idx = df.index[is_paid]
-        costs.loc[sub_idx] = [
+        estimates.loc[sub_idx, "Cost Primary"] = [
             price_row(
                 tok["Input (w/ Cache Write)"].loc[i],
                 tok["Input (w/o Cache Write)"].loc[i],
@@ -224,10 +249,32 @@ def compute_costs(df: pd.DataFrame) -> pd.Series:
                 base.loc[i],
                 bool(fast.loc[i]),
                 max_mode=False,  # user pays provider directly, no Cursor upcharge
+                gpt_long_context_policy=GPT_LONG_CONTEXT_CONSERVATIVE,
             )
             for i in sub_idx
         ]
-    return costs
+        estimates.loc[sub_idx, "Cost High"] = [
+            price_row(
+                tok["Input (w/ Cache Write)"].loc[i],
+                tok["Input (w/o Cache Write)"].loc[i],
+                tok["Cache Read"].loc[i],
+                tok["Output Tokens"].loc[i],
+                base.loc[i],
+                bool(fast.loc[i]),
+                max_mode=False,  # user pays provider directly, no Cursor upcharge
+                gpt_long_context_policy=GPT_LONG_CONTEXT_ROW_THRESHOLD,
+            )
+            for i in sub_idx
+        ]
+
+    estimates["Cost Low"] = estimates["Cost Primary"]
+    estimates["Cost Delta"] = estimates["Cost High"] - estimates["Cost Primary"]
+    return estimates
+
+
+def compute_costs(df: pd.DataFrame) -> pd.Series:
+    """Return the conservative primary per-row USD cost series."""
+    return compute_cost_estimates(df)["Cost Primary"]
 
 
 def main() -> None:
@@ -254,19 +301,8 @@ def main() -> None:
     #   - Aborted/Errored:  $0
     #   - User API Key:     provider's API rate, no Cursor upcharge
     is_paid = df["Kind"] == "User API Key"
-    df["cost_usd"] = 0.0
-    df.loc[is_paid, "cost_usd"] = df[is_paid].apply(
-        lambda r: price_row(
-            r["Input (w/ Cache Write)"],
-            r["Input (w/o Cache Write)"],
-            r["Cache Read"],
-            r["Output Tokens"],
-            r["base_model"],
-            r["is_fast"],
-            max_mode=False,  # provider rate, no Cursor 20% upcharge
-        ),
-        axis=1,
-    )
+    df = pd.concat([df, compute_cost_estimates(df)], axis=1)
+    df["cost_usd"] = df["Cost Primary"]
 
     df["ym"] = df["Date"].dt.to_period("M").astype(str)
 
@@ -279,6 +315,7 @@ def main() -> None:
     by_kind = df.groupby("Kind").agg(
         events=("cost_usd", "size"),
         cost_usd=("cost_usd", "sum"),
+        high_estimate=("Cost High", "sum"),
     ).round(2)
     print(by_kind.to_string())
     print()
@@ -286,24 +323,32 @@ def main() -> None:
     paid = df[is_paid]
     print("=== Paid spend by base model (User API Key only) ===")
     by_model = (
-        paid.groupby("base_model")["cost_usd"]
-        .agg(["count", "sum"]).round(2)
-        .sort_values("sum", ascending=False)
+        paid.groupby("base_model").agg(
+            events=("cost_usd", "size"),
+            cost_usd=("cost_usd", "sum"),
+            high_estimate=("Cost High", "sum"),
+        ).round(2)
+        .sort_values("cost_usd", ascending=False)
     )
-    by_model.columns = ["events", "cost_usd"]
     print(by_model.to_string())
     print()
 
     print("=== Monthly paid spend (User API Key only) ===")
-    monthly = paid.groupby("ym")["cost_usd"].agg(["count", "sum"]).round(2)
-    monthly.columns = ["events", "cost_usd"]
+    monthly = paid.groupby("ym").agg(
+        events=("cost_usd", "size"),
+        cost_usd=("cost_usd", "sum"),
+        high_estimate=("Cost High", "sum"),
+    ).round(2)
     print(monthly.to_string())
     print()
 
     total_paid = paid["cost_usd"].sum()
+    total_high = paid["Cost High"].sum()
     months = max(1, df["ym"].nunique())
     print("=== Summary ===")
-    print(f"  User API Key spend (paid to provider): ${total_paid:,.2f}")
+    print(f"  User API Key spend (conservative):     ${total_paid:,.2f}")
+    print(f"  Row-threshold high estimate:           ${total_high:,.2f}")
+    print(f"  Estimate gap:                          ${total_high - total_paid:,.2f}")
     print(f"  Included events:                       {(df['Kind']=='Included').sum():,} (covered by Cursor plan, $0)")
     if args.plan_fee > 0:
         print(f"  Plan fees ({months} months x ${args.plan_fee:.0f}):                  ${months * args.plan_fee:,.2f}")
