@@ -80,6 +80,7 @@
               </button>
             </div>
             <p id="spectatorLabel" class="muted">Spectators: 0</p>
+            <button id="leaveSeatButton" class="secondary-button" disabled>Leave seat</button>
           </section>
 
           <section class="panel-section">
@@ -107,6 +108,18 @@
       </section>
     </main>
 
-    <script src="/static/app.js"></script>
+    <dialog id="requestDialog" class="request-dialog">
+      <form method="dialog">
+        <p class="eyebrow">Request</p>
+        <h2 id="requestTitle">Request pending</h2>
+        <p id="requestMessage" class="dialog-message"></p>
+        <div class="dialog-actions">
+          <button id="requestRejectButton" class="secondary-button" value="reject">Reject</button>
+          <button id="requestAcceptButton" class="primary-button" value="accept">Accept</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/static/app.js?v=20260716-request-dialogs"></script>
   </body>
 </html>

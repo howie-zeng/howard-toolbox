@@ -21,7 +21,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cost_estimate import compute_costs, map_model, rates_for_event
+from cost_estimate import GPT_LONG_CONTEXT, compute_cost_estimates, map_model, rates_for_event
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -139,12 +139,29 @@ def load_data(csv_path: str, since: str | None = None) -> pd.DataFrame:
                 "Cache Read", "Output Tokens", "Total Tokens"]:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
-    # Raw `Cost` column from CSV is $0 for everything (always Included / Free /
-    # User API Key), so we replace it with a token-based imputed cost using
-    # Cursor's published API rates. Included events stay at $0.
-    df["Cost"] = compute_costs(df)
     df["model_family"] = df["Model"].map(classify_model)
     df["base_model"] = df["Model"].fillna("").map(lambda m: map_model(m)[0])
+    df["pricing_input_tokens"] = (
+        df["Input (w/ Cache Write)"] + df["Input (w/o Cache Write)"] + df["Cache Read"]
+    )
+    df["gpt_long_context_threshold"] = df["base_model"].map(
+        lambda m: GPT_LONG_CONTEXT.get(m, (0, 1.0))[0]
+    )
+    df["gpt_row_over_long_context_threshold"] = (
+        df["gpt_long_context_threshold"].gt(0)
+        & df["pricing_input_tokens"].gt(df["gpt_long_context_threshold"])
+    )
+    df["gpt_row_over_1m"] = (
+        df["base_model"].isin(GPT_LONG_CONTEXT)
+        & df["pricing_input_tokens"].gt(1_000_000)
+    )
+
+    # Raw `Cost` in Cursor CSV exports is usually $0, so the report uses a
+    # token-based estimate. `Cost` is the conservative primary estimate; high
+    # estimate columns preserve the old row-threshold GPT method for comparison.
+    cost_estimates = compute_cost_estimates(df)
+    df = pd.concat([df, cost_estimates], axis=1)
+    df["Cost"] = df["Cost Primary"]
     return df
 
 
@@ -302,7 +319,7 @@ def chart_cache(df):
 
 
 def chart_monthly(monthly):
-    """Bar: requests per month (left axis). Line: paid cost (right axis)."""
+    """Bar: requests per month (left axis). Line: primary paid cost (right axis)."""
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Bar(
         x=monthly["month_label"], y=monthly["requests"], name="Requests",
@@ -310,13 +327,13 @@ def chart_monthly(monthly):
         hovertemplate="%{x}<br>%{y:,} requests<extra></extra>",
     ), secondary_y=False)
     fig.add_trace(go.Scatter(
-        x=monthly["month_label"], y=monthly["cost"], name="Paid Spend (USD)",
+        x=monthly["month_label"], y=monthly["cost"], name="Primary Spend (USD)",
         line=dict(color="#EF4444", width=2.5), mode="lines+markers",
         hovertemplate="%{x}<br>$%{y:,.2f}<extra></extra>",
     ), secondary_y=True)
     fig.update_layout(height=380, legend=LEGEND_H, **CHART_LAYOUT)
     fig.update_yaxes(title_text="Requests", secondary_y=False)
-    fig.update_yaxes(title_text="Paid Spend (USD)", secondary_y=True)
+    fig.update_yaxes(title_text="Primary Spend (USD)", secondary_y=True)
     return fig
 
 
@@ -337,7 +354,7 @@ def chart_maxmode(df):
 
 
 def chart_daily_cost(df):
-    """Daily paid spend (bars) with 7-day rolling-average line overlay."""
+    """Daily primary paid spend (bars) with 7-day rolling-average line overlay."""
     paid = df[df["Kind"] == "User API Key"]
     if paid.empty:
         return go.Figure()
@@ -348,7 +365,7 @@ def chart_daily_cost(df):
     daily["cost_7d"] = daily["Cost"].rolling(7, min_periods=1).mean()
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=daily["date"], y=daily["Cost"], name="Daily Spend",
+        x=daily["date"], y=daily["Cost"], name="Daily Primary Spend",
         marker_color="rgba(124,58,237,0.35)",
         hovertemplate="%{x}<br>$%{y:,.2f}<extra></extra>",
     ))
@@ -358,14 +375,14 @@ def chart_daily_cost(df):
         hovertemplate="%{x}<br>7d avg: $%{y:,.2f}<extra></extra>",
     ))
     fig.update_layout(
-        xaxis_title="", yaxis_title="Paid Spend (USD)",
+        xaxis_title="", yaxis_title="Primary Spend (USD)",
         height=360, legend=LEGEND_H, **CHART_LAYOUT,
     )
     return fig
 
 
 def chart_cumulative_cost(df):
-    """Cumulative paid spend over time (area)."""
+    """Cumulative primary paid spend over time (area)."""
     paid = df[df["Kind"] == "User API Key"]
     if paid.empty:
         return go.Figure()
@@ -377,17 +394,17 @@ def chart_cumulative_cost(df):
         line=dict(color="#7C3AED", width=2.5),
         fill="tozeroy", fillcolor="rgba(124,58,237,0.15)",
         hovertemplate="%{x}<br>Cumulative: $%{y:,.2f}<extra></extra>",
-        name="Cumulative Spend",
+        name="Cumulative Primary Spend",
     ))
     fig.update_layout(
-        xaxis_title="", yaxis_title="Cumulative Paid Spend (USD)",
+        xaxis_title="", yaxis_title="Cumulative Primary Spend (USD)",
         height=360, showlegend=False, **CHART_LAYOUT,
     )
     return fig
 
 
 def chart_monthly_cost(df):
-    """Bar chart of paid spend (User API Key events) by month."""
+    """Bar chart of primary paid spend (User API Key events) by month."""
     paid = df[df["Kind"] == "User API Key"].copy()
     if paid.empty:
         return go.Figure()
@@ -404,14 +421,14 @@ def chart_monthly_cost(df):
         hovertemplate="%{x}<br>$%{y:,.2f}<extra></extra>",
     ))
     fig.update_layout(
-        xaxis_title="Month", yaxis_title="Paid Spend (USD)",
+        xaxis_title="Month", yaxis_title="Primary Spend (USD)",
         height=380, **CHART_LAYOUT,
     )
     return fig
 
 
 def chart_cost_by_model(df, top_n: int = 10):
-    """Horizontal bar: top-N base models by paid spend."""
+    """Horizontal bar: top-N base models by primary paid spend."""
     paid = df[df["Kind"] == "User API Key"]
     if paid.empty:
         return go.Figure()
@@ -428,7 +445,7 @@ def chart_cost_by_model(df, top_n: int = 10):
         hovertemplate="%{y}<br>$%{x:,.2f}<extra></extra>",
     ))
     fig.update_layout(
-        xaxis_title="Paid Spend (USD)", yaxis_title="",
+        xaxis_title="Primary Spend (USD)", yaxis_title="",
         template="plotly_white", height=max(320, 28 * len(by_model) + 80),
         margin=dict(l=220, r=60, t=20, b=50),
     )
@@ -519,6 +536,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     monthly = df.groupby("year_month").agg(
         requests=("Date", "count"), total_tokens=("Total Tokens", "sum"),
         output_tokens=("Output Tokens", "sum"), cost=("Cost", "sum"),
+        cost_high=("Cost High", "sum"), cost_delta=("Cost Delta", "sum"),
     ).reset_index().sort_values("year_month")
     monthly["month_label"] = monthly["year_month"].apply(
         lambda ym: pd.Timestamp(ym).strftime("%b %Y")
@@ -527,10 +545,23 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     # ── Cost metrics (User API Key only) ───────────────────────────────────
     paid_df = df[df["Kind"] == "User API Key"]
     total_paid = float(paid_df["Cost"].sum())
+    total_paid_high = float(paid_df["Cost High"].sum())
+    total_paid_delta = total_paid_high - total_paid
+    total_paid_delta_pct = total_paid_delta / max(total_paid, 1e-9) * 100
     n_paid_events = len(paid_df)
     paid_active_days = paid_df["date"].nunique()
     avg_paid_per_day = total_paid / max(paid_active_days, 1)
     avg_paid_per_event = total_paid / max(n_paid_events, 1)
+
+    gpt_paid_df = paid_df[paid_df["base_model"].str.startswith("gpt", na=False)]
+    gpt_paid = float(gpt_paid_df["Cost"].sum())
+    gpt_paid_high = float(gpt_paid_df["Cost High"].sum())
+    gpt_paid_delta = gpt_paid_high - gpt_paid
+    gpt_over_threshold_rows = int(gpt_paid_df["gpt_row_over_long_context_threshold"].sum())
+    gpt_over_1m_rows = int(gpt_paid_df["gpt_row_over_1m"].sum())
+    gpt_over_threshold_tokens = int(
+        gpt_paid_df.loc[gpt_paid_df["gpt_row_over_long_context_threshold"], "Total Tokens"].sum()
+    )
 
     top_cost_model = (
         paid_df.groupby("base_model")["Cost"].sum().sort_values(ascending=False)
@@ -633,7 +664,8 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         monthly_rows += (
             f"<tr><td>{r['month_label']}</td><td>{int(r['requests']):,}</td>"
             f"<td>{fmt_num(r['total_tokens'])}</td><td>{fmt_num(r['output_tokens'])}</td>"
-            f"<td>${r['cost']:,.2f}</td></tr>"
+            f"<td>${r['cost']:,.2f}</td><td>${r['cost_high']:,.2f}</td>"
+            f"<td>${r['cost_delta']:,.2f}</td></tr>"
         )
 
     # Paid-spend model table (User API Key only, top 10)
@@ -644,6 +676,8 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
                 events=("Date", "count"),
                 tokens=("Total Tokens", "sum"),
                 cost=("Cost", "sum"),
+                cost_high=("Cost High", "sum"),
+                cost_delta=("Cost Delta", "sum"),
             ).reset_index().sort_values("cost", ascending=False).head(10)
         )
         for _, r in cm.iterrows():
@@ -651,8 +685,13 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
             cost_model_rows += (
                 f"<tr><td>{r['base_model']}</td><td>{int(r['events']):,}</td>"
                 f"<td>{fmt_num(r['tokens'])}</td>"
-                f"<td>${r['cost']:,.2f}</td><td>{pct:.1f}%</td></tr>"
+                f"<td>${r['cost']:,.2f}</td><td>${r['cost_high']:,.2f}</td>"
+                f"<td>${r['cost_delta']:,.2f}</td><td>{pct:.1f}%</td></tr>"
             )
+    else:
+        cost_model_rows = (
+            "<tr><td colspan=\"7\">No User API Key events in this export.</td></tr>"
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -724,6 +763,25 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         font-size: 0.8rem; color: var(--gray-500); margin-top: 8px;
         font-style: italic;
     }}
+    .methodology {{
+        background: white; border: 1px solid var(--gray-200); border-radius: 12px;
+        padding: 18px 22px; margin-bottom: 28px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }}
+    .methodology h2 {{ font-size: 1.05rem; margin-bottom: 8px; }}
+    .methodology p {{ color: var(--gray-700); font-size: 0.92rem; margin-bottom: 12px; }}
+    .methodology-grid {{
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }}
+    .methodology-stat {{
+        background: var(--gray-50); border: 1px solid var(--gray-200);
+        border-radius: 10px; padding: 12px 14px;
+    }}
+    .methodology-stat .label {{ color: var(--gray-500); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; }}
+    .methodology-stat .value {{ color: var(--gray-900); font-weight: 700; font-size: 1rem; margin-top: 2px; }}
+    @media (max-width: 900px) {{
+        .methodology-grid {{ grid-template-columns: repeat(2, 1fr); }}
+    }}
     table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; }}
     th {{ text-align: left; padding: 10px 14px; background: var(--gray-100);
         font-weight: 600; color: var(--gray-700); border-bottom: 2px solid var(--gray-200); }}
@@ -756,9 +814,19 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
 <!-- KPI grid: headline cost metrics first, then volume, then efficiency -->
 <div class="kpi-grid">
     <div class="kpi-card highlight">
-        <div class="label">Paid Spend</div>
+        <div class="label">Conservative Paid Spend</div>
         <div class="value">${total_paid:,.0f}</div>
         <div class="sub">{n_paid_events:,} API-key events &middot; ${avg_paid_per_event:.2f}/req</div>
+    </div>
+    <div class="kpi-card">
+        <div class="label">High Estimate</div>
+        <div class="value">${total_paid_high:,.0f}</div>
+        <div class="sub">row-threshold method &middot; +${total_paid_delta:,.0f}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="label">GPT Estimate Gap</div>
+        <div class="value">${gpt_paid_delta:,.0f}</div>
+        <div class="sub">{gpt_over_1m_rows:,} GPT rows above 1M aggregate input</div>
     </div>
     <div class="kpi-card">
         <div class="label">Avg Daily Spend</div>
@@ -801,15 +869,46 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     </div>
 </div>
 
+<div class="methodology">
+    <h2>Cost Methodology</h2>
+    <p>
+        The headline spend uses a conservative estimate. Cursor usage exports can aggregate
+        multiple underlying model calls into one row; this export has GPT rows above a model's
+        actual context window, so applying GPT-5.4/GPT-5.5 long-context uplift to the full row
+        can overstate input/cache cost. The high estimate preserves that row-threshold method
+        for comparison.
+    </p>
+    <div class="methodology-grid">
+        <div class="methodology-stat">
+            <div class="label">Primary Estimate</div>
+            <div class="value">${total_paid:,.2f}</div>
+        </div>
+        <div class="methodology-stat">
+            <div class="label">High Estimate</div>
+            <div class="value">${total_paid_high:,.2f}</div>
+        </div>
+        <div class="methodology-stat">
+            <div class="label">Total Gap</div>
+            <div class="value">${total_paid_delta:,.2f} ({total_paid_delta_pct:.1f}%)</div>
+        </div>
+        <div class="methodology-stat">
+            <div class="label">GPT Rows &gt; Threshold / &gt; 1M</div>
+            <div class="value">{gpt_over_threshold_rows:,} / {gpt_over_1m_rows:,}</div>
+        </div>
+    </div>
+</div>
+
 <!-- Executive summary: lead with cost, arranged as 2x2 grid -->
 <div class="section">
     <h2>Executive Summary</h2>
     <div class="insight-grid">
         <div class="insight-box">
             <h3>Spend Concentration</h3>
-            <p>You spent <strong>${total_paid:,.2f}</strong> out-of-pocket over {paid_active_days} active days
-               via your own API key. <strong>{top_cost_model_name}</strong> alone accounts for
-               <strong>${top_cost_model_val:,.2f}</strong> ({top_cost_model_pct:.0f}% of spend).</p>
+            <p>Conservative out-of-pocket spend is <strong>${total_paid:,.2f}</strong> over
+               {paid_active_days} active days via your own API key. The row-threshold high
+               estimate is <strong>${total_paid_high:,.2f}</strong>. <strong>{top_cost_model_name}</strong>
+               alone accounts for <strong>${top_cost_model_val:,.2f}</strong>
+               ({top_cost_model_pct:.0f}% of primary spend).</p>
         </div>
         <div class="insight-box">
             <h3>Burn Rate &amp; Projection</h3>
@@ -831,6 +930,15 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
                <strong style="color:#10B981">${cache_savings:,.2f}</strong>.</p>
         </div>
         <div class="insight-box">
+            <h3>GPT Cost Audit</h3>
+            <p>GPT primary spend is <strong>${gpt_paid:,.2f}</strong>; the row-threshold high
+               estimate is <strong>${gpt_paid_high:,.2f}</strong>, a
+               <strong>${gpt_paid_delta:,.2f}</strong> gap. There are
+               <strong>{gpt_over_threshold_rows:,}</strong> paid GPT rows above the long-context
+               threshold and <strong>{gpt_over_1m_rows:,}</strong> above 1M aggregate input/cache
+               tokens, covering <strong>{fmt_num(gpt_over_threshold_tokens)}</strong> total tokens.</p>
+        </div>
+        <div class="insight-box">
             <h3>Activity Snapshot</h3>
             <p>Busiest day: <strong>{busiest_str}</strong> ({busiest_count:,} requests).
                Median output size is {fmt_num(median_output)} tokens per request.
@@ -848,21 +956,22 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         Pricing imputed from <a href="https://cursor.com/docs/models-and-pricing" target="_blank">Cursor's published API rates</a>.
         Only <code>User API Key</code> events are charged &mdash; <code>Included</code>,
         <code>Aborted</code>, and <code>Errored</code> events are $0. Max Mode 20% upcharge is
-        <em>not</em> applied since you pay the provider directly.
+        <em>not</em> applied since you pay the provider directly. Spend charts use the conservative
+        primary estimate; high estimate columns show the old row-threshold GPT long-context method.
     </p>
     <div class="two-col">
         <div class="chart-card">
-            <div class="card-title">Daily Paid Spend (7-day avg overlay)</div>
+            <div class="card-title">Daily Primary Spend (7-day avg overlay)</div>
             {divs["cost_daily"]}
         </div>
         <div class="chart-card">
-            <div class="card-title">Cumulative Paid Spend</div>
+            <div class="card-title">Cumulative Primary Spend</div>
             {divs["cost_cumulative"]}
         </div>
     </div>
     <div class="two-col">
         <div class="chart-card">
-            <div class="card-title">Monthly Paid Spend</div>
+            <div class="card-title">Monthly Primary Spend</div>
             {divs["cost_monthly"]}
         </div>
         <div class="chart-card">
@@ -871,7 +980,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         </div>
     </div>
     <div class="chart-card">
-        <div class="card-title">Paid Spend by Base Model (top 10)</div>
+        <div class="card-title">Primary Spend by Base Model (top 10)</div>
         {divs["cost_by_model"]}
     </div>
     <div class="chart-card" style="overflow-x:auto;">
@@ -879,7 +988,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
             <thead>
                 <tr>
                     <th>Base Model</th><th>Events</th><th>Tokens</th>
-                    <th>Paid Spend</th><th>% of Total</th>
+                    <th>Primary Spend</th><th>High Estimate</th><th>Gap</th><th>% of Total</th>
                 </tr>
             </thead>
             <tbody>{cost_model_rows}</tbody>
@@ -891,7 +1000,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
 <div class="section">
     <h2>2. Usage Volume</h2>
     <div class="chart-card">
-        <div class="card-title">Daily Requests by Model Family (black line = 7-day avg)</div>
+        <div class="card-title">Daily Tokens by Model Family (black line = 7-day avg requests)</div>
         {divs["daily_vol"]}
     </div>
     <div class="chart-card">
@@ -906,7 +1015,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
         <table>
             <thead><tr>
                 <th>Month</th><th>Requests</th><th>Total Tokens</th>
-                <th>Output Tokens</th><th>Paid Spend</th>
+                <th>Output Tokens</th><th>Primary Spend</th><th>High Estimate</th><th>Gap</th>
             </tr></thead>
             <tbody>{monthly_rows}</tbody>
         </table>
@@ -922,7 +1031,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
             {divs["heat"]}
         </div>
         <div class="chart-card">
-            <div class="card-title">Spend Heatmap (paid $, ET)</div>
+            <div class="card-title">Primary Spend Heatmap (paid $, ET)</div>
             {divs["cost_heat"]}
         </div>
     </div>

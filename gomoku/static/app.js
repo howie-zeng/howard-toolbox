@@ -17,6 +17,8 @@ const state = {
   connected: false,
   joined: false,
   errorTimer: null,
+  activeRequestKey: "",
+  pendingRequest: null,
 };
 
 const els = {
@@ -42,8 +44,14 @@ const els = {
   undoLabel: document.getElementById("undoLabel"),
   rematchButton: document.getElementById("rematchButton"),
   rematchLabel: document.getElementById("rematchLabel"),
+  leaveSeatButton: document.getElementById("leaveSeatButton"),
   moveHistory: document.getElementById("moveHistory"),
   themeToggle: document.getElementById("themeToggle"),
+  requestDialog: document.getElementById("requestDialog"),
+  requestTitle: document.getElementById("requestTitle"),
+  requestMessage: document.getElementById("requestMessage"),
+  requestAcceptButton: document.getElementById("requestAcceptButton"),
+  requestRejectButton: document.getElementById("requestRejectButton"),
 };
 
 function applyTheme(theme) {
@@ -232,6 +240,14 @@ function claimSeat(color) {
   send({ type: "claim_seat", color });
 }
 
+function releaseSeat() {
+  if (!myColor()) {
+    showBanner("You are already watching as a spectator.", true);
+    return;
+  }
+  send({ type: "release_seat" });
+}
+
 function requestOrAcceptRematch() {
   const snap = state.snapshot;
   if (!snap || !isTerminal(snap.game.status)) return;
@@ -271,6 +287,8 @@ function renderSnapshot() {
   renderHistory();
   renderUndo();
   renderRematch();
+  renderLeaveSeat();
+  renderIncomingRequest();
   showBanner(statusText());
 }
 
@@ -322,6 +340,12 @@ function renderRematch() {
   }
 }
 
+function renderLeaveSeat() {
+  const color = myColor();
+  els.leaveSeatButton.disabled = !color;
+  els.leaveSeatButton.textContent = color ? `Leave ${titleCase(color)} seat` : "Leave seat";
+}
+
 function renderUndo() {
   const snap = state.snapshot;
   const seated = Boolean(myColor());
@@ -341,6 +365,68 @@ function renderUndo() {
     els.undoButton.textContent = "Accept undo";
     els.undoLabel.textContent = `${requester} wants to undo ${titleCase(move.color)} ${move.notation}.`;
   }
+}
+
+function renderIncomingRequest() {
+  const request = incomingRequest();
+  if (!request) {
+    state.activeRequestKey = "";
+    state.pendingRequest = null;
+    closeRequestDialog();
+    return;
+  }
+  if (state.activeRequestKey === request.key) {
+    return;
+  }
+  showRequestDialog(request);
+}
+
+function incomingRequest() {
+  const snap = state.snapshot;
+  if (!snap || !myColor()) return null;
+  if (snap.undo_request && snap.undo_request.player_id !== state.playerId) {
+    const requester = nameForPlayerId(snap.undo_request.player_id);
+    const move = snap.undo_request.move;
+    return {
+      key: `undo:${snap.undo_request.player_id}:${snap.undo_request.move_number}`,
+      title: "Undo request",
+      message: `${requester} wants to undo ${titleCase(move.color)} ${move.notation}.`,
+      acceptType: "undo_accept",
+      rejectType: "undo_reject",
+    };
+  }
+  if (isTerminal(snap.game.status) && snap.rematch_accepts.length && !snap.rematch_accepts.includes(state.playerId)) {
+    return {
+      key: `rematch:${snap.rematch_accepts.join(",")}`,
+      title: "Rematch request",
+      message: "The other player wants to clear the board and start a rematch.",
+      acceptType: "rematch_accept",
+      rejectType: "rematch_reject",
+    };
+  }
+  return null;
+}
+
+function showRequestDialog(request) {
+  state.activeRequestKey = request.key;
+  state.pendingRequest = request;
+  els.requestTitle.textContent = request.title;
+  els.requestMessage.textContent = request.message;
+  if (!els.requestDialog.open) {
+    els.requestDialog.showModal();
+  }
+}
+
+function closeRequestDialog() {
+  if (els.requestDialog.open) {
+    els.requestDialog.close();
+  }
+}
+
+function answerRequest(actionKey) {
+  if (!state.pendingRequest) return;
+  send({ type: state.pendingRequest[actionKey] });
+  closeRequestDialog();
 }
 
 function statusText() {
@@ -412,12 +498,16 @@ els.nameInput.addEventListener("keydown", (event) => {
 });
 els.blackSeat.addEventListener("click", () => claimSeat("black"));
 els.whiteSeat.addEventListener("click", () => claimSeat("white"));
+els.leaveSeatButton.addEventListener("click", releaseSeat);
 els.copyButton.addEventListener("click", async () => {
   await navigator.clipboard.writeText(els.shareLink.value);
   showBanner("LAN link copied.");
 });
 els.undoButton.addEventListener("click", requestOrAcceptUndo);
 els.rematchButton.addEventListener("click", requestOrAcceptRematch);
+els.requestDialog.addEventListener("cancel", (event) => event.preventDefault());
+els.requestAcceptButton.addEventListener("click", () => answerRequest("acceptType"));
+els.requestRejectButton.addEventListener("click", () => answerRequest("rejectType"));
 if (els.themeToggle) {
   els.themeToggle.addEventListener("change", () => applyTheme(els.themeToggle.checked ? "classic" : "quiet"));
 }
