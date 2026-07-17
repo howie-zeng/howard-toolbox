@@ -1,0 +1,47 @@
+group,field,description
+static,loan_id,Loan identifier
+static,orig_dt,Origination date
+static,o_bal,Original balance
+static,o_noterate,Original note rate (%)
+static,o_term,Original term (months)
+static,ofico,Origination FICO
+static,orig_ltv,Original LTV
+static,orig_cltv,Original combined LTV
+static,dti,Debt-to-income
+static,purpose,Loan purpose
+static,occ_type,Occupancy
+static,prop_type,Property type
+static,num_units,Units
+static,num_borrower,Borrower count
+static,channel,Origination channel
+static,ft_buyer,First-time buyer flag
+static,doc_raw_new,Documentation type
+static,dscr_ratio,DSCR (missing for non-DSCR)
+static,foreign_national,Foreign-national code
+static,prod_type,Product type
+static,io,Interest-only flag
+static,io_term,Interest-only term (months)
+static,pp_penalty,Prepay-penalty flag
+static,prepayment_penalty_term,Prepay-penalty term (months)
+static,state,State
+static,msa,MSA code
+static,zip_prefix,ZIP prefix
+static,lien,Lien position
+static,deal_name,Securitization deal
+static,shelf,Issuer shelf
+static,servicer,Origination servicer
+dynamic,r_dt,Factor (as-of) date
+dynamic,age,Loan age (months)
+dynamic,bal,Current balance
+dynamic,c_noterate,Current note rate (%)
+dynamic,status,Current delinquency status
+dynamic,mod,Modification flag
+dynamic,mod_ft_pay_dt,Modification first-payment date
+dynamic,servicer_curr,Current servicer
+geo_key,r_dt_geo_code,Geo code at factor date (join to hpi_series)
+geo_key,r_dt_geo_type,"Geo type at factor date (Z=zip,S=state,N=nation)"
+geo_key,orig_dt_geo_code,Geo code at origination (join to hpi_series)
+geo_key,orig_dt_geo_type,Geo type at origination
+other,hamp_eligible,HAMP eligibility flag
+other,mi_type,Mortgage insurance type
+other,loan_in_eligible_disaster_area,Loan in eligible disaster area flag
