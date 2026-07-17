@@ -1,173 +1,497 @@
 {
-  "version": 1,
-  "transcripts": {
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\0ebd7816-11dd-49d7-a1d8-f674640aa913\\0ebd7816-11dd-49d7-a1d8-f674640aa913.jsonl": {
-      "mtimeMs": 1774639889305,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\19fe80b9-4fdc-4e42-bd9e-3888f837d629\\19fe80b9-4fdc-4e42-bd9e-3888f837d629.jsonl": {
-      "mtimeMs": 1776111744599,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\2d57947e-7944-4740-9176-0467e807cb42\\2d57947e-7944-4740-9176-0467e807cb42.jsonl": {
-      "mtimeMs": 1777383267149,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\30b3207d-e595-4461-abe6-617361d88e2f\\30b3207d-e595-4461-abe6-617361d88e2f.jsonl": {
-      "mtimeMs": 1780421573473,
-      "lastProcessedAt": "2026-06-05T17:05:35Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\392f1876-c293-4c83-93cb-e560111fc486\\392f1876-c293-4c83-93cb-e560111fc486.jsonl": {
-      "mtimeMs": 1773676437996,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3ac5def6-a93c-4f3b-9411-7df1b88045e7\\3ac5def6-a93c-4f3b-9411-7df1b88045e7.jsonl": {
-      "mtimeMs": 1776694238221,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3c722abf-1026-4c48-8661-35e96bc7540a\\3c722abf-1026-4c48-8661-35e96bc7540a.jsonl": {
-      "mtimeMs": 1778104715376,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3d9124f0-66d8-4cbd-8d09-43b7ee54a3e8\\3d9124f0-66d8-4cbd-8d09-43b7ee54a3e8.jsonl": {
-      "mtimeMs": 1778165003616,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\3dc682ac-c688-40c7-80a5-f36cb8be2c87.jsonl": {
-      "mtimeMs": 1780517148146,
-      "lastProcessedAt": "2026-06-03T22:16:38Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3fc5534a-f8c0-44fc-99f9-00b9cfcdc295\\3fc5534a-f8c0-44fc-99f9-00b9cfcdc295.jsonl": {
-      "mtimeMs": 1779224382313,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\452680cd-3c32-4137-b593-a8584ac70861\\452680cd-3c32-4137-b593-a8584ac70861.jsonl": {
-      "mtimeMs": 1773687260301,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\5178b7f9-4cf8-48c5-873f-b2ea632c7030\\5178b7f9-4cf8-48c5-873f-b2ea632c7030.jsonl": {
-      "mtimeMs": 1776180124021,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\53012450-6d72-45b5-acd8-cc7b33e46256\\53012450-6d72-45b5-acd8-cc7b33e46256.jsonl": {
-      "mtimeMs": 1784235520183,
-      "lastProcessedAt": "2026-07-16T22:20:10Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\5345d2fd-71d0-416d-b533-a43844e2e3f3\\5345d2fd-71d0-416d-b533-a43844e2e3f3.jsonl": {
-      "mtimeMs": 1776376038452,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\61e811a7-ebcc-4642-8a9a-56e5943f8197\\61e811a7-ebcc-4642-8a9a-56e5943f8197.jsonl": {
-      "mtimeMs": 1777318090001,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\6e5343c1-4709-4c9b-883d-e33b87698a42\\6e5343c1-4709-4c9b-883d-e33b87698a42.jsonl": {
-      "mtimeMs": 1775076934660,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\75d917a8-b100-416a-b875-195cbd000310.jsonl": {
-      "mtimeMs": 1784217405760,
-      "lastProcessedAt": "2026-07-16T22:20:10Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75e9626c-f2ad-45d0-8535-e6c7dd2adeb4\\75e9626c-f2ad-45d0-8535-e6c7dd2adeb4.jsonl": {
-      "mtimeMs": 1773668609032,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80235ac2-e0b0-4fc1-8824-6a474d468ca1\\80235ac2-e0b0-4fc1-8824-6a474d468ca1.jsonl": {
-      "mtimeMs": 1776374681592,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f.jsonl": {
-      "mtimeMs": 1779470524119,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\863ec59c-973e-4ba3-8fdd-f967825f4724\\863ec59c-973e-4ba3-8fdd-f967825f4724.jsonl": {
-      "mtimeMs": 1783624729787,
-      "lastProcessedAt": "2026-07-16T22:20:10Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8a19ec90-1bec-41f2-9b6c-57e41949f633\\8a19ec90-1bec-41f2-9b6c-57e41949f633.jsonl": {
-      "mtimeMs": 1776375129569,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b.jsonl": {
-      "mtimeMs": 1777385815539,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9a90f262-202a-4bd8-9bf6-751832fe0baf\\9a90f262-202a-4bd8-9bf6-751832fe0baf.jsonl": {
-      "mtimeMs": 1776714896762,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9d405146-e153-4b2d-805f-d8441da2fb22\\9d405146-e153-4b2d-805f-d8441da2fb22.jsonl": {
-      "mtimeMs": 1780517133500,
-      "lastProcessedAt": "2026-06-03T22:16:38Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a0715c91-d59f-42a5-a95c-84b667cdb24a\\a0715c91-d59f-42a5-a95c-84b667cdb24a.jsonl": {
-      "mtimeMs": 1778174787660,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a66d673b-cadf-4505-b251-bb3bd0aec98f\\a66d673b-cadf-4505-b251-bb3bd0aec98f.jsonl": {
-      "mtimeMs": 1782855495449,
-      "lastProcessedAt": "2026-07-09T18:31:43Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\acd33a2f-9286-47d4-b153-2daaf27e6f5a.jsonl": {
-      "mtimeMs": 1784240198661,
-      "lastProcessedAt": "2026-07-16T22:20:10Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2.jsonl": {
-      "mtimeMs": 1779468485290,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cc2c75e7-c4a9-49c5-a272-b9c77be9d18b\\cc2c75e7-c4a9-49c5-a272-b9c77be9d18b.jsonl": {
-      "mtimeMs": 1777660258965,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\ccc85559-313d-4a34-8349-3dc6d3784db4\\ccc85559-313d-4a34-8349-3dc6d3784db4.jsonl": {
-      "mtimeMs": 1773676530192,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cd238b29-4d32-4dc9-bda6-1c2389686fd4\\cd238b29-4d32-4dc9-bda6-1c2389686fd4.jsonl": {
-      "mtimeMs": 1777321456210,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\d397eee3-bdeb-4df2-a58a-3d2e495ac490.jsonl": {
-      "mtimeMs": 1773688822346,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\da88e228-35bc-406a-aa4f-0276947f1308\\da88e228-35bc-406a-aa4f-0276947f1308.jsonl": {
-      "mtimeMs": 1777660098495,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e433b480-0269-498f-be11-c40fa7fd2e85\\e433b480-0269-498f-be11-c40fa7fd2e85.jsonl": {
-      "mtimeMs": 1775834149948,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e5ca7ae8-ad30-499d-9c07-c5d7713d0640\\e5ca7ae8-ad30-499d-9c07-c5d7713d0640.jsonl": {
-      "mtimeMs": 1777494748686,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e7ae6bd1-74dd-4a53-836e-33da25a662cf\\e7ae6bd1-74dd-4a53-836e-33da25a662cf.jsonl": {
-      "mtimeMs": 1779311874217,
-      "lastProcessedAt": "2026-06-02T15:28:40Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\ebebd9d7-4877-4e72-be89-394bfa9044d0\\ebebd9d7-4877-4e72-be89-394bfa9044d0.jsonl": {
-      "mtimeMs": 1773951779672,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f072e56e-917e-49e6-9895-f14b4639599a\\f072e56e-917e-49e6-9895-f14b4639599a.jsonl": {
-      "mtimeMs": 1777568370774,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f0fb554f-cc3b-4e9c-8583-669a6c3321bb\\f0fb554f-cc3b-4e9c-8583-669a6c3321bb.jsonl": {
-      "mtimeMs": 1775661540660,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f672d8e9-7e33-4a59-845d-41866f43c758\\f672d8e9-7e33-4a59-845d-41866f43c758.jsonl": {
-      "mtimeMs": 1780505437230,
-      "lastProcessedAt": "2026-06-03T22:16:38Z"
-    },
-    "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10.jsonl": {
-      "mtimeMs": 1777493705509,
-      "lastProcessedAt": "2026-05-06T21:57:58Z"
-    }
-  }
+    "version":  1,
+    "transcripts":  {
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\0ebd7816-11dd-49d7-a1d8-f674640aa913\\0ebd7816-11dd-49d7-a1d8-f674640aa913.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1774639889305,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\19fe80b9-4fdc-4e42-bd9e-3888f837d629\\19fe80b9-4fdc-4e42-bd9e-3888f837d629.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776111744598,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\2d57947e-7944-4740-9176-0467e807cb42\\2d57947e-7944-4740-9176-0467e807cb42.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777383267148,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\30b3207d-e595-4461-abe6-617361d88e2f\\30b3207d-e595-4461-abe6-617361d88e2f.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1780421573472,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\30b3207d-e595-4461-abe6-617361d88e2f\\subagents\\5d83ac23-b26c-4332-bae5-855af6d3d2b5.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779130136788,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\30b3207d-e595-4461-abe6-617361d88e2f\\subagents\\9c2eb8bd-05f6-4080-9772-2fefd35490d3.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780335805990,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\30b3207d-e595-4461-abe6-617361d88e2f\\subagents\\bdc8b8c2-f609-4502-bae4-51d0ae236189.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780414142286,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\392f1876-c293-4c83-93cb-e560111fc486\\392f1876-c293-4c83-93cb-e560111fc486.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773676437996,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3ac5def6-a93c-4f3b-9411-7df1b88045e7\\3ac5def6-a93c-4f3b-9411-7df1b88045e7.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776694238220,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3ac5def6-a93c-4f3b-9411-7df1b88045e7\\subagents\\a205cc02-536b-4338-9aba-50eb27068a8e.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1776694228063,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3c722abf-1026-4c48-8661-35e96bc7540a\\3c722abf-1026-4c48-8661-35e96bc7540a.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1778104715376,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3c722abf-1026-4c48-8661-35e96bc7540a\\subagents\\a04dbcfc-60a8-46f5-9728-af2fb9d39f3b.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1778104711284,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3d9124f0-66d8-4cbd-8d09-43b7ee54a3e8\\3d9124f0-66d8-4cbd-8d09-43b7ee54a3e8.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1778165003616,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3d9124f0-66d8-4cbd-8d09-43b7ee54a3e8\\subagents\\b9ab71c9-eb62-4de8-9b5e-4dd4e4cbaa47.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1778097250580,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\3dc682ac-c688-40c7-80a5-f36cb8be2c87.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1780517148146,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\subagents\\851d11cb-e253-4f7c-a937-f7d272105f9f.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780517117047,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\subagents\\a611a005-267d-47af-9d2a-696950e41656.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780517102084,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\subagents\\cdb1e0c4-a3b9-4158-bce5-0e3fc23068ef.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780517115249,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3dc682ac-c688-40c7-80a5-f36cb8be2c87\\subagents\\d16e1d2c-ccb5-4c70-8125-a41b5139deed.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780517118104,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3fc5534a-f8c0-44fc-99f9-00b9cfcdc295\\3fc5534a-f8c0-44fc-99f9-00b9cfcdc295.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1779224382312,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\3fc5534a-f8c0-44fc-99f9-00b9cfcdc295\\subagents\\f2732f20-d882-4f22-bbe4-f361fe75f89d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1778859441883,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\452680cd-3c32-4137-b593-a8584ac70861\\452680cd-3c32-4137-b593-a8584ac70861.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773687260300,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\5178b7f9-4cf8-48c5-873f-b2ea632c7030\\5178b7f9-4cf8-48c5-873f-b2ea632c7030.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776180124020,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\5178b7f9-4cf8-48c5-873f-b2ea632c7030\\subagents\\9e5bb729-3aa2-4f97-9fd0-3476270f509f.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1776178654138,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\53012450-6d72-45b5-acd8-cc7b33e46256\\53012450-6d72-45b5-acd8-cc7b33e46256.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1784235520183,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\5345d2fd-71d0-416d-b533-a43844e2e3f3\\5345d2fd-71d0-416d-b533-a43844e2e3f3.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776376038451,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\61e811a7-ebcc-4642-8a9a-56e5943f8197\\61e811a7-ebcc-4642-8a9a-56e5943f8197.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777318090000,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\61e811a7-ebcc-4642-8a9a-56e5943f8197\\subagents\\15d718a1-a89f-4283-a910-27839f44b01d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777316189392,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\61e811a7-ebcc-4642-8a9a-56e5943f8197\\subagents\\67892b92-e4db-4525-a3d0-ff9d613e1f3a.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777316023623,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\61e811a7-ebcc-4642-8a9a-56e5943f8197\\subagents\\cbb020e0-3982-44ff-9713-9de21256448a.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777318079427,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\6e5343c1-4709-4c9b-883d-e33b87698a42\\6e5343c1-4709-4c9b-883d-e33b87698a42.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1775076934659,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\75d917a8-b100-416a-b875-195cbd000310.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1784217405760,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\subagents\\66001e30-efc4-4918-a592-b906a0f304f7.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1783622539358,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\subagents\\863ec59c-973e-4ba3-8fdd-f967825f4724.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1783623116060,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\subagents\\a2676cac-530c-4ef7-9494-8815a367951c.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1783621934378,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75d917a8-b100-416a-b875-195cbd000310\\subagents\\ef76a1b3-a804-49da-8473-44168cee412f.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1783622184806,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\75e9626c-f2ad-45d0-8535-e6c7dd2adeb4\\75e9626c-f2ad-45d0-8535-e6c7dd2adeb4.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773668609031,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80235ac2-e0b0-4fc1-8824-6a474d468ca1\\80235ac2-e0b0-4fc1-8824-6a474d468ca1.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776374681591,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80235ac2-e0b0-4fc1-8824-6a474d468ca1\\subagents\\51fc5b18-eef0-4e90-ad02-652b4598445f.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1776373410655,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1779470524118,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f\\subagents\\0a96c399-cfd3-4fcc-8d73-fffdba6a689e.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779470291255,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\80c7b7dd-b61c-4e92-9ed8-37aac35ff08f\\subagents\\ec1ca148-aa45-4178-9348-8f7c71ceb733.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779470346571,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\863ec59c-973e-4ba3-8fdd-f967825f4724\\863ec59c-973e-4ba3-8fdd-f967825f4724.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1783624729787,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\863ec59c-973e-4ba3-8fdd-f967825f4724\\subagents\\65a95be5-e788-4e6e-9f77-94fc74f6d38d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1783623137945,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8a19ec90-1bec-41f2-9b6c-57e41949f633\\8a19ec90-1bec-41f2-9b6c-57e41949f633.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776375129568,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777385815539,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\subagents\\349d5891-affb-405a-a3dc-e4ae29c253e3.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1776799316255,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\subagents\\9a2d5a69-ac73-4f5d-9af8-aa13c7d190e5.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777061300410,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\subagents\\9a90f262-202a-4bd8-9bf6-751832fe0baf.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1776714896406,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\8dae7e5b-8de4-4044-9e5e-bf487f1edd3b\\subagents\\e699576f-bd7a-4c8e-8df1-aa1434ea7e34.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777309706256,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1784299386793,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\2a820c12-2cd4-4370-a484-92741f79aeff.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784299280926,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\3121cd88-5a3e-4e00-ade4-f0cd1bc58b28.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784299346154,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\4c1d83ef-515d-43e2-9c1a-bb1e7c1ba073.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297942068,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\73455eaf-2f56-42e9-bedc-23026b183412.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784299395286,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\c28dcae1-67c9-4751-81c3-799a7e5d9465.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297341360,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\c52aa759-9420-434b-9876-ad4b42aff6d2.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297573152,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\d4af7f99-1f6e-4a3b-a528-c3258933022f.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297334139,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\e19742cf-38dc-4c8a-bdbc-a2d4317c8c42.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784299214703,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\95315eb4-1b4d-4d0e-ac34-4862878f3f5b\\subagents\\e6ce5efd-bf74-4c00-ab30-fc18897ce9b0.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297135900,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9a90f262-202a-4bd8-9bf6-751832fe0baf\\9a90f262-202a-4bd8-9bf6-751832fe0baf.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1776714896762,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9d405146-e153-4b2d-805f-d8441da2fb22\\9d405146-e153-4b2d-805f-d8441da2fb22.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1780517133500,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9d405146-e153-4b2d-805f-d8441da2fb22\\subagents\\159ecef9-3a7c-480f-81f1-0980bff45301.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780516706636,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\9d405146-e153-4b2d-805f-d8441da2fb22\\subagents\\1f793911-f0a0-4a4d-b65e-f1dbec330b0e.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780516760192,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a0715c91-d59f-42a5-a95c-84b667cdb24a\\a0715c91-d59f-42a5-a95c-84b667cdb24a.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1778174787659,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a66d673b-cadf-4505-b251-bb3bd0aec98f\\a66d673b-cadf-4505-b251-bb3bd0aec98f.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1782855495449,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a66d673b-cadf-4505-b251-bb3bd0aec98f\\subagents\\aa980bfe-ffd0-472e-8522-65c01ae03683.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1781204732239,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a66d673b-cadf-4505-b251-bb3bd0aec98f\\subagents\\ab21661c-08e5-4dba-9008-ef2d1c8af986.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780525024126,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\a66d673b-cadf-4505-b251-bb3bd0aec98f\\subagents\\f15b2061-7435-415b-972e-8200f1d92629.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780679166230,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\acd33a2f-9286-47d4-b153-2daaf27e6f5a.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1784299438131,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\000841fe-bb3c-4181-bed1-50bf016fcec5.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784238565373,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\0b544dd3-72e6-46de-9acd-8956cd6f6534.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237122433,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\0f363769-6ce2-4872-b32d-12ac636a97e8.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237155714,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\126148a9-2e35-4edf-887e-ed760da9a058.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237208384,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\1779b154-4da7-4757-8aa6-ff5ce82a5688.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237163370,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\2881dd2e-7784-4423-9649-2a94892d99b2.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784250914652,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\47d779a3-c2e4-459b-a3f8-0389c0884b98.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784240458373,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\4ec901c0-a83b-4823-bccd-e15207bb6d0d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237975728,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\606580de-ea83-486f-9279-a4a28a3f1af2.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237185289,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\6279453e-9168-4636-8695-4316259d933a.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237277614,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\62f6e694-c2db-4f88-85a2-b5e293fc1332.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237198299,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\67159040-e238-41e2-a45e-6c9709408432.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784297796483,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\7729ab3d-298a-49e5-bcc3-773f23090c5b.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784236865854,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\8f02bd9c-24e3-4502-92c7-e47b8b787e16.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237199850,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\dd3855ae-a9cd-4f8d-8826-3d2cd7f74d04.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237177178,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\acd33a2f-9286-47d4-b153-2daaf27e6f5a\\subagents\\e2df97f0-8c57-4373-9277-63cf266588fb.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1784237199544,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1779468485289,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\18f8bfb7-a816-4445-9f25-d0f5a3ee2380.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223573935,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\3d0bfcf3-574b-46fc-88d5-a6d4eb780886.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223588040,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\816dc592-0664-44d0-9950-3af29bbebbe3.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223605371,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\8b4b8a52-47e3-4d7c-8716-e0fa0bb61b3a.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223598150,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\8fc798f7-2611-4e74-b56a-fbbd69776bc4.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223580954,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\c1ed6bbf-55db-4966-9d54-735b62c4a8e2\\subagents\\b18fe01b-082b-4c69-bd6e-0b827a8b4339.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1779223603723,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cc2c75e7-c4a9-49c5-a272-b9c77be9d18b\\cc2c75e7-c4a9-49c5-a272-b9c77be9d18b.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777660258965,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cc2c75e7-c4a9-49c5-a272-b9c77be9d18b\\subagents\\8adfeffe-6bf5-4740-a4f8-63505c186d5c.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777660250333,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\ccc85559-313d-4a34-8349-3dc6d3784db4\\ccc85559-313d-4a34-8349-3dc6d3784db4.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773676530192,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cd238b29-4d32-4dc9-bda6-1c2389686fd4\\cd238b29-4d32-4dc9-bda6-1c2389686fd4.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777321456210,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\cd238b29-4d32-4dc9-bda6-1c2389686fd4\\subagents\\cef08836-c8dd-415f-94ea-888eacd2b9a1.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777061137483,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\d397eee3-bdeb-4df2-a58a-3d2e495ac490.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773688822345,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\0acddbea-6542-45ab-ba21-0fe68ad4e9f2.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688489727,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\4cb0be23-4f39-4226-b8c2-729db242790b.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688376483,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\85516460-6771-4e89-a89e-48ffc2efb4f3.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688043717,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\85987fb8-5b2d-4c66-b25e-df480205c996.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688496858,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\a0303351-da71-4722-933b-b541be5fb423.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688051628,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\a4f74df6-8ba2-4d14-ab7d-7785060f7061.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688065473,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\e583324c-4c68-40bf-bc2b-9d8789d764d2.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688488157,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\d397eee3-bdeb-4df2-a58a-3d2e495ac490\\subagents\\ec8d33ce-3a10-41fb-ae8a-3290f08937fe.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688501347,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\da88e228-35bc-406a-aa4f-0276947f1308\\da88e228-35bc-406a-aa4f-0276947f1308.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777660098495,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e433b480-0269-498f-be11-c40fa7fd2e85\\e433b480-0269-498f-be11-c40fa7fd2e85.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1775834149947,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e433b480-0269-498f-be11-c40fa7fd2e85\\subagents\\4bdcb019-25d8-463e-a8e4-ef5d20d8f267.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1775752864502,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e5ca7ae8-ad30-499d-9c07-c5d7713d0640\\e5ca7ae8-ad30-499d-9c07-c5d7713d0640.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777494748686,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e7ae6bd1-74dd-4a53-836e-33da25a662cf\\e7ae6bd1-74dd-4a53-836e-33da25a662cf.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1779311874217,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\e7ae6bd1-74dd-4a53-836e-33da25a662cf\\subagents\\057c3a36-3e13-45ac-bc95-1903625e9f9d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777578138449,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\ebebd9d7-4877-4e72-be89-394bfa9044d0\\ebebd9d7-4877-4e72-be89-394bfa9044d0.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1773951779671,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\ebebd9d7-4877-4e72-be89-394bfa9044d0\\subagents\\9c586039-36f0-48ab-a0d7-a456b9ba3551.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1773688602553,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f072e56e-917e-49e6-9895-f14b4639599a\\f072e56e-917e-49e6-9895-f14b4639599a.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777568370774,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f072e56e-917e-49e6-9895-f14b4639599a\\subagents\\74016815-0f61-4c19-9b35-54540e461117.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777566260721,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f0fb554f-cc3b-4e9c-8583-669a6c3321bb\\f0fb554f-cc3b-4e9c-8583-669a6c3321bb.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1775661540660,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f672d8e9-7e33-4a59-845d-41866f43c758\\f672d8e9-7e33-4a59-845d-41866f43c758.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1780505437230,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\f672d8e9-7e33-4a59-845d-41866f43c758\\subagents\\2c610d97-da07-47f4-ae7d-140902740b37.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1780498425964,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10.jsonl":  {
+                                                                                                                                                                                                    "mtimeMs":  1777493705508,
+                                                                                                                                                                                                    "lastProcessedAt":  "2026-05-06T21:57:58Z"
+                                                                                                                                                                                                },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10\\subagents\\1ed5dd2a-51c2-4bf0-b7b3-ffc051b23893.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777493578555,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           },
+                        "C:\\Users\\hzeng\\.cursor\\projects\\s-QR-hzeng-howard-toolbox\\agent-transcripts\\fd55c1e7-73a0-4c22-91ed-b7e4bd0deb10\\subagents\\92bdedb6-51e9-4728-9c8d-99f1c269095d.jsonl":  {
+                                                                                                                                                                                                               "mtimeMs":  1777493314003,
+                                                                                                                                                                                                               "lastProcessedAt":  "2026-07-17T14:50:24Z"
+                                                                                                                                                                                                           }
+                    }
 }

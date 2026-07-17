@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "mcp__ffc53ec7-5f0d-4170-9008-dd8ab19c9c9a__outlook_email_search",
+      "PowerShell(try { Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.json\" -Raw | ConvertFrom-Json -ErrorAction Stop | Out-Null; \"VALID JSON - defaultMode is now: $\\(\\(Get-Content \"$env:USERPROFILE\\\\.claude\\\\settings.json\" -Raw | ConvertFrom-Json\\).permissions.defaultMode\\)\" } catch { \"INVALID JSON: $_\" })",
+      "mcp__ffc53ec7-5f0d-4170-9008-dd8ab19c9c9a__read_resource",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "PowerShell(python \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\\\\claude-code-routines\\\\send_outlook_summary.py\" --date 2026-06-10 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\702061e3-790e-4ad0-af6a-fe933ce07026\\\\scratchpad\\\\read_outlook.py\")",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\702061e3-790e-4ad0-af6a-fe933ce07026\\\\scratchpad\\\\read_inbox.py\")",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\702061e3-790e-4ad0-af6a-fe933ce07026\\\\scratchpad\\\\read_bodies.py\")",
+      "PowerShell(git -C \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\" log --since=\"2026-06-30\" --pretty=format:\"%h %ad %s\" --date=short 2>$null)",
+      "PowerShell(python \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\\\\claude-code-routines\\\\send_outlook_summary.py\" --date 2026-07-03 --to hzeng@libremax.com --dry-run)",
+      "PowerShell(python \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\\\\claude-code-routines\\\\send_outlook_summary.py\" --date 2026-07-03 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\62931a71-6e37-412e-ac02-4e19c2c33e97\\\\scratchpad\\\\scan_inbox.py\")",
+      "PowerShell($env:PYTHONIOENCODING='utf-8'; python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\62931a71-6e37-412e-ac02-4e19c2c33e97\\\\scratchpad\\\\scan_inbox.py\")",
+      "PowerShell($env:PYTHONIOENCODING='utf-8'; python \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\\\\claude-code-routines\\\\send_outlook_summary.py\" --date 2026-07-04 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\904241ba-30a7-4dcd-b7cf-4bd7ebc3c3cc\\\\scratchpad\\\\scan_inbox.py\")",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\904241ba-30a7-4dcd-b7cf-4bd7ebc3c3cc\\\\scratchpad\\\\probe.py\")",
+      "PowerShell(git -C \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\" log --since=\"48 hours ago\" --pretty=format:\"%h | %ad | %s\" --date=format:\"%Y-%m-%d %H:%M\" 2>$null)",
+      "PowerShell(git -C \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\" log -5 --pretty=format:\"%h | %ad | %s\" --date=format:\"%Y-%m-%d %H:%M\")",
+      "PowerShell(python \"S:\\\\QR\\\\hzeng\\\\howard-toolbox\\\\claude-code-routines\\\\send_outlook_summary.py\" --date 2026-07-07 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\0936692a-5a6e-4aae-aa8b-61e047f9377e\\\\scratchpad\\\\scan_inbox.py\")",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\0936692a-5a6e-4aae-aa8b-61e047f9377e\\\\scratchpad\\\\sync_rescan.py\")",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\0936692a-5a6e-4aae-aa8b-61e047f9377e\\\\scratchpad\\\\fetch_bodies.py\")",
+      "PowerShell(python claude-code-routines/send_outlook_summary.py --date 2026-07-10 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python send_outlook_summary.py --date 2026-07-10 --to hzeng@libremax.com --send --fallback-draft)",
+      "PowerShell(python \"C:\\\\Users\\\\hzeng\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\S--QR-hzeng-howard-toolbox-claude-code-routines\\\\ba3551de-4011-45a1-9769-3fb67de7e3f9\\\\scratchpad\\\\scan_inbox.py\")"
+    ]
+  }
+}
