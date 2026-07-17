@@ -123,3 +123,163 @@ The volatility model has converged.
 $$
 \sigma_{t}^2 = \alpha \epsilon_{t-1}^2 + \beta \sigma_{t-1}^2
 $$
+
+---
+
+## NQM Vector Email Runbook
+
+Use this workflow to regenerate NQM CPR or CDR comparison plots and embed them
+in an Outlook-ready email.
+
+### Inputs and Outputs
+
+- Workbook: `S:\QR\hzeng\vector_compare_nqm_v7.xlsx`
+- Worksheet: `vector_compare_0925`
+- Plotter: `emailer/plot_vector_compare.py`
+- Plot folder: `emailer/assets/nqm_vector_compare/`
+- Email body: `MD_CONTENT` in `emailer/run.py`
+- Rendered email: `emailer/outputs/latest_email.html`
+
+Run all commands from the repository root:
+
+```powershell
+Set-Location S:\QR\hzeng\howard-toolbox
+```
+
+### Curves Included
+
+The plotter intentionally includes only these four workbook model series:
+
+- Blue — `Prod`, labeled **Prod**
+- Orange — `New NonQM`, labeled **New NQM**
+- Grey — `JPM`, labeled **JPM**
+- Yellow — `New NonQM V9 No Decay Dialed`, labeled **Dialed NQM**
+
+Do not add `New NonQM No Decay` or `New NonQM No Decay Dial` unless the email
+specifically requires those extra comparisons.
+
+### Standard Deal Mapping
+
+- `B3A` — VERUS 2022-1
+- `ENU` — VISIO 2023-1
+- `ESU` — CHNGE 2023-4
+- `B4O` — COLT 2022-3
+- `ES8` — ADMT 2023-NQM3
+- `Q4Y` — BRAVO 2021-NQM1
+- `F7E` — LMAT 2024-INV1
+- `HXF` — OBX 2026-NQM1
+- `GZC` — JPMMT 2025-NQM4
+- `GWI` — CROSS 2025-H7
+- `G8U` — ADMT 2025-NQM1
+- `HZK` — GSMBS 2025-R1
+- `F6R` — NRZT 2024-NQM2
+- `GI0` — GCAT 2025-NQM3
+- `HWB` — BARC 2026-NQM1
+- `HW3` — NYMT 2026-INV1
+
+### Generate Base and SuperBear CDR Plots
+
+```powershell
+python emailer/plot_vector_compare.py `
+  --workbook "S:\QR\hzeng\vector_compare_nqm_v7.xlsx" `
+  --sheet vector_compare_0925 `
+  --metric CDR `
+  --scenarios Base SuperBear `
+  --deals `
+  "VERUS 2022-1" `
+  "VISIO 2023-1" `
+  "CHNGE 2023-4" `
+  "COLT 2022-3" `
+  "ADMT 2023-NQM3" `
+  "BRAVO 2021-NQM1" `
+  "LMAT 2024-INV1" `
+  "OBX 2026-NQM1" `
+  "JPMMT 2025-NQM4" `
+  "CROSS 2025-H7" `
+  "ADMT 2025-NQM1" `
+  "GSMBS 2025-R1" `
+  "NRZT 2024-NQM2" `
+  "GCAT 2025-NQM3" `
+  "BARC 2026-NQM1" `
+  "NYMT 2026-INV1"
+```
+
+Expected result:
+
+```text
+Wrote 32 plots to ...\emailer\assets\nqm_vector_compare
+```
+
+The filenames include the metric and scenario, for example:
+
+- `verus_2022_1_cdr_base.png`
+- `verus_2022_1_cdr_superbear.png`
+
+To generate CPR instead, change `--metric CDR` to `--metric CPR`. Metric-specific
+filenames prevent CPR and CDR runs from overwriting each other.
+
+### Add the Plots to the Email
+
+Use one section per deal, with Base first and SuperBear second. Keep both images
+on one line at 310px so Outlook displays them side by side:
+
+```html
+**B3A — VERUS 2022-1**
+
+<img src="assets/nqm_vector_compare/verus_2022_1_cdr_base.png" width="310" style="width:310px;height:auto;vertical-align:top;margin:4px 6px 4px 0;" /> <img src="assets/nqm_vector_compare/verus_2022_1_cdr_superbear.png" width="310" style="width:310px;height:auto;vertical-align:top;margin:4px 0 4px 0;" />
+```
+
+Add this four-curve legend before the deal sections:
+
+```html
+**Legend:** <span style="color:#1f77b4;font-weight:700;">Blue = Prod</span>; <span style="color:#f28c28;font-weight:700;">Orange = New NQM</span>; <span style="color:#808080;font-weight:700;">Grey = JPM</span>; <span style="color:#d4a017;font-weight:700;">Yellow = Dialed NQM</span>.
+```
+
+Follow the pool-ID order in the mapping above. Plot titles already identify Base
+and SuperBear, so separate scenario labels are unnecessary.
+
+### Validate and Render
+
+If the plotter code changed, run:
+
+```powershell
+python -m ruff check emailer/plot_vector_compare.py emailer/run.py tests/test_plot_vector_compare.py
+python -m pytest
+```
+
+Render without changing the clipboard:
+
+```powershell
+python emailer/run.py --no-clipboard
+```
+
+Inspect `emailer/outputs/latest_email.html`. Confirm:
+
+- The plotter reported 32 files and no missing deal/scenario combinations.
+- Every deal has one Base plot and one SuperBear plot.
+- Each plot contains exactly Prod, New NQM, JPM, and Dialed NQM.
+- The y-axis shows the requested metric.
+- No missing-image warnings appear during rendering.
+
+When ready to paste into Outlook, run:
+
+```powershell
+python emailer/run.py
+```
+
+Run the final render **after** pytest. Emailer tests write to
+`emailer/outputs/latest_email.html` and can overwrite the finished email.
+
+### Troubleshooting
+
+- **Missing deal/scenario:** Match `BBG Deal` and `Scenario` values exactly;
+  `SuperBear` is case-sensitive.
+- **Wrong metric:** Check `--metric CPR` versus `--metric CDR` and confirm the
+  y-axis label before sending.
+- **Wrong curves:** Check the exact workbook `Model` values listed above.
+- **Images do not embed:** Use paths beginning with
+  `assets/nqm_vector_compare/` and run the emailer from the repository root.
+- **Plots stop too early or run too long:** The default is 120 projection
+  months; override it with `--max-month`.
+- **Git status does not show generated plots:** PNG files are intentionally
+  ignored and remain local.

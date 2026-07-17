@@ -14,6 +14,12 @@ Create a concise daily summary for Howard covering RESI and CLO emails from the 
 
 Primary goal: inspect Howard's Outlook email first, especially the `AUTO` folder and any RESI/CLO/job notification folders. If direct Outlook access is unavailable, inspect accessible Outlook exports, `.msg` / `.eml` files, saved mail artifacts, and local report/job notification files. Do **not** start from git commits unless Outlook/email sources are unavailable or need context.
 
+Before searching, read these routine memory files:
+
+- `claude-code-routines/memory/daily-resi-clo-summary-scope.md`
+- `claude-code-routines/memory/mailbox-folder-map.md`
+- `claude-code-routines/memory/libremax-tls-interception-ca.md`
+
 **Out of scope — do NOT flag these (not Howard's responsibility):**
 
 - Automated **risk runs** — the "LIBREMAX Risk Run" / "SWIB Risk Run: '…' scenario set for … " job-failure/success notifications (CRT/RMBS/CLO/etc.). Ignore their bond failures.
@@ -82,6 +88,35 @@ If none are found, write: `No failed or concerning jobs found from accessible so
 ### Todo
 - Actionable checklist for Howard, ordered by urgency.
 ```
+
+At the end, save the completed summary to:
+
+```text
+claude-code-routines/outputs/daily-resi-clo-summary-YYYYMMDD.md
+```
+
+Use today's local date for `YYYYMMDD` unless the user or scheduler context provides a different target date.
+
+Then email the saved summary to Howard through Outlook:
+
+```powershell
+python claude-code-routines/send_outlook_summary.py `
+  --date YYYY-MM-DD `
+  --to hzeng@libremax.com `
+  --send `
+  --fallback-draft
+```
+
+If Outlook automation is unavailable or sending fails, create a draft instead:
+
+```powershell
+python claude-code-routines/send_outlook_summary.py `
+  --date YYYY-MM-DD `
+  --to hzeng@libremax.com `
+  --draft
+```
+
+Report whether the email was sent, drafted, or blocked.
 
 Rules:
 

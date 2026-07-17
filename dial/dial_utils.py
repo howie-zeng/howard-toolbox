@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Iterable, Optional
 import re
+from collections.abc import Iterable
+from pathlib import Path
 
 import pandas as pd
 
@@ -15,14 +15,25 @@ def trim_float(x: float) -> str:
     return s
 
 
-def dial_schedule(x: float, flat_months: int = 48, ramp_months: int = 23) -> str:
-    """Generate the dial string for a scalar multiplier x."""
+def dial_schedule(x: float, flat_months: int = 48, ramp_months: int = 23, permanent: bool = False) -> str:
+    """Generate the dial string for a scalar multiplier x.
+
+    permanent=True emits a flat segment plus a trailing pad equal to x, so the
+    multiplier applies indefinitely (the engine treats a trailing "Nx" without
+    "for M" as the fill value for all later months — LMSim State.cpp pad rule).
+    Use for structural calibrations that should NOT ramp back to 1x (e.g. dials
+    correcting borrowed-model collateral mismatch).
+    """
     if flat_months <= 0:
         raise ValueError(f"flat_months must be > 0 (got {flat_months})")
+
+    x = round(x, 3)
+    if permanent:
+        return f"{trim_float(x)}x for {flat_months} {trim_float(x)}x"
+
     if ramp_months <= 0:
         raise ValueError(f"ramp_months must be > 0 (got {ramp_months})")
 
-    x = round(x, 3)
     parts = [f"{trim_float(x)}x for {flat_months}"]
     for i in range(1, ramp_months + 1):
         val = ((ramp_months + 1 - i) * x + i - 1) / ramp_months
@@ -33,7 +44,7 @@ def dial_schedule(x: float, flat_months: int = 48, ramp_months: int = 23) -> str
     return " ".join(parts)
 
 
-def find_status_row(df: pd.DataFrame) -> Optional[int]:
+def find_status_row(df: pd.DataFrame) -> int | None:
     """Return the row index where any cell equals 'Status' (case-insensitive)."""
     for i, row in df.iterrows():
         if any(str(cell).strip().lower() == "status" for cell in row):
@@ -69,7 +80,7 @@ def build_columns_from_status_header(df: pd.DataFrame, status_row_idx: int) -> l
         header_top.append(last)
 
     raw_columns = []
-    for top_val, base_val in zip(header_top, header_main):
+    for top_val, base_val in zip(header_top, header_main, strict=True):
         top = _clean_header(top_val)
         base = _clean_header(base_val)
         if top and base and top != base:
@@ -97,7 +108,7 @@ def build_columns_from_status_header(df: pd.DataFrame, status_row_idx: int) -> l
     return new_columns
 
 
-def normalize_error_window(window: Optional[str]) -> Optional[str]:
+def normalize_error_window(window: str | None) -> str | None:
     if window is None:
         return None
     s = str(window).upper().replace(" ", "")
@@ -108,7 +119,7 @@ def normalize_error_window(window: Optional[str]) -> Optional[str]:
     return s
 
 
-def select_error_columns(columns: Iterable, window: Optional[str]) -> list[str]:
+def select_error_columns(columns: Iterable, window: str | None) -> list[str]:
     """Return columns containing the requested error window (e.g., '3M Error')."""
     if not window:
         return []
