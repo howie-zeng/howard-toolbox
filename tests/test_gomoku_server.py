@@ -1,5 +1,6 @@
 import time
 
+import gomoku.server as server
 from gomoku.game import Color
 from gomoku.server import (
     SEAT_HOLD_SECONDS,
@@ -127,6 +128,123 @@ def test_undo_requester_cannot_self_approve() -> None:
         assert "other player" in str(error)
     else:
         raise AssertionError("undo requester should not self-approve")
+
+
+def test_undo_request_can_be_rejected_by_other_seated_player() -> None:
+    room = Room(room_id="room1")
+    room.names = {"black-id": "Black", "white-id": "White"}
+    claim_seat(room, "black-id", {"color": "black"})
+    claim_seat(room, "white-id", {"color": "white"})
+    place_move(room, "black-id", {"row": 7, "col": 7})
+
+    request_undo(room, "black-id")
+    server.reject_undo(room, "white-id")
+
+    assert room.undo_request is None
+    assert room.game.move_number == 1
+
+
+def test_undo_requester_cannot_self_reject() -> None:
+    room = Room(room_id="room1")
+    room.names = {"black-id": "Black", "white-id": "White"}
+    claim_seat(room, "black-id", {"color": "black"})
+    claim_seat(room, "white-id", {"color": "white"})
+    place_move(room, "black-id", {"row": 7, "col": 7})
+
+    request_undo(room, "black-id")
+
+    try:
+        server.reject_undo(room, "black-id")
+    except Exception as error:
+        assert "other player" in str(error)
+    else:
+        raise AssertionError("undo requester should not self-reject")
+
+
+def test_rematch_request_can_be_rejected_by_other_seated_player() -> None:
+    room = Room(room_id="room1")
+    room.names = {"black-id": "Black", "white-id": "White"}
+    claim_seat(room, "black-id", {"color": "black"})
+    claim_seat(room, "white-id", {"color": "white"})
+
+    for row, col, player_id in [
+        (7, 3, "black-id"),
+        (0, 0, "white-id"),
+        (7, 4, "black-id"),
+        (0, 1, "white-id"),
+        (7, 5, "black-id"),
+        (0, 2, "white-id"),
+        (7, 6, "black-id"),
+        (0, 3, "white-id"),
+        (7, 7, "black-id"),
+    ]:
+        place_move(room, player_id, {"row": row, "col": col})
+
+    request_rematch(room, "black-id")
+    server.reject_rematch(room, "white-id")
+
+    assert room.rematch_accepts == set()
+    assert room.game.status == "black_win"
+
+
+def test_release_seat_keeps_player_joined_and_pauses_without_clearing_board() -> None:
+    room = Room(room_id="room1")
+    room.names = {"black-id": "Black", "white-id": "White"}
+    claim_seat(room, "black-id", {"color": "black"})
+    claim_seat(room, "white-id", {"color": "white"})
+    place_move(room, "black-id", {"row": 7, "col": 7})
+    request_undo(room, "black-id")
+    room.rematch_accepts = {"black-id"}
+
+    server.release_seat(room, "white-id")
+
+    assert Color.WHITE not in room.seats
+    assert room.names["white-id"] == "White"
+    assert room.game.status == "waiting"
+    assert room.game.move_number == 1
+    assert room.game.board[7][7] == "black"
+    assert room.game.turn == "white"
+    assert room.undo_request is None
+    assert room.rematch_accepts == set()
+
+    claim_seat(room, "white-id", {"color": "white"})
+    assert room.game.status == "playing"
+
+
+def test_moves_are_rejected_while_seat_is_open() -> None:
+    room = Room(room_id="room1")
+    room.names = {"black-id": "Black", "white-id": "White"}
+    claim_seat(room, "black-id", {"color": "black"})
+
+    try:
+        place_move(room, "black-id", {"row": 7, "col": 7})
+    except Exception as error:
+        assert "both seats" in str(error)
+    else:
+        raise AssertionError("seated player should not move before both seats are filled")
+
+    claim_seat(room, "white-id", {"color": "white"})
+    place_move(room, "black-id", {"row": 7, "col": 7})
+    server.release_seat(room, "white-id")
+
+    try:
+        place_move(room, "black-id", {"row": 7, "col": 8})
+    except Exception as error:
+        assert "both seats" in str(error)
+    else:
+        raise AssertionError("paused game should reject moves until both seats are filled")
+
+
+def test_release_seat_rejects_spectators() -> None:
+    room = Room(room_id="room1")
+    room.names = {"watch-id": "Watch"}
+
+    try:
+        server.release_seat(room, "watch-id")
+    except Exception as error:
+        assert "Only seated players" in str(error)
+    else:
+        raise AssertionError("spectator should not release a seat")
 
 
 def test_expiring_disconnected_seat_clears_pending_state() -> None:

@@ -195,10 +195,16 @@ def create_app(host: str = "127.0.0.1", port: int = DEFAULT_PORT) -> FastAPI:
                             request_undo(room, player_id)
                         elif action == "undo_accept":
                             accept_undo(room, player_id)
+                        elif action == "undo_reject":
+                            reject_undo(room, player_id)
                         elif action == "rematch_request":
                             request_rematch(room, player_id)
                         elif action == "rematch_accept":
                             accept_rematch(room, player_id)
+                        elif action == "rematch_reject":
+                            reject_rematch(room, player_id)
+                        elif action == "release_seat":
+                            release_seat(room, player_id)
                         elif action == "leave":
                             leave_room(room, player_id)
                         else:
@@ -273,6 +279,8 @@ def place_move(room: Room, player_id: str, message: dict[str, Any]) -> None:
     color = room.seat_for(player_id)
     if color is None:
         raise GameError("Spectators cannot move")
+    if len(room.seats) != 2:
+        raise GameError("Game needs both seats before moves")
     if room.game.turn != color:
         raise GameError("It is not your turn")
     row = parse_int(message.get("row"), "row")
@@ -307,6 +315,16 @@ def accept_undo(room: Room, player_id: str) -> None:
     room.rematch_accepts.clear()
 
 
+def reject_undo(room: Room, player_id: str) -> None:
+    if room.seat_for(player_id) is None:
+        raise GameError("Only seated players can reject undo")
+    if room.undo_request is None:
+        raise GameError("No undo request is pending")
+    if room.undo_request.player_id == player_id:
+        raise GameError("The other player must reject undo")
+    room.undo_request = None
+
+
 def request_rematch(room: Room, player_id: str) -> None:
     if not room.game.is_terminal:
         raise GameError("Rematch is available after the game is over")
@@ -328,6 +346,28 @@ def accept_rematch(room: Room, player_id: str) -> None:
         room.game.status = "playing"
         room.rematch_accepts.clear()
         room.undo_request = None
+
+
+def reject_rematch(room: Room, player_id: str) -> None:
+    if room.seat_for(player_id) is None:
+        raise GameError("Only seated players can reject rematch")
+    if player_id in room.rematch_accepts:
+        raise GameError("The other player must reject rematch")
+    if not room.rematch_accepts:
+        raise GameError("No rematch request is pending")
+    room.rematch_accepts.clear()
+
+
+def release_seat(room: Room, player_id: str) -> None:
+    color = room.seat_for(player_id)
+    if color is None:
+        raise GameError("Only seated players can release a seat")
+    del room.seats[color]
+    room.rematch_accepts.discard(player_id)
+    room.rematch_accepts.clear()
+    room.undo_request = None
+    if room.game.status == "playing":
+        room.game.status = "waiting"
 
 
 def leave_room(room: Room, player_id: str) -> None:
