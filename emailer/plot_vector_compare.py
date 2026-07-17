@@ -165,6 +165,10 @@ def plot_deal_scenario(
     if not subset:
         return None
 
+    available_models = {str(record["model"]) for record in subset}
+    if any(model not in available_models for model in model_styles):
+        return None
+
     fig = Figure(figsize=(8.6, 4.8), dpi=150)
     FigureCanvasAgg(fig)
     ax = fig.subplots()
@@ -233,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         for deal, scenario in missing:
             print(f"- {deal}: {scenario}")
 
-    return 0 if written else 1
+    return 0 if written and not missing else 1
 
 
 if __name__ == "__main__":

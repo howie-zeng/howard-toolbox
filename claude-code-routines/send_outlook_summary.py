@@ -53,6 +53,11 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="If --send fails, create an Outlook draft instead.",
     )
+    parser.add_argument(
+        "--allow-duplicate",
+        action="store_true",
+        help="Send even if Sent Items already contains this summary subject today.",
+    )
     return parser
 
 
@@ -88,6 +93,20 @@ def _outlook_app():
     return win32com.client.Dispatch("Outlook.Application")
 
 
+def _same_day_summary_was_sent(outlook, subject: str, summary_date: dt.date) -> bool:
+    sent_items = outlook.Session.GetDefaultFolder(5).Items
+    sent_items.Sort("[SentOn]", True)
+
+    for index in range(1, sent_items.Count + 1):
+        message = sent_items.Item(index)
+        sent_date = message.SentOn.date()
+        if sent_date < summary_date:
+            break
+        if sent_date == summary_date and message.Subject == subject:
+            return True
+    return False
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -109,6 +128,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     outlook = _outlook_app()
+    if args.send and not args.allow_duplicate and _same_day_summary_was_sent(
+        outlook,
+        subject,
+        summary_date,
+    ):
+        print(f"[SKIP] Sent Items already contains: {subject}")
+        print("[SKIP] Use --allow-duplicate only when a new in-scope update requires resending.")
+        return 0
+
     message = outlook.CreateItem(0)
     message.To = args.to
     message.Subject = subject

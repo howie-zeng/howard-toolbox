@@ -17,8 +17,14 @@ Primary goal: inspect Howard's Outlook email first, especially the `AUTO` folder
 Before searching, read these routine memory files:
 
 - `claude-code-routines/memory/daily-resi-clo-summary-scope.md`
+- `claude-code-routines/memory/duplicate-scheduled-run-guard.md`
 - `claude-code-routines/memory/mailbox-folder-map.md`
 - `claude-code-routines/memory/libremax-tls-interception-ca.md`
+
+Before regenerating or sending, apply the duplicate-run guard: check for a fresh
+same-day output file and a same-day email with the expected subject in Outlook
+Sent Items. If both exist and no newer in-scope message arrived, stop without
+overwriting or resending.
 
 **Out of scope — do NOT flag these (not Howard's responsibility):**
 
@@ -50,7 +56,7 @@ Suggested search order:
 Mailbox folder map (learned 2026-06-01 — check ALL of these, not just Inbox/AUTO):
 
 - **Check every run:** `Inbox/auto` (the "AUTO" feed; ~36k items), **`Jenkins Automation`** (~12.5k items — this is where Howard's RESI/CLO build pipelines report: `quant-DailyNewIssueCRTVectors`, `quant-CRTDaily-Workflow`, `quant-Monthly-ResiTracking-pipeline`, `quant-WeekendCRTTrackingVectors`, `quant-RMBSLoader`, `quant-CLODaily-Workflow-pipeline`, `quant-CLO-restart-spread-model-celery`, `quant-CLO-Loan-Px-Diff-Email`, `quant-colordb-run-risk-results`, `quant-trimaran-galileo-integration-test`, etc.), **`CLO`** (CLO RV lists/offers, spread-model MAE & curve-comparison v2/v2r/delev, surveillance, IO/PO & break-even yields, MVOC), `HECM`, `RESI`, `Tracking` (QR Model Tracking Reports / NQM called deal-months), and `Inbox`.
-- **Out-of-scope folders (skip):** `Daily Fund PnL`, `Performance Attribution`, `Resources`, `Archive`, `Conversation History`, `Sync Issues`, `Junk Email`, `Sent Items`, `Glenn & Kiet`.
+- **Out-of-scope folders (skip):** `Daily Fund PnL`, `Performance Attribution`, `Resources`, `Archive`, `Conversation History`, `Sync Issues`, `Junk Email`, `Glenn & Kiet`.
 - **Folder-access gotcha:** the `outlook_email_search` `folderName` lookup resolves `Inbox`, `CLO`, `HECM`, `Jenkins Automation`, `auto`, but returns NOT_FOUND for some custom folders (`RESI`, `Tracking`). For those, get the folder ID from `read_resource mail:///folders/` (lists all folders) and read it via `read_resource mail:///folders/{id}` to enumerate recent messages.
 - In Jenkins, treat `Build FAILURE` / `Build failed in Jenkins` / `ABORTED` / `[Tests: FAILED]` as failures, and `Jenkins build is back to normal` as a recovery (implies a prior failure). A failure with no later "back to normal" or SUCCESS for the same job = still broken.
 

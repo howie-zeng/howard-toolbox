@@ -24,6 +24,7 @@ claude-code-routines/outputs/
 
 # Editor and runtime state
 .vscode/
+.cursor/hooks/state/continual-learning.json
 *.log
 ~$*.docx
 
