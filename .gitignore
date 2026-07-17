@@ -9,8 +9,23 @@
 emailer/outputs/
 dial/outputs/
 
+# Generated reports and simulation artifacts
+usage/*_cursor_usage.html
+roll-rate-model/build/
+roll-rate-model/output/
+roll-rate-model/input/deals/
+roll-rate-model/input/coef/**/model_report.html
+
 # Smooth notebook: local model baselines and edited model copies
 smooth/local_models/
+
+# Local/generated workflow material
+claude-code-routines/outputs/
+
+# Editor and runtime state
+.vscode/
+*.log
+~$*.docx
 
 # Python
 __pycache__/
