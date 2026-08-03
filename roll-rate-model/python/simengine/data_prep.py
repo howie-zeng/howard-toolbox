@@ -82,6 +82,7 @@ HOMEOWNERSHIP_VALUE_MAP = {
     "Own":      "Own",
     "Mortgage": "Mortgage",
     "Other":    "Other",
+    "Missing":  "Missing",
 }
 
 # R: employed = fcase(is.na -> NA, emp_status %in% NOT_EMPLOYED -> "No", default -> "Yes")
@@ -1016,7 +1017,7 @@ def _extend_cpi_forward(lookup: Dict[str, float], n_months: int = 120) -> None:
 def load_cpi_lookup(path: str, extend_months: int = 120) -> Dict[str, float]:
     """Load CPI CSV (DATE, CPIAUCNS) -> {YYYY-MM: cpi_value}.
 
-    Auto-extrapolates forward using trailing 12-month growth rate.
+    Extrapolates forward using trailing 12-month growth when extend_months is positive.
     """
     lookup: Dict[str, float] = {}
     with open(path, newline="") as f:
@@ -1024,7 +1025,8 @@ def load_cpi_lookup(path: str, extend_months: int = 120) -> Dict[str, float]:
         for row in reader:
             ym = _parse_cpi_date(row["DATE"])
             lookup[ym] = float(row["CPIAUCNS"])
-    _extend_cpi_forward(lookup, extend_months)
+    if extend_months > 0:
+        _extend_cpi_forward(lookup, extend_months)
     return lookup
 
 

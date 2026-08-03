@@ -2,6 +2,10 @@
 
 _Written 2026-07-14. Pick up here after clearing session._
 
+> This handoff covers simulation and reporting work in `auto-sim`. For the
+> upstream ABS-EE transition and severity model-training pipeline, see
+> [`docs/abs_ee_training_runbook.md`](docs/abs_ee_training_runbook.md).
+
 ## Where we are (model state — done, don't redo)
 - **`ctco` (C→LIQ) transition** is live: `config/auto_prime.json` fromC gam_models has
   `{"path":"from0/models/ctco_bam.rds","to_status":"LIQ"}` and `status_to_roll["C"] = ["C","D1M","PIF","LIQ"]`.

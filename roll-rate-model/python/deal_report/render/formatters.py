@@ -9,6 +9,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .theme import ACCENT, BORDER, CARD_BG, TEXT, TEXT_DIM
+
+
 # ---------------------------------------------------------------------------
 # Scalar formatters
 # ---------------------------------------------------------------------------

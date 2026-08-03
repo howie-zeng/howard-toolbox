@@ -46,9 +46,16 @@ OUTPUTS_DIR = EMAILER_DIR / "outputs"
 # EDIT YOUR MARKDOWN CONTENT HERE
 # -----------------------------------------------------------------------------
 MD_CONTENT = r"""
-Hi,
+Hi Dan,
 
-Replace this text with the email body.
+It looks like `BARC 2026-NQM1` and `NRZT 2026-NQM4` may be mapped incorrectly in `poolgroupmap`. Could you take a look?
+
+| BBG deal | Expected pool per `lp_cover` | Deal number | Current `poolgroupmap` | Match |
+| --- | --- | --- | --- | --- |
+| BARC 2026-NQM1 | HW4 | BCQ61 | HWB | ❌ |
+| BRAVO 2026-NQM1 | HWB | BRN61 | HWB | ✅ |
+| NRZT 2026-NQM4 | IG8 | NR6Q4 | IGA | ❌ |
+| NRZT 2026-NQM6 | IGA | NR6Q6 | IGA | ✅ |
 
 """
 

@@ -874,7 +874,7 @@ def build_report(df: pd.DataFrame, name: str = "Howard") -> str:
     <p>
         The headline spend uses a conservative estimate. Cursor usage exports can aggregate
         multiple underlying model calls into one row; this export has GPT rows above a model's
-        actual context window, so applying GPT-5.4/GPT-5.5 long-context uplift to the full row
+        actual context window, so applying GPT long-context uplift to the full aggregate row
         can overstate input/cache cost. The high estimate preserves that row-threshold method
         for comparison.
     </p>

@@ -2,11 +2,13 @@
   "deal_name": "upst_2026_2",
   "input_dir": "input",
   "scenario": "new",
-  "coef_version": "DIALED_v3",
+  "coef_version": "STACKED_v4",
 
   "macro": {
-    "cpi_inflator_36": {"mode": "default", "path": "input/macro/cpi_table.csv"},
-    "cpi_inflator_12": {"mode": "default", "path": "input/macro/cpi_table.csv"}
+    "cpi_inflator_36": {"mode": "custom", "path": "input/macro/CPIAUCNS.csv"},
+    "cpi_inflator_12": {"mode": "custom", "path": "input/macro/CPIAUCNS.csv"},
+    "rate_incentive_ALL": {"mode": "custom", "path": "input/macro/FICO_BKT_COUPON.csv",
+                           "key_columns": ["vint_moyy", "fico_bkt"]}
   },
   "group_by": ["term", "grade"],
 
@@ -38,10 +40,10 @@
       "from_status": "C",
       "output_file": "fromC.txt",
       "models": [
-        {"path": "from0/ALL/models/PROD_V1_ctd1_BASE_prod.RData", "to_status": "D1M",
-         "stacked": ["from0/ALL/models/PROD_V1_ctd1_STACKED_lending_environment_platform_type_f_prod.RData"]},
-        {"path": "from0/ALL/models/PROD_V1_ctp_BASE_prod.RData",  "to_status": "PIF",
-         "stacked": ["from0/ALL/models/PROD_V1_ctp_STACKED_lending_environment_platform_type_f_prod.RData"]}
+        {"path": "from0/ALL/models/PROD_V1_ctd1_BASE_v2_prod.RData", "to_status": "D1M",
+         "stacked": ["from0/ALL/models/PROD_V1_ctd1_BASE_v2_STACKED_LE_prod.RData"]},
+        {"path": "from0/ALL/models/PROD_V1_ctp_BASE_v2_prod.RData",  "to_status": "PIF",
+         "stacked": ["from0/ALL/models/PROD_V1_ctp_BASE_v2_STACKED_LE_plat_prod.RData"]}
       ]
     },
     {
@@ -51,7 +53,8 @@
         {"path": "from1/ALL/models/PROD_V1_d1tC_BASE_prod.RData",    "to_status": "C"},
         {"path": "from1/ALL/models/PROD_V1_d1td2_BASE_prod.RData",   "to_status": "D2M"},
         {"path": "from1/ALL/models/PROD_V1_d1td3p_BASE_prod.RData",  "to_status": "D3M"},
-        {"path": "from1/ALL/models/PROD_V1_d1tCO_BASE_prod.RData",   "to_status": "LIQ"}
+        {"path": "from1/ALL/models/PROD_V1_d1tCO_BASE_prod.RData",   "to_status": "LIQ"},
+        {"path": "from1/ALL/models/PROD_V1_d1tP_BASE_prod.RData",    "to_status": "PIF"}
       ]
     },
     {

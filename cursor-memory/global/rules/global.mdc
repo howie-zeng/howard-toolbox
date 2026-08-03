@@ -1,0 +1,45 @@
+---
+description: Global agent behavior rules for Howard Zeng
+alwaysApply: true
+---
+
+# Global Rules
+
+## Context Loading
+
+Before non-trivial work, read the workspace project skill file (`.cursor/skills/<project>/SKILL.md`)
+for full project knowledge. Domain corrections are in `.cursor/rules/memories.mdc`
+(auto-injected, no read needed).
+
+## Environments
+
+- **Company Machines**: Repos live on `S:\QR\hzeng\`. DFS share — `.cursor/` directories may be locked; use git plumbing when needed.
+- **Local Desktop**: Repos synced via OneDrive at `E:\OneDrive\Github\`. Also hosts OpenClaw at `C:\Users\Howard\.openclaw`.
+
+Project skills and rules are tracked in each repo under `.cursor/`.
+Global skills (`personal-profile`) live at `~/.cursor/skills/`.
+
+## Memory Write Protocol
+
+The agent may **proactively propose** memory updates. All writes require
+**diff preview + user approval** before saving. Never write silently.
+
+**When to propose an update:**
+- The user corrects a mistake or says something like "remember this"
+- The user expresses a preference (even casually)
+- A domain fact or gotcha is discovered during work
+- A structural change was made to the codebase
+- The agent made an error that should not be repeated
+
+**Routing:**
+- Project domain facts/corrections → workspace `.cursor/rules/memories.mdc`
+- Project structure/pattern changes → workspace project skill file
+- Generic preference or agent mistake → `~/.cursor/skills/personal-profile/SKILL.md`
+
+**Steps:**
+1. Determine target file from routing above.
+2. Show the proposed edit (diff) and wait for approval.
+3. Project files → write to the workspace repo (source of truth). On DFS where `.cursor/` is locked, use git plumbing.
+4. Global files → write directly to `~/.cursor/skills/personal-profile/SKILL.md`.
+
+Consolidation follows the same protocol (diff + approval). Never write silently.

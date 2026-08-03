@@ -147,17 +147,30 @@ static void reg_cpi_inflator(VarRegistry& reg, const std::string& field_name,
     std::function<void(LoanDict&, const VarContext&)> macro_fn = nullptr;
 
     if (active.count(field_name)) {
-        macro_fn = [field_name](LoanDict& loan, const VarContext& ctx) {
+        // Compute inflator from raw CPI levels: CPI(t) / CPI(t - lag) - 1.
+        // Freeze behavior: if either month is missing from the table
+        // (e.g. past the last actual), the previous value is kept.
+        const int lag_months = (field_name == "cpi_inflator_36") ? -36 : -12;
+        macro_fn = [lag_months, field_name](LoanDict& loan, const VarContext& ctx) {
             if (!ctx.calendar_table) return;
             std::string r_dt = get_string(loan, "r_dt");
-            std::string ym = r_dt.substr(0, 7);
-            auto it = ctx.calendar_table->find(ym);
-            if (it != ctx.calendar_table->end()) {
-                auto col = it->second.find(field_name);
-                if (col != it->second.end())
-                    set_val(loan, field_name, col->second);
-            }
-            // If not found, value stays (freeze behavior)
+            int y, m;
+            parse_year_month(r_dt, y, m);
+            char key_now[8];
+            std::snprintf(key_now, sizeof(key_now), "%04d-%02d", y, m);
+            auto now_it = ctx.calendar_table->find(key_now);
+            if (now_it == ctx.calendar_table->end()) return;
+            auto now_col = now_it->second.find("CPIAUCNS");
+            if (now_col == now_it->second.end()) return;
+            int ly, lm;
+            advance_month(y, m, lag_months, ly, lm);
+            char key_lag[8];
+            std::snprintf(key_lag, sizeof(key_lag), "%04d-%02d", ly, lm);
+            auto lag_it = ctx.calendar_table->find(key_lag);
+            if (lag_it == ctx.calendar_table->end()) return;
+            auto lag_col = lag_it->second.find("CPIAUCNS");
+            if (lag_col == lag_it->second.end() || lag_col->second <= 0) return;
+            set_val(loan, field_name, now_col->second / lag_col->second - 1.0);
         };
     }
 

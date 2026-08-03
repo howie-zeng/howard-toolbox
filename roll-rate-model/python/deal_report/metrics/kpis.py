@@ -14,6 +14,7 @@ import pandas as pd
 
 from .aggregation import balance_weighted_avg, compute_kpis
 
+
 # ---------------------------------------------------------------------------
 # Column standardisation — model output -> canonical
 # ---------------------------------------------------------------------------

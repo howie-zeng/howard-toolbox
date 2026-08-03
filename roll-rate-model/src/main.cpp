@@ -338,6 +338,7 @@ struct MetricRow {
     double cpr, cdr, cgl;
     double begin_bal, pif_bal, liq_bal, loss, cum_loss;
     double dq30_bal, dq60_bal, dq90_bal, dq120_bal;
+    double sch_prin;   // scheduled principal — denominator basis used in CPR
 };
 
 static std::vector<MetricRow> compute_metrics(
@@ -380,6 +381,7 @@ static std::vector<MetricRow> compute_metrics(
         mr.loss = loss; mr.cum_loss = cum_loss;
         mr.dq30_bal = row[i_dq30]; mr.dq60_bal = row[i_dq60];
         mr.dq90_bal = row[i_dq90]; mr.dq120_bal = row[i_dq120];
+        mr.sch_prin = sp;
         out.push_back(mr);
     }
     return out;
@@ -393,7 +395,7 @@ static void write_metrics_portfolio_csv(
     if (!f.is_open()) throw std::runtime_error("cannot open output: " + path);
 
     f << std::fixed;
-    f << "period,cpr,cdr,cgl,begin_bal,pif_bal,liq_bal,loss,cum_loss\n";
+    f << "period,cpr,cdr,cgl,begin_bal,pif_bal,liq_bal,loss,cum_loss,sch_prin\n";
     for (const auto& m : metrics) {
         if (m.begin_bal < 0.01 && m.cpr == 0 && m.cdr == 0) continue;
         f << m.period << ','
@@ -401,7 +403,8 @@ static void write_metrics_portfolio_csv(
           << m.cdr << ',' << m.cgl << ','
           << std::setprecision(2) << m.begin_bal << ','
           << m.pif_bal << ',' << m.liq_bal << ','
-          << m.loss << ',' << m.cum_loss << '\n';
+          << m.loss << ',' << m.cum_loss << ','
+          << m.sch_prin << '\n';
     }
 }
 
@@ -433,7 +436,7 @@ static void write_metrics_grouped_csv(
     // header
     for (const auto& g : group_by) f << g << ',';
     f << "loan_age,cpr,cdr,cgl,begin_bal,pif_bal,liq_bal,loss,cum_loss,"
-      << "dq30_bal,dq60_bal,dq90_bal,dq120_bal";
+      << "dq30_bal,dq60_bal,dq90_bal,dq120_bal,sch_prin";
     for (const auto& pk : gr.prob_keys) f << ',' << pk;
     f << '\n';
 
@@ -517,9 +520,10 @@ static void write_metrics_grouped_csv(
                   << m.pif_bal << ',' << m.liq_bal << ','
                   << m.loss << ',' << m.cum_loss << ','
                   << m.dq30_bal << ',' << m.dq60_bal << ','
-                  << m.dq90_bal << ',' << m.dq120_bal;
+                  << m.dq90_bal << ',' << m.dq120_bal << ','
+                  << m.sch_prin;
             } else {
-                f << ",,,,,,,,,,,";  // 12 empty financial columns
+                f << ",,,,,,,,,,,,";  // 13 empty financial columns
             }
 
             write_probs(age);
@@ -544,7 +548,7 @@ static void write_metrics_grouped_period_csv(
     // header
     for (const auto& g : group_by) f << g << ',';
     f << "period,cpr,cdr,cgl,begin_bal,pif_bal,liq_bal,loss,cum_loss,"
-      << "dq30_bal,dq60_bal,dq90_bal,dq120_bal";
+      << "dq30_bal,dq60_bal,dq90_bal,dq120_bal,sch_prin";
     for (const auto& pk : gr.prob_keys) f << ',' << pk;
     f << '\n';
 
@@ -594,7 +598,8 @@ static void write_metrics_grouped_period_csv(
               << m.pif_bal << ',' << m.liq_bal << ','
               << m.loss << ',' << m.cum_loss << ','
               << m.dq30_bal << ',' << m.dq60_bal << ','
-              << m.dq90_bal << ',' << m.dq120_bal;
+              << m.dq90_bal << ',' << m.dq120_bal << ','
+              << m.sch_prin;
 
             write_probs(p);
             f << '\n';

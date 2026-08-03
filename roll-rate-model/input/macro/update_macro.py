@@ -53,7 +53,7 @@ def fetch_fred_csv(series_id):
         if val in (".", ""):
             continue
         dt = datetime.strptime(date_str, "%Y-%m-%d")
-        rows.append((f"{dt.month}/{dt.day}/{dt.year}", float(val)))
+        rows.append((dt.strftime("%Y-%m"), float(val)))
     return rows
 
 

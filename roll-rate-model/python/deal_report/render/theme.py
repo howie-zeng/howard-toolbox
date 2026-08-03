@@ -15,24 +15,25 @@ CHART_FULL_WIDTH = 1400
 CHART_SIMPLE_WIDTH = 900
 CHART_HEIGHT = 380
 
-# Per-metric accent colours (single-series charts)
+# Per-metric accent colours (single-series charts) — semantic & muted:
+# blue = balance/size, green = prepay, amber/red = default & loss, teal = interest.
 METRIC_COLORS = {
-    "cpr": "#5bc0eb",
-    "cdr": "#e55934",
-    "cgl": "#fa7921",
-    "begin_bal": "#5bc0eb",
-    "pool_factor": "#9bc53d",
-    "cum_interest": "#a0e426",
-    "ctd1": "#8b5cf6",
-    "ctp": "#16a34a",
+    "begin_bal":    "#3b6ea5",  # balance — slate blue
+    "pool_factor":  "#5b8bb5",  # balance % — lighter slate blue
+    "cpr":          "#4c956c",  # prepay — green
+    "cdr":          "#c97b3c",  # default rate — amber
+    "cgl":          "#b3543d",  # cumulative loss — brick red
+    "cum_interest": "#3d7d8a",  # interest — teal
+    "ctd1":         "#8a6d9e",  # roll to delinquency — muted purple
+    "ctp":          "#4c956c",  # prepay — green
 }
 
 # Stacked-area palettes
-DQ_COLORS = ["#fde74c", "#fa7921", "#e55934", "#9b1d20"]
-PMT_COLORS = ["#5bc0eb", "#9bc53d", "#c3a5e0"]
+DQ_COLORS = ["#e9c46a", "#e08a4f", "#c25b3f", "#8c2f25"]   # severity: gold -> deep red
+PMT_COLORS = ["#3d7d8a", "#4c956c", "#8fa6c2"]             # interest / principal / PIF
 
 # Multi-source palette (Deal + per-quarter comparisons in summary tables)
-SOURCE_COLORS = ["#4a90d9", "#e8734a", "#5cc07a", "#b07cd8", "#f0b429"]
+SOURCE_COLORS = ["#3b6ea5", "#c97b3c", "#4c956c", "#8a6d9e", "#d9a441"]
 
 # Multi-line palette for curve charts (one colour per cohort series)
 CURVE_PALETTE = [

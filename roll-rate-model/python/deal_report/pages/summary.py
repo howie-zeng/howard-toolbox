@@ -9,21 +9,15 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..formatters import (
-    TABLE_FMT,
-    df_to_html_table,
-    fmt_dollars,
-    fmt_pct,
-    json_safe,
-    kpi_grid,
-    strip_total_rows,
+from ..render.formatters import (
+    df_to_html_table, fmt_dollars, fmt_pct, json_safe, kpi_grid,
+    strip_total_rows, TABLE_FMT,
 )
-from ..theme import (
-    CHART_HEIGHT,
-    CHART_SIMPLE_WIDTH,
-    SOURCE_COLORS,
+from ..render.theme import (
+    CHART_HEIGHT, CHART_SIMPLE_WIDTH, SOURCE_COLORS,
 )
-from ..vega_specs import bar_spec, faceted_bar_spec
+from ..render.vega_specs import bar_spec, faceted_bar_spec
+
 
 # Metrics shown in the section's chart switcher.  Each ``y_format`` matches
 # what the underlying column actually contains (Bal % is already in %).
@@ -52,12 +46,9 @@ def _kpi_section(stats: dict) -> str:
         ("Total Balance", fmt_dollars(ov.get("total_balance")),      None),
         ("Avg Balance",   fmt_dollars(ov.get("avg_balance")),        None),
     ]
-    if "w_rate" in ov:
-        items.append(("WAC", fmt_pct(ov["w_rate"]), None))
-    if "w_fico" in ov:
-        items.append(("Wtd FICO", f"{ov['w_fico']:.0f}", None))
-    if "w_term" in ov:
-        items.append(("Wtd Term", f"{ov['w_term']:.1f}mo", None))
+    if "w_rate" in ov: items.append(("WAC",      fmt_pct(ov["w_rate"]),   None))
+    if "w_fico" in ov: items.append(("Wtd FICO", f"{ov['w_fico']:.0f}",   None))
+    if "w_term" in ov: items.append(("Wtd Term", f"{ov['w_term']:.1f}mo", None))
     return kpi_grid(items)
 
 
@@ -98,8 +89,7 @@ def _section_chart(
 
     for i, (mc, y_fmt) in enumerate(avail):
         active_cls = " active" if i == 0 else ""
-        cid = f"chart_{plot_id}"
-        plot_id += 1
+        cid = f"chart_{plot_id}"; plot_id += 1
 
         rec_df = clean[["term"] + ([color_col] if color_col and color_col in clean.columns else []) + [mc]].copy()
         if color_col and color_col in rec_df.columns:

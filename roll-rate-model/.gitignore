@@ -4,6 +4,9 @@ build/
 # Generated simulation outputs and reports
 output/
 
+# Oversized loan tape (87 MB) — exceeds GitHub's file-size comfort threshold.
+input/deals/UPST_2026_2/loans_prepped.json
+
 # Python bytecode
 __pycache__/
 *.pyc

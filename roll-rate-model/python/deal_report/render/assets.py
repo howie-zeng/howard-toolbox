@@ -13,6 +13,18 @@ from __future__ import annotations
 
 from .theme import ACCENT, BG, BORDER, CARD_BG, TEXT, TEXT_DIM
 
+
+# Exact-pinned Vega libs, shared by the main document and every iframe sub-page.
+# Unpinned majors drift independently on the CDN; a mismatched trio silently
+# breaks rendering (vega-util internals undefined -> 0 charts). Pinning one
+# compatible triple keeps all pages in lockstep.
+VEGA_CDN = (
+    '<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>'
+    '<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.23.0"></script>'
+    '<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.29.0"></script>'
+)
+
+
 CSS = f"""\
 body {{
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
@@ -103,13 +115,34 @@ h3 {{ color: {TEXT}; margin: 14px 0 8px 0; font-size: 14px; }}
 .report-section.visible {{ display: block; }}
 
 /* ---- Charts ---- */
-.chart-row {{ display: flex; gap: 16px; margin: 12px 0; }}
-.chart-row > .chart-box {{ flex: 1; min-width: 0; }}
+/* Grid columns are at least one chart wide, so when two no longer fit the row
+   collapses to a single column instead of letting fixed-width charts overlap. */
+.chart-row {{
+  display: grid; gap: 16px; margin: 12px 0;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+}}
+.chart-row > .chart-box {{ min-width: 0; }}
+/* SVGs carry a viewBox, so width:100% + height:auto makes each chart FILL its
+   box (scaling up/down) instead of sitting tiny at its natural pixel size. */
+.chart-box svg {{ display: block; width: 100%; height: auto; }}
+/* Custom HTML cohort legend — BELOW the chart (so toggling it never resizes the
+   chart), toggled by JS on show_cohorts. */
+.cohort-legend {{
+  display: none; flex-wrap: wrap; gap: 5px 16px; justify-content: center;
+  margin-top: 10px; font-size: 11px; color: {TEXT_DIM};
+}}
+.cohort-legend.visible {{ display: flex; }}
+.cl-item {{ display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }}
+.cl-item:hover {{ color: {TEXT}; }}
+.cl-item.active {{ font-weight: 700; color: {TEXT}; }}
+.cl-sw {{ width: 18px; height: 3px; border-radius: 2px; display: inline-block; flex: none; }}
 .chart-box {{
   background: {CARD_BG}; padding: 14px; margin: 12px 0;
   border-radius: 6px; border: 1px solid {BORDER}; overflow: visible;
 }}
-.chart-box .vega-embed {{ overflow: visible !important; }}
+/* vega-embed defaults to inline-block (shrinks to the svg's intrinsic width, which
+   caps growth on wide windows). Force it full-width so the svg fills the box. */
+.chart-box .vega-embed {{ display: block; width: 100%; overflow: visible !important; }}
 .chart-box .vega-embed summary {{ display: none !important; }}
 
 /* ---- Tables ---- */
@@ -234,14 +267,40 @@ JS = r"""
     var node = document.getElementById('vega-specs');
     if (!node) return;
     var specs = JSON.parse(node.textContent || '[]');
+    var views = {};
     for (var i = 0; i < specs.length; i++) {
       var entry = specs[i];
       var el = document.getElementById(entry.id);
       if (!el) continue;
       try {
-        await vegaEmbed(el, entry.spec, { actions: false, renderer: 'svg' });
+        var res = await vegaEmbed(el, entry.spec, { actions: false, renderer: 'svg' });
+        if (res && res.view) views[entry.id] = res.view;
       } catch (e) { console.error('Vega render error for ' + entry.id, e); }
     }
+    // Dynamic cohort legends: show the HTML legend only while its chart's
+    // show_cohorts toggle is on (wired after the loop to avoid closure bugs).
+    document.querySelectorAll('.cohort-legend').forEach(function (leg) {
+      var view = views[leg.getAttribute('data-for')];
+      if (!view) return;
+      try {
+        var apply = function (v) { leg.classList.toggle('visible', !!v); };
+        apply(view.signal('show_cohorts'));
+        view.addSignalListener('show_cohorts', function (n, v) { apply(v); });
+      } catch (e) { /* no show_cohorts signal on this chart */ }
+      // Interactive: click a legend item to bold its cohort line (toggle).
+      leg.querySelectorAll('.cl-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          var c = item.getAttribute('data-cohort');
+          var cur = null;
+          try { cur = view.signal('hl_cohort'); } catch (e) { return; }
+          var next = (cur === c) ? null : c;
+          try { view.signal('hl_cohort', next).run(); } catch (e) {}
+          leg.querySelectorAll('.cl-item').forEach(function (x) {
+            x.classList.toggle('active', x.getAttribute('data-cohort') === next);
+          });
+        });
+      });
+    });
     window.__vegaRendered = true;
   }
 

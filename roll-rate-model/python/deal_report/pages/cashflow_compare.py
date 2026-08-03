@@ -20,6 +20,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from ..render.assets import VEGA_CDN
+
+
 CF_ENGINE_ROOT = Path("S:/QR/jli/Cashflow_Engine")
 
 
@@ -303,28 +306,29 @@ h2 { color: #212529; margin: 24px 0 8px 0; font-size: 16px; }
 .kpi-card.highlight { border-color: #2b7ab5; }
 .kpi-card.highlight .value { color: #2b7ab5; }
 .note { font-size: 12px; color: #6c757d; margin: 8px 0 16px 0; line-height: 1.5; }
-.chart-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.chart-row { display: grid; gap: 16px;
+             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); }
 .chart-box { background: #f8f9fa; padding: 14px; margin: 8px 0; border-radius: 6px;
-              border: 1px solid #dee2e6; overflow: visible; flex: 1; min-width: 45%; }
-.chart-box .vega-embed { overflow: visible !important; }
+              border: 1px solid #dee2e6; overflow: visible; min-width: 0; }
+.chart-box svg { display: block; width: 100%; height: auto; }
+.chart-box .vega-embed { display: block; width: 100%; overflow: visible !important; }
 .chart-box .vega-embed summary { display: none !important; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+""" + VEGA_CDN + """
 </head><body>
 """
 
 
-# Per-chart palette — colors match the reference HTMLs in C:/Users/jasonli/Downloads.
+# Per-chart palette — muted, semantically aligned with the report (theme.py):
+# interest = teal, loss = brick red, balance = slate blue, cashflow = green.
 _CHARTS = [
     # (id_suffix, title, series_field, y_format, color)
-    ("cf_comp_0", "Cumulative Interest",         "cum_interest", "$,.0f", "#a0e426"),
-    ("cf_comp_1", "Periodic Interest",           "interest",     "$,.0f", "#5bc0eb"),
-    ("cf_comp_2", "Cumulative Gross Loss (CGL)", "cgl",          ".2%",   "#fa7921"),
-    ("cf_comp_3", "Pool Factor",                 "pool_factor",  ".2%",   "#9bc53d"),
-    ("cf_comp_4", "Net Cash Flow (per period)",  "net_cf",       "$,.0f", "#8b5cf6"),
-    ("cf_comp_5", "Cumulative Net Cash Flow",    "cum_net_cf",   "$,.0f", "#e55934"),
+    ("cf_comp_0", "Cumulative Interest",         "cum_interest", "$,.0f", "#3d7d8a"),
+    ("cf_comp_1", "Periodic Interest",           "interest",     "$,.0f", "#6aa0ab"),
+    ("cf_comp_2", "Cumulative Gross Loss (CGL)", "cgl",          ".2%",   "#b3543d"),
+    ("cf_comp_3", "Pool Factor",                 "pool_factor",  ".2%",   "#3b6ea5"),
+    ("cf_comp_4", "Net Cash Flow (per period)",  "net_cf",       "$,.0f", "#8a6d9e"),
+    ("cf_comp_5", "Cumulative Net Cash Flow",    "cum_net_cf",   "$,.0f", "#4c956c"),
 ]
 
 
@@ -380,7 +384,7 @@ def _chart_spec(title: str, color: str, y_format: str,
                               "scale": {"domain": ["Roll-Rate Model",
                                                    "Cashflow Projection"],
                                         "range": [color, color]},
-                              "legend": {"orient": "right", "labelLimit": 200,
+                              "legend": {"orient": "top", "labelLimit": 200,
                                          "symbolType": "stroke",
                                          "symbolStrokeWidth": 2.5,
                                          "symbolSize": 200}},
@@ -423,8 +427,8 @@ def _chart_spec(title: str, color: str, y_format: str,
             "view": {"stroke": None},
             "background": "#f8f9fa",
             "axis": {"labelColor": "#212529", "titleColor": "#212529",
-                     "gridColor": "#e0e0e0", "domainColor": "#ced4da",
-                     "tickColor": "#ced4da"},
+                     "gridColor": "#eef1f5", "gridOpacity": 0.9,
+                     "domainColor": "#ced4da", "tickColor": "#ced4da"},
             "legend": {"labelColor": "#212529", "titleColor": "#212529"},
             "title":  {"color": "#212529", "subtitleColor": "#6c757d"},
         },

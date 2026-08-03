@@ -250,26 +250,41 @@ dump_one_model <- function(rdata_path, to_status_label, stacked_paths = NULL, n_
 
   # --- 1. Intercept (base) ---
   intercept <- coefs["(Intercept)"]
+  pterms <- attr(gam$pterms, "term.labels")   # kept for the summary line at the bottom
 
-  # --- 2. Parametric factor terms (base) ---
-  pterms <- attr(gam$pterms, "term.labels")
-  for (var_name in pterms) {
-    pattern <- paste0("^", gsub("([.()\\[\\]])", "\\\\\\1", var_name))
-    matching <- grep(pattern, names(coefs), value = TRUE)
-    matching <- matching[matching != "(Intercept)"]
-    for (cn in matching) {
-      level <- sub(pattern, "", cn)
-      if (nchar(level) == 0) next
-      add_row(var_name, level, NA, NA, coefs[cn])
+  # --- 2. Parametric factor terms — accumulate base + stack into one row per (var, level)
+  param_acc <- new.env(hash = TRUE)
+  accum_parametrics <- function(g) {
+    cf <- g$coefficients
+    pt <- attr(g$pterms, "term.labels")
+    for (var_name in pt) {
+      pattern <- paste0("^", gsub("([.()\\[\\]])", "\\\\\\1", var_name))
+      matching <- grep(pattern, names(cf), value = TRUE)
+      matching <- matching[matching != "(Intercept)"]
+      for (cn in matching) {
+        level <- sub(pattern, "", cn)
+        if (nchar(level) == 0) next
+        key <- paste0(var_name, "|", level)
+        val <- unname(cf[cn])
+        if (exists(key, envir = param_acc, inherits = FALSE)) {
+          old <- get(key, envir = param_acc)
+          assign(key, list(var_name = var_name, level = level,
+                           value = old$value + val), envir = param_acc)
+        } else {
+          assign(key, list(var_name = var_name, level = level, value = val),
+                 envir = param_acc)
+        }
+      }
     }
   }
+  accum_parametrics(gam)
 
   # --- 3. Smooth terms (base) ---
   smooth_df <- dump_smooth_terms(gam, ref_row, to_status_label, n_grid)
   n_smooth_base <- length(gam$smooth)
   n_smooth_stacked <- 0
 
-  # --- 4. Stacked layers — consolidate intercept + append smooths ---
+  # --- 4. Stacked layers — consolidate intercept + append smooths + accumulate parametrics
   if (!is.null(stacked_paths)) {
     for (sp in stacked_paths) {
       cat(sprintf("    + stacked: %s\n", basename(sp)))
@@ -281,6 +296,9 @@ dump_one_model <- function(rdata_path, to_status_label, stacked_paths = NULL, n_
         intercept <- intercept + s_intercept
         cat(sprintf("      intercept += %.6f (combined = %.6f)\n", s_intercept, intercept))
       }
+
+      # Accumulate stacked parametric (categorical) coefs into the same map as base
+      accum_parametrics(sgam)
 
       # Build reference row for stacked model (offset = 0)
       s_ref <- make_reference_row(sgam)
@@ -294,6 +312,12 @@ dump_one_model <- function(rdata_path, to_status_label, stacked_paths = NULL, n_
         cat(sprintf("      %d smooth terms appended\n", length(sgam$smooth)))
       }
     }
+  }
+
+  # --- Emit accumulated parametrics ---
+  for (key in ls(param_acc)) {
+    p <- get(key, envir = param_acc)
+    add_row(p$var_name, p$level, NA, NA, p$value)
   }
 
   # --- Write intercept row (consolidated) ---
