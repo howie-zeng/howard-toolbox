@@ -199,7 +199,20 @@ For each non-green Tier-A job:
 
 ### 5. Fix dispatcher
 
-For each **NEW** Tier-A failure with a diagnosis, one agent in its own worktree:
+**Eligibility — only `RED` and `UNSTABLE` states dispatch a fix agent.** `STALE`,
+`NEVER_RAN`, and `UNREACHABLE` are trigger/infra/access problems, not code bugs; patching
+LMQR cannot fix them. They are reported for investigation with the expected cadence and
+last-build time, and never consume a fix-agent slot.
+
+**Ranking when more than 3 are eligible** — sort by, in order:
+1. consecutive-failure count descending (longest-broken first),
+2. then jobs blocking downstream children before leaf jobs,
+3. then earliest expected fire time.
+
+Report every eligible job that did not get a slot as "diagnosed, fix not attempted (slot
+cap)" so the cap is never mistaken for "nothing else wrong".
+
+For each dispatched Tier-A failure, one agent in its own worktree:
 
 ```bash
 git -C C:/Git/LMQR fetch origin master --prune
