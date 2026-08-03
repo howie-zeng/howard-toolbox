@@ -274,7 +274,7 @@ JENKINS_BASE_URL = "http://jenkins.libremax.com"
 
 - [ ] **Step 5: Write `jenkins-jobs.yaml`**
 
-All 26 entries. Triggers transcribed verbatim from `C:\Git\JenkinsJobs\<job>.jenkinsfile`.
+All 25 entries (quant-DailyCRTVectors was archived and removed). Triggers transcribed verbatim from `C:\Git\JenkinsJobs\<job>.jenkinsfile`.
 
 ```yaml
 # Registry for Howard's quant-* tracking / flat-file Jenkins jobs.
