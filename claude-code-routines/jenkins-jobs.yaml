@@ -1,0 +1,274 @@
+# Registry for Howard's quant-* tracking / flat-file Jenkins jobs.
+#
+# This file is DATA, not configuration for an algorithm. `jenkins_monitor facts` publishes
+# every field below verbatim into its daily fact sheet, and the agent applies judgment to
+# them per claude-code-routines/JENKINS_MONITOR_PROMPT.md. It exists because job names lie
+# about cadence and re-reading 25 jenkinsfiles every morning is slow and error-prone.
+#
+# Triggers transcribed from C:\Git\JenkinsJobs\<job>.jenkinsfile - the authoritative
+# source. Job NAMES DO NOT IMPLY CADENCE; do not "correct" these from the name.
+#
+# 'H' is Jenkins' hashed value: Jenkins picks one stable value in the field's range and
+# reuses it forever, so 'H 20 * * *' denotes a WINDOW (some minute inside hour 20), not a
+# time. Any run inside that hour is on time - judging such a job against 20:59 flagged four
+# jobs stale for running early, one by three minutes.
+#
+# max_silence_days: an ABSOLUTE wall-clock ceiling on silence, in days. Set only on
+# upstream-triggered jobs, whose parent-recency comparison is meaningless: each sits behind
+# a readiness gate that may legitimately decide there is nothing for the child to do, so the
+# parent running without the child following is expected, not a fault. Comparing against the
+# parent produced 7 false positives measuring HOURS to a few DAYS, so the 21-day floor cannot
+# reproduce any of them while still catching a job that has genuinely stopped (the
+# observation that motivated this package was a job whose last REAL build was 27 days old).
+# pollscm (builds only on repo change) and manual (trigger commented out) omit it on purpose,
+# because silence there is genuinely expected.
+jobs:
+  # ---- simdata family -------------------------------------------------------
+  - job: quant-DailySimDataUpdate
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "20 15 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: agencydata/wh_crt_update.py
+    console_informative: false          # --log does not mirror WARNING+ to stdout
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\wh_crt_update_*.log'
+
+  - job: quant-DailySimDataUpdateLP
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "20 14 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: agencydata/wh_lp_update.py
+    unstable_is_failure: true           # 8 deal types, each catchError->UNSTABLE
+    success_markers:
+      - "Done NQM"
+      - "Done Jumbo"
+      - "Done HELOC"
+      - "Done ALT_A"
+      - "Done Subprime"
+      - "Done NQM Pseudo"
+      - "Done Jumbo Pseudo"
+      - "Done HELOC Pseudo"
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\lp_update_*.log'
+
+  - job: quant-DailySimDataUpdateDV01
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "0 15 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdv01/dv01_update.py
+    # NOT a copy-paste error: dv01_update.py:214 writes lp_update_<ts>.log into crt_update/ too.
+    # Only the timestamp distinguishes DV01 logs from the LP job's - match by run time.
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\lp_update_*.log'
+
+  - job: quant-DailySimDataUpdateIntex
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "0 16 * * 5"                  # FRIDAY ONLY despite the "Daily" name
+    tz: America/New_York
+    grace_hours: 8
+    repo: LMQR
+    entrypoint: lmdata/lmloader/helocintexloader.py
+
+  # ---- vectors family ------------------------------------------------------
+  - job: quant-DailySimHistVector
+    tier: fix
+    family: vectors
+    trigger_type: cron
+    cron: "20 20 * * 1-6"               # Mon-Sat
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-DailySimHistVectorUndialed
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-generate-vectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-riskrun-workflow
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-WeekendCRTTrackingVectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-WeekendCRTVectorsWorkflow
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-WeekendCRTVectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-WeekendCRTVectorsWorkflow
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  # ---- resi tracking family ------------------------------------------------
+  - job: quant-Monthly-ResiTracking-pipeline
+    tier: fix
+    family: resitracking
+    trigger_type: manual                # cron is COMMENTED OUT in the jenkinsfile
+    # `orchestrator: true` was removed here: it had no `child_job`, and child drill-down
+    # needs BOTH - so drill-down was silently disabled and the reader was left trying to pull
+    # a traceback out of a wrapper console that never has one. No child job name has been
+    # verified from the jenkinsfile, and inventing one would point the drill-down at the wrong
+    # job. Re-add BOTH fields together once the child is known; registry.py rejects
+    # orchestrator without child_job.
+    repo: LMQR
+
+  - job: quant-Monthly-ResiTracking-Tracking
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "H 23 * * 1-5"                # weekdays, despite the "Monthly" name
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-Monthly-ResiTracking-Unload
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "H 2 * * *"                   # DAILY, despite the "Monthly" name
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-Monthly-Tracking-Report
+    tier: fix
+    family: resitracking
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmanalytics/tracking/transition_report.py
+
+  - job: quant-Monthly-Tracking-Report-Undialed
+    tier: fix
+    family: resitracking
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: lmanalytics/tracking/transition_report.py
+
+  - job: quant-tracking-report-recache-workflow
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "0 9 * * 0"                   # Sundays; note NO TZ= prefix in jenkinsfile
+    tz: America/New_York                # controller default; assumed NY
+    grace_hours: 12
+    orchestrator: true
+    child_job: quant-tracking-report-recache
+    repo: LMQR
+
+  # ---- pseudo deal family --------------------------------------------------
+  - job: quant-PseudoDeal-Stats
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Tracking
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Unload
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Update
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  # ---- loaders / reports ---------------------------------------------------
+  - job: quant-RMBSLoader
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "0 23 * * 1-5"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdata/lmloader/rmbsintexloader.py
+
+  - job: quant-HECMCollateralReport
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "H 23 20-31 * *"              # 20th-31st of each month
+    tz: America/New_York
+    grace_hours: 8
+    repo: LMQR
+    entrypoint: HECM/collateral_report/hecm_monthly_automation.py
+
+  - job: quant-dv01-figure-sync
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "H 20 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdv01.dv01_redshift
+
+  # ---- deploys: NOTIFY ONLY, never auto-fixed ------------------------------
+  - job: quant-deploy-lmqr
+    tier: notify
+    family: deploy
+    trigger_type: pollscm
+
+  - job: quant-deploy-lmsimdata
+    tier: notify
+    family: deploy
+    trigger_type: pollscm
+
+  - job: quant-deploy-Rcode
+    tier: notify
+    family: deploy
+    trigger_type: pollscm

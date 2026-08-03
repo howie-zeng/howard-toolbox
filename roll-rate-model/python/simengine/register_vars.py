@@ -447,14 +447,26 @@ def reg_int_rate(reg: VarRegistry):
     ))
 
 
+def _gam_term_stack(term):
+    """Map a loan's ``term`` to its GAM coefficient-stack key.
+
+    The GAM is only fit for 36- and 60-month vintages, so 24→36, 48→60,
+    84→60 (nearest larger supported tenor); other terms pass through.
+    Used by ``oterm_f`` and ``term_platform`` — ``term``/``rem_term``
+    themselves are unaffected, so amortization math is unchanged.
+    """
+    if term is None:
+        return None
+    n = int(term)
+    return {24: 36, 48: 60, 84: 60}.get(n, n)
+
+
 def reg_oterm_f(reg: VarRegistry):
-    """oterm_f = str(term), categorical factor for model lookup."""
+    """oterm_f = str(GAM-stack term), categorical factor for model lookup."""
 
     def init(loan, ctx):
-        t = loan.get("term")
-        if t is not None:
-            return str(int(t)) if isinstance(t, (int, float)) else str(t)
-        return None
+        mapped = _gam_term_stack(loan.get("term"))
+        return str(mapped) if mapped is not None else None
 
     reg.register(VarDef(
         name="oterm_f",
@@ -552,15 +564,14 @@ def reg_term_fico(reg: VarRegistry):
 
 
 def reg_term_platform(reg: VarRegistry):
-    """term_platform = term crossed with platform_f, e.g. '36.Prosper'."""
+    """term_platform = GAM-stack term crossed with platform_f, e.g. '36.Prosper'."""
 
     def init(loan, ctx):
-        term = loan.get("term")
+        mapped = _gam_term_stack(loan.get("term"))
         pf = loan.get("platform_f")
-        if term is None or pf is None:
+        if mapped is None or pf is None:
             return ""
-        t = int(term) if isinstance(term, (int, float)) else term
-        return f"{t}.{pf}"
+        return f"{mapped}.{pf}"
 
     reg.register(VarDef(
         name="term_platform",

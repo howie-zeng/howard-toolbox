@@ -1,0 +1,90 @@
+---
+description: Cross-repository context loading and Howard Toolbox memory governance.
+alwaysApply: true
+---
+
+# Memory Governance
+
+## Context Loading
+
+Before non-trivial work, resolve the current workspace dynamically and load context in this order:
+
+1. Read the workspace project skill at `.cursor/skills/<project>/SKILL.md`.
+2. If the task touches domain conventions, known gotchas, prior corrections, or repeated workflows, consult `.cursor/rules/memories.mdc` and project `AGENTS.md` when present.
+3. If the task depends on persistent personal preferences or repeated agent mistakes, consult `~/.cursor/skills/personal-profile/SKILL.md`.
+
+Prefer local project files. If a local project skill or memory is absent, use the Howard Toolbox canonical fallback for the derived project key. Do not load all memory blindly; read only files relevant to the current task.
+
+## Operating Modes
+
+- **Light task**: Small edit, one-off answer, or trivial refactor. Read only the project skill if needed.
+- **Domain task**: Modeling, pipeline, architecture, or repository-specific logic. Read the project skill and project memory.
+- **Preference-sensitive task**: Formatting, workflow style, communication style, or repeated user preferences. Also read the global personal profile.
+
+## Memory Write Protocol
+
+The agent may proactively propose memory updates, but must never write silently. Every write requires a diff preview and explicit user approval.
+
+Propose an update only when the information is durable, likely to affect future work, specific enough to act on, not already captured, and worth retrieving again.
+
+Do not propose updates for temporary facts, one-off requests, speculative assumptions, noisy low-reuse details, or unverified information.
+
+## Memory Routing
+
+- Project domain facts, corrections, gotchas, and repeated failure patterns go to `.cursor/rules/memories.mdc` or project `AGENTS.md`, following that project's existing layout.
+- Project structure, architecture, workflows, and repository conventions go to the workspace `.cursor/skills/<project>/SKILL.md`.
+- Persistent user preferences and repeated cross-repository agent mistakes go to `~/.cursor/skills/personal-profile/SKILL.md`.
+
+## Memory Entry Standard
+
+Use compact, retrieval-friendly entries:
+
+- **Rule / Fact**
+- **Why it matters**
+- **Trigger to use it**
+- **Example**
+- **Confidence**: high / medium / low
+
+Prefer concise entries over long prose.
+
+## Update Procedure
+
+1. Identify the correct local target and canonical mirror.
+2. Draft the smallest useful edit.
+3. Show a diff preview for both targets.
+4. Wait for explicit user approval.
+5. Apply only the approved change to both targets.
+6. Briefly confirm what was saved, why, and whether canonical synchronization is complete.
+
+## Howard Toolbox Canonical Sync
+
+- The canonical root is `S:\QR\hzeng\howard-toolbox`.
+- Every approved memory write updates its local target, project-local when project-scoped, and the Howard Toolbox canonical mirror in the same task.
+- Resolve the current workspace dynamically; never assume a fixed repository location.
+- Derive the project key from the project skill name or canonical alias. Map `RCode` and `RCode_NQM` to `rcode`; otherwise use the normalized repository basename.
+- Canonical project memory is under `cursor-memory/<project-key>/`, including `AGENTS.md` and rules.
+- Canonical project skills are under `.cursor/skills/<project-key>/`.
+- The canonical personal profile is `.cursor/skills/personal-profile/SKILL.md`.
+- For context loading, prefer local project files, then use the Howard Toolbox canonical fallback when local skill or memory is absent.
+- Local project files are authoritative while working. Howard Toolbox is the canonical cross-location mirror used by other clones and locations.
+- Do not blindly overwrite unrelated dirty memory or run a broad sync. Preview diffs and obtain approval as required above.
+- If Howard Toolbox is unavailable, update the local target only after approval and explicitly report canonical synchronization as pending.
+
+## Post-Task Reflection
+
+After a non-trivial task, briefly evaluate whether to propose:
+
+- A correction that should not be repeated.
+- A durable user preference.
+- A reusable repository workflow.
+- A domain gotcha that would save time later.
+
+If nothing durable was learned, do not propose a memory update.
+
+## Environment Notes
+
+- Company repositories commonly live under `S:\QR\hzeng\`.
+- Local desktop repositories commonly live under `E:\OneDrive\Github\`.
+- Current workspace paths can differ from these examples and must always be resolved dynamically.
+- OpenClaw home is `C:\Users\Howard\.openclaw`.
+- Project files are the working source of truth; Howard Toolbox is the canonical cross-location mirror.

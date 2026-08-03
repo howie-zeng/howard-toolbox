@@ -12,12 +12,11 @@ import pandas as pd
 
 from .aggregation import wavg
 from .grade_sort import sort_grades
-from .theme import (
-    FICO_BUCKET_BINS,
-    FICO_BUCKET_LABELS,
-    RATE_BUCKET_BINS,
-    RATE_BUCKET_LABELS,
+from ..render.theme import (
+    FICO_BUCKET_BINS, FICO_BUCKET_LABELS,
+    RATE_BUCKET_BINS, RATE_BUCKET_LABELS,
 )
+
 
 # Raw column -> internal alias.  Supports both DV01-standard names (loan_*)
 # and roll-rate model names (orig_bal, ofico, note_rate).

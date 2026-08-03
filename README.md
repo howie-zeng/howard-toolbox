@@ -35,6 +35,13 @@ howard-toolbox/
 │   ├── quant_workflows_notebook.ipynb  # 18 organized sections
 │   └── README.md             # Comprehensive workflow documentation
 │
+├── runbooks/                 # Operational how-to guides (resi/NQM sim pipeline)
+│   ├── release-lmsim-model.md   # tag → wheel build (cmake/vcpkg) → pypy → pin
+│   ├── run-risk-and-vectors.md  # lm_sim_pub_main + riskrun_main, purpose traps
+│   ├── onboard-resi-deal.md     # deal-resolution layers + flat-file gen + N: deploy
+│   ├── dial-model.md            # pointer to dial/DIAL_RUNBOOK.md + trap checklist
+│   └── README.md             # Index
+│
 ├── usage/                    # Cursor API usage analysis
 │   └── analyze.py            # CLI: CSV -> interactive HTML dashboard
 │
@@ -249,6 +256,17 @@ python roll-rate-model\python\run.py --config roll-rate-model\config\default.jso
 ```
 
 See `[roll-rate-model/README.md](roll-rate-model/README.md)` for C++ build/run commands and report generation.
+
+### 9. Runbooks (`runbooks/`)
+
+Operational how-to guides for the resi/NQM sim pipeline — the step-by-step procedures on top of the code (deep C++/engine *facts* live in `cursor-memory/lmsim/AGENTS.md`; these are the *procedures*). Distilled from the NQM release (shipped 2026-07-23, `lmsim` v2.4.2).
+
+- **`release-lmsim-model.md`** — cut an `lmsim` release: tag → CI builds the wheel (C++ via scikit-build/vcpkg/CMake) → publish to pypy → pin in LMQR.
+- **`run-risk-and-vectors.md`** — `lm_sim_pub_main` + `riskrun_main`, the `--vector_purpose` trap, batch-ray vs batch-local, pypy-down fallback.
+- **`onboard-resi-deal.md`** — when a deal fails (`deal no mapping` / `no collat` / `no pool file`): the 4 resolution layers, per-product flat-file generation, and the LMSimData → N: deploy conflict.
+- **`dial-model.md`** — pointer to the canonical `dial/DIAL_RUNBOOK.md` + the silent-failure trap checklist.
+
+See `[runbooks/README.md](runbooks/README.md)`.
 
 ---
 

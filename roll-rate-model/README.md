@@ -20,6 +20,10 @@ The intended high-level flow is:
 2. Run the C++ or Python simulator.
 3. Review portfolio, grouped, probability, and debug outputs.
 
+## Vendoring And Upstream Provenance
+
+This copy is selectively vendored from `S:\QR\jli\roll-rate-model`, pinned to upstream commit `67306e56`. It is not a byte-for-byte mirror: sync source, configuration, documentation, and small runnable inputs that are needed here, while excluding generated `build/` and `output/` trees and oversized deal files. Preserve destination-only and legacy assets unless a reviewed sync plan explicitly replaces them.
+
 ## Quick Start
 
 Run these commands from `roll-rate-model/`.
@@ -31,6 +35,8 @@ python python\data_prep_for_sim.py --config config\default.json --skip-dump
 ```
 
 This loads the configured transition topology, prints model/payment matrices, prepares raw deal CSV loans into `loans_prepped.json`, writes a TSV companion file, and generates a coefficient model report. Omit `--skip-dump` only when the configured R model paths are available and you want to refresh `input/coef/<version>/from*.txt`.
+
+The default configuration selects `STACKED_v4`. A runnable copy requires all five `from*.txt` coefficient files listed under [Transition Model Logic](#transition-model-logic).
 
 ### Build the C++ engine
 
@@ -87,7 +93,11 @@ roll-rate-model/
 |-- python/
 |   |-- data_prep_for_sim.py    # Loan prep + optional R GAM coefficient dump
 |   |-- run.py                  # Python simulator CLI
-|   `-- simengine/              # Python reference implementation
+|   |-- simengine/              # Python reference implementation
+|   `-- deal_report/
+|       |-- metrics/            # Report calculations and aggregations
+|       |-- render/             # HTML assets, formatting, theme, Vega specs
+|       `-- pages/              # Aggregate, summary, and cashflow pages
 |-- input/
 |   |-- coef/                   # Dumped model coefficient files by version
 |   |-- deals/                  # Raw CSV and prepared JSON loan tapes
@@ -95,7 +105,7 @@ roll-rate-model/
 |   |-- macro/                  # CPI and FICO coupon macro lookup tables
 |   `-- pmt_matrix.txt          # Payment-count matrix by from/to status
 |-- output/                     # Generated simulation outputs and reports
-|-- tools/                      # R/Python helper scripts
+|-- tools/                      # R/Python helpers, including make_dial.py
 `-- build/                      # Generated CMake/MSVC build artifacts
 ```
 
@@ -134,14 +144,14 @@ Examples:
 - `fromD1M_C`
 - `fromD4M_LIQ`
 
-Coefficient files live under `input/coef/<coef_version>/` and are named by from-status:
+Coefficient files live under `input/coef/<coef_version>/` and are named by from-status. The default `STACKED_v4` model requires exactly these five files:
 
 ```text
-input/coef/DIALED_v3/fromC.txt
-input/coef/DIALED_v3/fromD1M.txt
-input/coef/DIALED_v3/fromD2M.txt
-input/coef/DIALED_v3/fromD3M.txt
-input/coef/DIALED_v3/fromD4M.txt
+input/coef/STACKED_v4/fromC.txt
+input/coef/STACKED_v4/fromD1M.txt
+input/coef/STACKED_v4/fromD2M.txt
+input/coef/STACKED_v4/fromD3M.txt
+input/coef/STACKED_v4/fromD4M.txt
 ```
 
 Each coefficient file is tab-delimited with columns like:
@@ -177,7 +187,9 @@ Loan prep applies:
 - Macro lookup fields such as CPI inflation and FICO-bucket coupon incentives.
 - `v_*` flags for missing smooth variables.
 
-`platform_type_f` is no longer derived in the Python registry; current coefficient sets should rely on fields present in the input tape or on the remaining derived fields above.
+For GAM-stack lookup fields, 24-month loans map to the supported 36-month stack and 48- or 84-month loans map to the 60-month stack. This changes categorical model keys such as `oterm_f` and `term_platform`; it does not change the loan's actual `term`, remaining term, or amortization math.
+
+Neither the current Python nor C++ engine derives `platform_type_f`. Current coefficients should use fields supplied by the input tape or the supported derived fields above. Preserve legacy `DIALED_*` coefficient/config assets: some encode the older `platform_type_f` contract, so do not regenerate or overwrite them blindly with the current dump path.
 
 Prepared loans are written to:
 
@@ -263,21 +275,30 @@ Status    term    grade    C    D1M    D2M    D3M    D4M    PIF    LIQ
 
 When `--dial-name upst_ctd1` is passed, the engine loads matching files from `input/dial/`, applies the multiplier for each from/to/period/segment, and renormalizes the transition probabilities.
 
+`tools/make_dial.py` composes an optional unsegmented base schedule with an optional custom dial, multiplying cells period by period. Pass `--deal-name` to emit every `(term, grade)` segment present in a prepared deal:
+
+```powershell
+python tools\make_dial.py --out PAR_2026_2_FINAL --base CURTAIL_PROSPER --custom PAR_2026_2_FINAL_D1M --deal-name PAR_2026_2
+```
+
 ### Macro inputs
 
 Macro files live under `input/macro/`.
 
-- `CPIAUCNS.csv`: source CPI index data.
-- `cpi_table.csv`: calendar-indexed CPI inflation variables used by the simulator.
-- `FICO_BKT_COUPON.csv`: FICO bucket coupon benchmark used for rate incentive variables.
+- `CPIAUCNS.csv`: raw monthly CPI index levels used directly for `cpi_inflator_12` and `cpi_inflator_36`.
+- `FICO_BKT_COUPON.csv`: FICO-bucket coupon benchmark used for `rate_incentive_ALL`.
 - `FICO_BKT_COUPON_BY_PLATFORM.csv`: reference output by platform, not directly consumed by the simulator.
+- `cpi_table.csv`: legacy/generated calendar table retained for generic calendar-table workflows; the default CPI inflator configuration does not use it.
 
-Useful scripts:
+The default config points both CPI inflators to raw `CPIAUCNS.csv` and keeps `rate_incentive_ALL` on the FICO coupon lookup. During simulation, Python and C++ recompute an active CPI inflator only when both the current and lagged CPI levels exist and the lagged level is positive. If either level is unavailable, the existing prepared or previously updated loan value freezes. The FICO coupon incentive likewise freezes at its last available value after monthly coupon data ends.
+
+The updater writes CPI keys as exact `YYYY-MM`, matching the committed raw file and the C++ lookup keys:
 
 ```powershell
 python input\macro\update_macro.py
-python tools\generate_macro_table.py
 ```
+
+`tools/generate_macro_table.py` remains available when a separate generic calendar table is intentionally needed; it is not part of the default raw-CPI path.
 
 ## Outputs
 
@@ -322,7 +343,13 @@ The report reads:
 output/<deal_name>/<scenario>/sim_results.xlsx
 ```
 
-and writes an HTML summary under `python/deal_report/`. Use this for quick review of portfolio and grouped simulation results without opening the workbook manually.
+The report code is separated into `deal_report/metrics/` for calculations, `deal_report/render/` for presentation helpers, and `deal_report/pages/` for page assembly. It writes a scenario-qualified HTML summary so one scenario does not overwrite another:
+
+```text
+output/<deal>/<deal>_<scenario>_deal_report.html
+```
+
+Use it for quick review of portfolio, grouped, and cashflow-comparison results without opening the workbook manually.
 
 ## C++ Engine
 
@@ -388,7 +415,13 @@ python python\run.py --config config\default.json --dump --mode sequential --sce
 
 ## Tests And Validation
 
-CMake is configured to build GoogleTest tests from `tests/*.cpp`, but this checkout currently does not contain a checked-in `tests/` folder. Some generated build artifacts show prior test executables, but those are not source files.
+The repository root contains a checked-in regression suite for sync-sensitive Python behavior, including GAM term-stack mapping, raw CPI loading and freeze semantics, and macro date keys:
+
+```powershell
+python -m pytest tests\test_roll_rate_model_sync.py -q
+```
+
+CMake also supports optional GoogleTest sources under `roll-rate-model/tests/*.cpp` when they are present.
 
 Useful validation commands:
 
@@ -439,10 +472,9 @@ Update these together:
 
 ```powershell
 python input\macro\update_macro.py
-python tools\generate_macro_table.py
 ```
 
-The first command refreshes source macro files; the second regenerates the calendar CPI table used during simulation.
+This refreshes the raw CPI and FICO coupon source files used by the default configuration. Run `python tools\generate_macro_table.py` separately only for a workflow that intentionally needs a generated generic calendar table.
 
 ## Caveats
 

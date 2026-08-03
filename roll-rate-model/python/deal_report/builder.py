@@ -13,18 +13,12 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from .assets import CSS, JS
-from .cashflow_compare import build_cf_comparison_html
-from .input_stats import compute_deal_input_stats
-from .kpis import compute_aggregate_metrics, enrich_portfolio_with_transition_rates
+from .render.assets import CSS, JS, VEGA_CDN
+from .pages.cashflow_compare import build_cf_comparison_html
+from .metrics.input_stats import compute_deal_input_stats
+from .metrics.kpis import compute_aggregate_metrics, enrich_portfolio_with_transition_rates
 from .loader import load_deal_input, load_sim_results, model_root
 from .pages import build_aggregate_page, build_summary_page
-
-VEGA_CDN = (
-    '<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>'
-    '<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>'
-    '<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>'
-)
 
 
 # ---------------------------------------------------------------------------
@@ -65,6 +59,7 @@ def build_html(
     aggregate_html, plot_id = build_aggregate_page(
         portfolio_df, metrics_portfolio_df, kpi,
         specs=specs, plot_id=plot_id,
+        metrics_grouped_period_df=metrics_grouped_period_df,
     )
     if input_stats:
         summary_html, plot_id = build_summary_page(
@@ -92,7 +87,7 @@ def build_html(
     out_root = Path(output_dir) if output_dir else (model_root() / "output")
     out_dir = out_root / deal
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{deal}_deal_report.html"
+    out_path = out_dir / f"{deal}_{scenario}_deal_report.html"
     out_path.write_text(html, encoding="utf-8")
     return html, out_path
 

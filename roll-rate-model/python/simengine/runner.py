@@ -21,6 +21,7 @@ from .data_prep import (
     load_loans,
     validate_loan,
     _get_registry,
+    _ym_offset,
 )
 from .dump import should_dump, new_collector, snap_pre, snap_post, write_csv
 
@@ -33,6 +34,24 @@ CF_COL = [
 CF_DICT = {name: i for i, name in enumerate(CF_COL)}
 
 META_COLS = ["loan_id", "term", "grade", "loan_age", "ofico", "fico_bucket", "term_fico", "platform_f", "orig_bal"]
+
+
+def _update_cpi_macro_fields(
+    loan: dict,
+    cpi_lookup: dict[str, float],
+    active_vars: set[str],
+    ym: str,
+) -> None:
+    """Update active CPI inflators when current and lagged CPI are available."""
+    cpi_now = cpi_lookup.get(ym)
+    if cpi_now is None:
+        return
+    for field_name, lag in (("cpi_inflator_12", 12), ("cpi_inflator_36", 36)):
+        if field_name not in active_vars:
+            continue
+        cpi_lag = cpi_lookup.get(_ym_offset(ym, -lag))
+        if cpi_lag is not None and cpi_lag > 0:
+            loan[field_name] = round(cpi_now / cpi_lag - 1, 4)
 
 
 def _stable_seed(seed0: int, loan_id: str, path: int) -> int:
@@ -218,7 +237,7 @@ def run_cf_one(loan: Dict[str, Any], dm: DataManager, dup: int,
         if has_macro:
             r_dt = loan.get("r_dt", "")
             ym = str(r_dt)[:7] if r_dt else ""
-            # Calendar vars (cpi_inflator_36, cpi_inflator_12, etc.)
+            # Generic calendar-table vars
             if ms.get("calendar_table"):
                 row = ms["calendar_table"].get(ym)
                 if row:
@@ -228,6 +247,10 @@ def run_cf_one(loan: Dict[str, Any], dm: DataManager, dup: int,
                     for var_name in ms["calendar_vars"]:
                         if var_name in last:
                             loan[var_name] = last[var_name]
+            if ms.get("cpi_lookup"):
+                _update_cpi_macro_fields(
+                    loan, ms["cpi_lookup"], ms["active_vars"], ym,
+                )
             # Loan-specific vars (rate_incentive_ALL)
             if ms.get("fico_coupon") and "rate_incentive_ALL" in ms["active_vars"]:
                 r_key = ym.replace("-", "")
@@ -395,15 +418,18 @@ def _run_one_loan(loan: Dict, dm: DataManager, n_per: int, dup: int,
 
 
 def run_simulation(loans: List[Dict], input_dir: str,
-                   n_per: int = 360, dup: int = 1, seed0: int = 42,
+                   n_per: Optional[int] = None, dup: int = 1, seed0: int = 42,
                    liq_severity: float = 0.60, dial_name: str = "",
                    status_to_roll=None, config=None,
                    workers: int = 1, mode: str = "auto") -> Dict:
 
+    if n_per is None:
+        n_per = config.get("n_per", 360) if config else 360
+    runtime_config = {**config, "n_per": n_per} if config else config
     dm = init_data_manager(
         input_dir, n_per=n_per, dial_name=dial_name,
         liq_severity=liq_severity, status_to_roll=status_to_roll,
-        config=config,
+        config=runtime_config,
     )
 
     # Build flat probability schema (avoids per-entry dict creation)
@@ -436,6 +462,10 @@ def run_simulation(loans: List[Dict], input_dir: str,
                 if "fico_coupon" not in macro_state:
                     macro_state["fico_coupon"] = load_fico_coupon_lookup(path)
                     print(f"  Macro {var_name}: {len(macro_state['fico_coupon'])} entries from {path}")
+            elif var_name in ("cpi_inflator_12", "cpi_inflator_36"):
+                if "cpi_lookup" not in macro_state:
+                    macro_state["cpi_lookup"] = load_cpi_lookup(path, extend_months=0)
+                    print(f"  Raw CPI: {len(macro_state['cpi_lookup'])} rows from {path}")
             else:
                 macro_state["calendar_vars"].add(var_name)
                 if "calendar_table" not in macro_state:
@@ -599,7 +629,8 @@ def compute_metrics(cf_rows: List[List[float]], orig_bal: float) -> List[Dict[st
                         "begin_bal": bb, "pif_bal": pif_bal, "liq_bal": liq_bal,
                         "loss": loss, "cum_loss": cum_loss,
                         "dq30_bal": row[ci["dq30_bal"]], "dq60_bal": row[ci["dq60_bal"]],
-                        "dq90_bal": row[ci["dq90_bal"]], "dq120_bal": row[ci["dq120_bal"]]})
+                        "dq90_bal": row[ci["dq90_bal"]], "dq120_bal": row[ci["dq120_bal"]],
+                        "sch_prin": sp})
     return metrics
 
 
@@ -689,6 +720,68 @@ def aggregate_by_groups(
                     m[pk] = 0.0
 
         agg_results[group_key] = {"metrics": metrics, "orig_bal": group_orig_bal}
+
+    agg_results["_prob_keys"] = prob_keys
+    return agg_results
+
+
+def aggregate_by_groups_period(
+    loan_results: List[Dict],
+    group_by: List[str],
+    n_per: int,
+    dm: DataManager = None,
+) -> Dict:
+    groups: Dict[str, List[Dict]] = defaultdict(list)
+    for lr in loan_results:
+        meta = lr["meta"]
+        key_parts = []
+        for g in group_by:
+            val = meta.get(g, "")
+            if val is None:
+                val = ""
+            key_parts.append(f"{g}={val}")
+        groups["|".join(key_parts)].append(lr)
+
+    prob_keys = _collect_prob_keys(loan_results, dm=dm)
+    agg_results = {}
+
+    for group_key, members in groups.items():
+        group_cf = [[0.0] * len(CF_COL) for _ in range(n_per)]
+        group_orig_bal = 0.0
+        prob_weighted = [[0.0] * len(prob_keys) for _ in range(n_per)]
+        prob_bal_total = [0.0] * n_per
+
+        for lr in members:
+            ob = lr["meta"].get("orig_bal") or 0
+            group_orig_bal += float(ob) if ob else 0
+
+            for p in range(n_per):
+                for c in range(len(CF_COL)):
+                    group_cf[p][c] += lr["cf"][p][c]
+
+            lr_pw = lr.get("prob_weighted")
+            lr_pb = lr.get("prob_bal")
+            if lr_pw:
+                for p in range(min(n_per, len(lr_pw))):
+                    prob_bal_total[p] += lr_pb[p]
+                    for ki in range(len(prob_keys)):
+                        prob_weighted[p][ki] += lr_pw[p][ki]
+
+        metrics = compute_metrics(group_cf, group_orig_bal)
+        for p, metric in enumerate(metrics):
+            if prob_bal_total[p] > 0:
+                for ki, prob_key in enumerate(prob_keys):
+                    metric[prob_key] = (
+                        prob_weighted[p][ki] / prob_bal_total[p]
+                    )
+            else:
+                for prob_key in prob_keys:
+                    metric[prob_key] = 0.0
+
+        agg_results[group_key] = {
+            "metrics": metrics,
+            "orig_bal": group_orig_bal,
+        }
 
     agg_results["_prob_keys"] = prob_keys
     return agg_results
@@ -796,6 +889,46 @@ def write_results_xlsx(result: Dict, output_path: str,
                     None, None, None, None,
                     None, None, None, None,
                 ] + prob_vals)
+
+    agg_period = aggregate_by_groups_period(
+        loan_results,
+        group_by,
+        n_per,
+        dm=result.get("dm"),
+    )
+    period_prob_keys = agg_period.pop("_prob_keys", [])
+    period_base_cols = [
+        "period", "cpr", "cdr", "cgl",
+        "begin_bal", "pif_bal", "liq_bal", "loss", "cum_loss",
+        "dq30_bal", "dq60_bal", "dq90_bal", "dq120_bal", "sch_prin",
+    ]
+
+    ws_agg_period = wb.create_sheet("Metrics_Grouped_Period")
+    ws_agg_period.append(group_by + period_base_cols + period_prob_keys)
+
+    for group_key in sorted(k for k in agg_period if k != "_prob_keys"):
+        group_data = agg_period[group_key]
+        parts = _parse_group_key(group_key)
+        group_vals = [parts.get(g, "") for g in group_by]
+
+        for m in group_data["metrics"]:
+            if m["begin_bal"] < 0.01 and m["cpr"] == 0 and m["cdr"] == 0:
+                continue
+
+            prob_vals = [
+                round(m.get(pk, 0.0), 6)
+                for pk in period_prob_keys
+            ]
+            ws_agg_period.append(group_vals + [
+                m["period"],
+                round(m["cpr"], 6), round(m["cdr"], 6),
+                round(m["cgl"], 6), round(m["begin_bal"], 2),
+                round(m["pif_bal"], 2), round(m["liq_bal"], 2),
+                round(m["loss"], 2), round(m["cum_loss"], 2),
+                round(m["dq30_bal"], 2), round(m["dq60_bal"], 2),
+                round(m["dq90_bal"], 2), round(m["dq120_bal"], 2),
+                round(m["sch_prin"], 2),
+            ] + prob_vals)
 
     wb.save(output_path)
 

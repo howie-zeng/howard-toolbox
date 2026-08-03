@@ -1,0 +1,35 @@
+# Superpowers Bootstrap
+
+You have superpowers.
+
+**IMPORTANT: The using-superpowers skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT read "using-superpowers" again - that would be redundant.**
+
+## How to Access Skills in Cursor
+
+Use the `Read` tool on skill files located at `~/.cursor/skills/superpowers/skills/{skill-name}/SKILL.md`.
+
+**Available skills:**
+- `brainstorming` - Interactive design refinement before implementation
+- `test-driven-development` - RED-GREEN-REFACTOR cycle
+- `systematic-debugging` - 4-phase root cause process
+- `writing-plans` - Detailed implementation plans
+- `executing-plans` - Batch execution with checkpoints
+- `subagent-driven-development` - Fast iteration with two-stage review
+- `using-git-worktrees` - Parallel development branches
+- `finishing-a-development-branch` - Merge/PR decision workflow
+- `dispatching-parallel-agents` - Concurrent subagent workflows
+- `requesting-code-review` - Pre-review checklist
+- `receiving-code-review` - Responding to feedback
+- `verification-before-completion` - Ensure fixes work
+- `writing-skills` - Create new skills
+
+**To load a skill:** `Read ~/.cursor/skills/superpowers/skills/{skill-name}/SKILL.md`
+
+## Tool Mapping for Cursor
+
+When skills reference tools, use these Cursor equivalents:
+- `Skill` tool → Use `Read` tool on `~/.cursor/skills/superpowers/skills/{skill-name}/SKILL.md`
+- `TodoWrite` → `TodoWrite` (identical)
+- `Task` with subagents → `Task` tool with `subagent_type` parameter
+- `Read`, `Write`, `Edit` → `Read`, `Write`, `StrReplace`
+- `Bash` → `Shell`

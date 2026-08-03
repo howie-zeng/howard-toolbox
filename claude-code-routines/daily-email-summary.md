@@ -60,6 +60,67 @@ Mailbox folder map (learned 2026-06-01 — check ALL of these, not just Inbox/AU
 - **Folder-access gotcha:** the `outlook_email_search` `folderName` lookup resolves `Inbox`, `CLO`, `HECM`, `Jenkins Automation`, `auto`, but returns NOT_FOUND for some custom folders (`RESI`, `Tracking`). For those, get the folder ID from `read_resource mail:///folders/` (lists all folders) and read it via `read_resource mail:///folders/{id}` to enumerate recent messages.
 - In Jenkins, treat `Build FAILURE` / `Build failed in Jenkins` / `ABORTED` / `[Tests: FAILED]` as failures, and `Jenkins build is back to normal` as a recovery (implies a prior failure). A failure with no later "back to normal" or SUCCESS for the same job = still broken.
 
+Before writing the summary, produce the `### Jenkins Job Monitor` section. The tool is
+deliberately thin — it gathers facts and remembers yesterday's verdicts; **you** do the
+judging. Run all of this from `claude-code-routines/`.
+
+**Step 1 — get the fact sheet:**
+
+```powershell
+python -m jenkins_monitor.cli facts --outputs outputs
+```
+
+**Step 2 — read `claude-code-routines/JENKINS_MONITOR_PROMPT.md` and follow it.** It carries
+the twelve rules that decide what counts as broken: `NOT_BUILT` is a no-work seed refresh,
+`H` in a cron is a hashed window not a time, job names lie about cadence, `ABORTED` means
+failed, `UNSTABLE` is a real partial failure, recovery needs confirmed success, and so on.
+Each one is a bug that was already hit and fixed — do not reason from first principles
+instead.
+
+**Step 3 — fetch the consoles you need** to name a root cause, including a wrapper job's
+child builds:
+
+```powershell
+python -m jenkins_monitor.cli console <job> <build> --tail 400
+```
+
+**Step 4 — write the section** in the shape the prompt specifies: scope line, new findings,
+unresolved carry-overs, recoveries, then silence and access gaps, most urgent first. Only
+`fix`-tier jobs are candidates for a fix agent; see `FIX_AGENT_RUNBOOK.md`. Deploy jobs are
+notify-only — report them for the dev team.
+
+**Step 5 — record your verdicts**, so tomorrow's run can tell "still broken" from
+"recovered":
+
+```powershell
+python -m jenkins_monitor.cli save-verdicts --outputs outputs --json verdicts.json
+```
+
+Skipping step 5 is not cosmetic: without it an agent reasoning fresh each morning escalated
+the same job for three consecutive days after it had already recovered.
+
+**If any of these commands fails for any reason** — non-zero exit, a Python traceback, no
+output, or output you cannot parse — do **not** omit the section. A missing Jenkins Job
+Monitor section is indistinguishable from "no Jenkins issues", which is the one wrong
+conclusion here. Instead:
+
+- Write the `### Jenkins Job Monitor` section anyway, stating that **the Jenkins monitor did
+  not run and job status is unknown for today**, with the exit code and the last few lines
+  of output as evidence.
+- Add "Jenkins monitor did not run — job status unknown for today" as a **top item** in the
+  `### Todo` list, above the other todos.
+- Never infer job health from the absence of failure emails when the monitor did not run;
+  the monitor exists precisely because failure emails are missed.
+
+Exit codes: `0` = it ran (jobs may still be red, and a missing token still exits 0 while
+printing the access gap loudly — read the output); `2` = malformed job registry
+(`jenkins-jobs.yaml`) or malformed verdict JSON, so nothing was checked or nothing was
+saved; any other non-zero = unexpected error. Treat `2` and "other" identically for the
+summary: status unknown, top todo.
+
+`facts` exiting 0 is not by itself an all-clear. If it reports an access gap, or any job
+carries a `fetch_error`, say so explicitly — that is missing information, never "all clear".
+
 Use this output format:
 
 ```markdown

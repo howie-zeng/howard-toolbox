@@ -25,3 +25,7 @@ uvicorn[standard]
 # dev tools
 ruff
 pytest
+
+# claude-code-routines/jenkins_monitor
+requests
+PyYAML

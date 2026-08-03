@@ -4,9 +4,9 @@ Compute imputed Cursor usage cost from a usage-events CSV.
 Pricing sourced from https://cursor.com/docs/models-and-pricing
 All prices are USD per 1M tokens. Max Mode = Yes adds 20% upcharge on
 legacy request-based plans. Claude 4 Sonnet 1M/Grok 4.20 get 2x when
-input exceeds 200k tokens. GPT-5.4/GPT-5.5 long context starts above
-272k input tokens and doubles input/cache pricing. Fast variants
-(OpenAI/Anthropic) price at 2x the base model.
+input exceeds 200k tokens. GPT-5.4/GPT-5.5/GPT-5.6 Sol long context
+starts above 272k input tokens and doubles input/cache pricing. Fast
+variants (OpenAI/Anthropic) price at 2x the base model.
 """
 
 import argparse
@@ -26,13 +26,21 @@ BASE_PRICES = {
     "claude-4.6-opus-fast":(30.00, 37.50, 3.00, 150.00),
     "claude-4.6-sonnet":   (3.00, 3.75, 0.30, 15.00),
     "claude-4.7-opus":     (5.00, 6.25, 0.50, 25.00),
+    "claude-4.7-opus-fast":(30.00, 37.50, 3.00, 150.00),
+    "claude-4.8-opus":     (5.00, 6.25, 0.50, 25.00),
+    "claude-5-sonnet":     (3.00, 3.75, 0.30, 15.00),
+    "claude-fable-5":      (10.00, 12.50, 1.00, 50.00),
     "composer-1":          (1.25, None, 0.125, 10.00),
     "composer-1.5":        (3.50, None, 0.35, 17.50),
     "composer-2":          (0.50, None, 0.20, 2.50),
+    "composer-2.5":        (0.50, None, 0.20, 2.50),
     "gemini-2.5-flash":    (0.30, None, 0.03, 2.50),
     "gemini-3-flash":      (0.50, None, 0.05, 3.00),
     "gemini-3-pro":        (2.00, None, 0.20, 12.00),
+    "gemini-3-pro-image":  (2.00, None, 0.20, 12.00),
     "gemini-3.1-pro":      (2.00, None, 0.20, 12.00),
+    "gemini-3.5-flash":    (1.50, None, 0.15, 9.00),
+    "glm-5.2":             (1.40, None, 0.26, 4.40),
     "gpt-5":               (1.25, None, 0.125, 10.00),
     "gpt-5-fast":          (2.50, None, 0.25, 20.00),
     "gpt-5-mini":          (0.25, None, 0.025, 2.00),
@@ -47,20 +55,26 @@ BASE_PRICES = {
     "gpt-5.4-mini":        (0.75, None, 0.075, 4.50),
     "gpt-5.4-nano":        (0.20, None, 0.02, 1.25),
     "gpt-5.5":             (5.00, None, 0.50, 30.00),
+    "gpt-5.6-luna":        (1.00, 1.25, 0.10, 6.00),
+    "gpt-5.6-sol":         (5.00, 6.25, 0.50, 30.00),
+    "gpt-5.6-terra":       (2.50, 3.125, 0.25, 15.00),
     "grok-4.20":           (2.00, None, 0.20, 6.00),
+    "grok-4.5":            (2.00, None, 0.50, 6.00),
     "kimi-k2.5":           (0.60, None, 0.10, 3.00),
+    "kimi-k2.7-code":      (0.95, None, 0.19, 4.00),
     "auto":                (1.25, 1.25, 0.25, 6.00),  # Auto pool rates
 }
 
 # Current Cursor docs only call out 2x >200k input for Claude 4 Sonnet 1M and Grok 4.20.
 LONG_CONTEXT_2X = {"claude-4-sonnet-1m", "grok-4.20"}
 
-# GPT-5.4/GPT-5.5 long-context pricing: input/cache pricing doubles. Cursor
-# usage CSV rows can aggregate multiple underlying calls, so the report uses a
-# conservative primary estimate and keeps row-threshold pricing as a high case.
+# GPT long-context pricing: input/cache pricing doubles. Cursor usage CSV rows
+# can aggregate multiple underlying calls, so the report uses a conservative
+# primary estimate and keeps row-threshold pricing as a high case.
 GPT_LONG_CONTEXT = {
     "gpt-5.4": (272_000, 2.0),
     "gpt-5.5": (272_000, 2.0),
+    "gpt-5.6-sol": (272_000, 2.0),
 }
 
 GPT_LONG_CONTEXT_CONSERVATIVE = "conservative"
@@ -77,12 +91,13 @@ def map_model(raw: str) -> tuple[str, bool]:
     m_clean = m.replace("-fast", "")
 
     # Strip reasoning-effort / thinking suffixes (high, medium, xhigh, thinking, preview)
-    for suffix in ("-xhigh-thinking", "-max-thinking", "-high-thinking",
-                   "-thinking-xhigh", "-thinking-max", "-thinking-high",
-                   "-extra-high", "-xhigh", "-high", "-medium", "-low",
-                   "-thinking", "-preview"):
-        if m_clean.endswith(suffix):
-            m_clean = m_clean[: -len(suffix)]
+    if m_clean not in BASE_PRICES:
+        for suffix in ("-xhigh-thinking", "-max-thinking", "-high-thinking",
+                       "-thinking-xhigh", "-thinking-max", "-thinking-high",
+                       "-extra-high", "-xhigh", "-high", "-medium", "-low",
+                       "-thinking", "-preview", "-max"):
+            if m_clean.endswith(suffix):
+                m_clean = m_clean[: -len(suffix)]
 
     # Cursor-specific labels
     if m_clean == "auto":
@@ -95,9 +110,9 @@ def map_model(raw: str) -> tuple[str, bool]:
             return ("gpt-5.3-codex", is_fast)
         return ("auto", False)
 
-    # Claude Opus Fast is its own line item in the docs (10x pricier)
-    if m_clean.startswith("claude-4.6-opus") and is_fast:
-        return ("claude-4.6-opus-fast", False)  # fast already baked in
+    # Claude Opus 4.6/4.7 Fast use published rates instead of the generic multiplier.
+    if m_clean.startswith(("claude-4.6-opus", "claude-4.7-opus")) and is_fast:
+        return (f"{m_clean}-fast", False)  # fast already baked in
 
     # Normalize claude-4.x-opus / sonnet / haiku
     if re.match(r"claude-\d\.\d+-(opus|sonnet|haiku)", m_clean):
@@ -105,7 +120,13 @@ def map_model(raw: str) -> tuple[str, bool]:
     # Cursor exports some Claude labels as claude-opus-4-7 instead of claude-4.7-opus.
     if match := re.match(r"claude-(opus|sonnet|haiku)-(\d)-(\d+)$", m_clean):
         family, major, minor = match.groups()
-        return (f"claude-{major}.{minor}-{family}", is_fast)
+        base_key = f"claude-{major}.{minor}-{family}"
+        if base_key == "claude-4.7-opus" and is_fast:
+            return ("claude-4.7-opus-fast", False)
+        return (base_key, is_fast)
+    if match := re.match(r"claude-(sonnet)-(\d+)$", m_clean):
+        family, major = match.groups()
+        return (f"claude-{major}-{family}", is_fast)
 
     # Composer
     if m_clean.startswith("composer"):
@@ -151,8 +172,12 @@ def rates_for_event(
         p_cw = p_in  # cache write == input rate for non-Anthropic models
 
     # Fast multiplier (2x) for OpenAI/Anthropic fast variants
-    # (Claude 4.6 Opus Fast is already a separate, much-more-expensive line item)
-    if is_fast and base_key != "claude-4.6-opus-fast":
+    # (Claude 4.6/4.7 Opus Fast use separate published rates)
+    if (
+        is_fast
+        and base_key.startswith(("gpt-", "claude-"))
+        and base_key not in {"claude-4.6-opus-fast", "claude-4.7-opus-fast"}
+    ):
         p_in *= 2
         p_cw *= 2
         p_cr *= 2

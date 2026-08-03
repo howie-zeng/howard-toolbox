@@ -74,9 +74,15 @@ Sync-RulesDir "$canonBase\lmqr\rules"      "C:\Git\LMQR\.cursor\rules"
 # LMSim
 Sync-FilePair "$canonBase\lmsim\AGENTS.md"  "C:\Git\LMSim\AGENTS.md"
 
+# RCode_NQM
+Sync-FilePair "$canonBase\rcode\AGENTS.md" "C:\Users\hzeng\Desktop\Github\RCode_NQM\AGENTS.md"
+
 # openclaw
 Sync-RulesDir "$canonBase\openclaw\rules"   "C:\Git\.openclaw\.cursor\rules"
 
 # howard-toolbox: canonical copy under cursor-memory/, workspace copy at repo root
 Sync-FilePair "$canonBase\howard-toolbox\AGENTS.md"  "S:\QR\hzeng\howard-toolbox\AGENTS.md"
 Sync-RulesDir "$canonBase\howard-toolbox\rules"      "S:\QR\hzeng\howard-toolbox\.cursor\rules"
+
+# Global Cursor rules
+Sync-RulesDir "$canonBase\global\rules" "$env:USERPROFILE\.cursor\rules"
