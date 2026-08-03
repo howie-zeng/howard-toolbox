@@ -73,6 +73,13 @@ def classify_job(
             + (f"; {fails} consecutive failing builds" if fails > 1 else ""),
         )
 
+    if real.result == "ABORTED":
+        return _status(
+            State.RED,
+            f"#{real.number} ABORTED (timeout or manual cancellation); "
+            "Jenkins does not record aborted builds under lastFailedBuild",
+        )
+
     if real.result == "UNSTABLE" and spec.unstable_is_failure:
         return _status(State.UNSTABLE, f"#{real.number} UNSTABLE (partial failure for this job)")
 

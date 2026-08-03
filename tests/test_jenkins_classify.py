@@ -21,8 +21,13 @@ def _b(num, result, hours_ago, building=False):
 
 
 CRON_SPEC = JobSpec(
-    job="j", tier="fix", family="f", trigger_type="cron",
-    cron="20 15 * * *", tz="America/New_York", grace_hours=6,
+    job="j",
+    tier="fix",
+    family="f",
+    trigger_type="cron",
+    cron="20 15 * * *",
+    tz="America/New_York",
+    grace_hours=6,
 )
 MANUAL_SPEC = JobSpec(job="m", tier="fix", family="f", trigger_type="manual")
 
@@ -80,9 +85,7 @@ def test_unstable_is_failure_only_when_spec_says_so():
     blob = {"lastBuild": {"number": 92, "result": "UNSTABLE", "timestamp": 1}}
     builds = [_b(92, "UNSTABLE", 2)]
     lenient = JobSpec(job="j", tier="fix", family="f", trigger_type="manual")
-    strict = JobSpec(
-        job="j", tier="fix", family="f", trigger_type="manual", unstable_is_failure=True
-    )
+    strict = JobSpec(job="j", tier="fix", family="f", trigger_type="manual", unstable_is_failure=True)
     assert classify.classify_job(lenient, blob, builds, NOW).state == State.GREEN
     assert classify.classify_job(strict, blob, builds, NOW).state == State.UNSTABLE
 
@@ -98,10 +101,42 @@ def test_stale_detected_when_last_real_build_is_old():
 
 def test_seed_run_does_not_mask_staleness():
     """Regression: a NOT_BUILT seed run 4h ago must not make a 27-day-old job look fresh."""
-    blob = {"lastBuild": {"number": 45, "result": "NOT_BUILT", "timestamp": 1}}
+    seed_ts_ms = int((NOW - dt.timedelta(hours=4)).timestamp() * 1000)
+    blob = {"lastBuild": {"number": 45, "result": "NOT_BUILT", "timestamp": seed_ts_ms}}
     builds = [_b(45, "NOT_BUILT", 4), _b(44, "SUCCESS", 24 * 27)]
     st = classify.classify_job(CRON_SPEC, blob, builds, NOW)
     assert st.state == State.STALE
+
+
+def test_aborted_last_real_build_is_red_not_green():
+    """Regression: ABORTED (e.g. timeout(1440 MINUTES)) must not fall through to GREEN.
+
+    Jenkins does not populate lastFailedBuild for an aborted build, so without an explicit
+    check the job would slip past the RED and UNSTABLE branches and report healthy.
+    """
+    blob = {"lastBuild": {"number": 50, "result": "ABORTED", "timestamp": 1}}
+    builds = [_b(50, "ABORTED", 1)]
+    st = classify.classify_job(MANUAL_SPEC, blob, builds, NOW)
+    assert st.state == State.RED
+    assert st.state != State.GREEN
+
+
+def test_aborted_does_not_shadow_newer_genuine_failure():
+    """The newest real build is ABORTED (#61), but Jenkins' own lastFailedBuild (#60) is
+    still newer than lastSuccessfulBuild (#58) - a genuine failure. The pre-existing
+    lastFailedBuild-vs-lastSuccessfulBuild RED check must fire first and report with the
+    FAILURE-based detail, not get rerouted to the ABORTED wording."""
+    blob = {
+        "lastBuild": {"number": 61, "result": "ABORTED", "timestamp": 1},
+        "lastSuccessfulBuild": {"number": 58, "timestamp": 1},
+        "lastFailedBuild": {"number": 60, "timestamp": 1},
+    }
+    builds = [_b(61, "ABORTED", 1), _b(60, "FAILURE", 2), _b(59, "SUCCESS", 3)]
+    st = classify.classify_job(MANUAL_SPEC, blob, builds, NOW)
+    assert st.state == State.RED
+    assert "FAILURE" in st.detail
+    assert "#60" in st.detail
+    assert "ABORTED" not in st.detail
 
 
 def test_green_when_recent_success():
