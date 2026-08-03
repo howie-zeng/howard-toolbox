@@ -1,0 +1,21 @@
+Started by timer
+[Pipeline] { (Parallel Job Execution)
+[Pipeline] parallel
+[Pipeline] build
+Scheduling project: quant-tracking-report-recache
+Starting building: quant-tracking-report-recache #75
+Starting building: quant-tracking-report-recache #76
+Starting building: quant-tracking-report-recache #77
+Starting building: quant-tracking-report-recache #78
+Starting building: quant-tracking-report-recache #79
+Build quant-tracking-report-recache #75 completed: FAILURE
+Failed in branch Job0
+Build quant-tracking-report-recache #78 completed: FAILURE
+Failed in branch Job3
+Build quant-tracking-report-recache #76 completed: FAILURE
+Failed in branch Job1
+Build quant-tracking-report-recache #79 completed: SUCCESS
+Build quant-tracking-report-recache #77 completed: SUCCESS
+[Pipeline] // parallel
+quant-tracking-report-recache #75 completed with status FAILURE (propagate: false to ignore)
+Finished: FAILURE

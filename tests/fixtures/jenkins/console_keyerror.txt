@@ -1,0 +1,20 @@
+[Pipeline] powershell
++ uv run --frozen --group full python lmanalytics/tracking/tracking_api_pickle.py
+Traceback (most recent call last):
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\tracking\tracking_api_pickle.py", line 900, in <module>
+    fetch_tracking_report(
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\tracking\tracking_api_pickle.py", line 686, in fetch_tracking_report
+    tracking_report = build_one_transition(
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\tracking\tracking_api_pickle.py", line 317, in build_one_transition
+    proj_vectors = get_qr_transitions(
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\lib\vectorlib.py", line 1190, in get_qr_transitions
+    cur_vectors = getFwdModelTransType(get_qr_vectors.deal_manager, bbg_deal_name, asofdate, scen_name, purpose)
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\lib\vectorlib.py", line 1148, in getFwdModelTransType
+    final_df = getFwdModelTranstion(deal_manager, bbg_deal_name, asofdate, scen_name, purpose)
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmanalytics\lib\vectorlib.py", line 1131, in getFwdModelTranstion
+    df = get_collat_trans_df(model_result_json)
+  File "S:\QR\GitHub\LibreMax-QR\master\LMQR\lmsimvectors\crt_deal.py", line 214, in get_collat_trans_df
+    nested_dict = model_result_json["ALL"]["Transition"]
+KeyError: 'Transition'
+ERROR: script returned exit code 1
+Finished: FAILURE

@@ -1,0 +1,8 @@
++ uv run python agencydata/wh_lp_update.py --log --fail_on_deal_error --deal_type NONQM
+Done NQM
++ uv run python agencydata/wh_lp_update.py --log --fail_on_deal_error --deal_type JUMBO2_0
+Done Jumbo
++ uv run python agencydata/wh_lp_update.py --log --fail_on_deal_error --deal_type HELOC
+1 of 40 deals failed: HELOC_XYZ
+ERROR: script returned exit code 1
+Finished: UNSTABLE
