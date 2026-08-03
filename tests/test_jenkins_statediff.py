@@ -72,6 +72,16 @@ def test_state_change_between_two_failing_states_is_new():
     assert findings[0].transition == "NEW"
 
 
+def test_previous_state_is_threaded_onto_the_finding():
+    findings = statediff.label([_st("a", State.BUILDING)], {"a": State.RED})
+    assert findings[0].previous_state == State.RED
+
+
+def test_previous_state_is_none_when_job_is_unseen():
+    findings = statediff.label([_st("a", State.RED)], {})
+    assert findings[0].previous_state is None
+
+
 def test_snapshot_round_trip(tmp_path):
     p = tmp_path / "jenkins-status-20260803.json"
     statediff.save_snapshot([_st("a", State.RED), _st("b", State.GREEN)], p)

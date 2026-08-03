@@ -66,5 +66,5 @@ def label(statuses: list[JobStatus], previous: dict[str, str]) -> list[Finding]:
         else:
             transition = "ONGOING" if prev == st.state else "NEW"
 
-        findings.append(Finding(status=st, transition=transition))
+        findings.append(Finding(status=st, transition=transition, previous_state=prev))
     return findings

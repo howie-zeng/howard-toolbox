@@ -90,3 +90,9 @@ class Finding:
     transition: str  # NEW | ONGOING | RECOVERED
     diagnosis: Diagnosis | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
+    #: The job's state in the previous snapshot, when known. Threaded through so a
+    #: renderer can show `RED -> BUILDING` instead of a bare current state - an
+    #: ONGOING finding whose current state is BUILDING/SEED_ONLY has NOT been
+    #: confirmed recovered, and dropping the previous state invites reading it as
+    #: neutral or all-clear.
+    previous_state: str | None = None
