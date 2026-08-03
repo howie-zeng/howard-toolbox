@@ -139,7 +139,11 @@ def staleness(
             return True, (f"upstream {spec.upstream} did work {_fmt(gap)} more recently than this job")
         return False, f"up to date relative to upstream {spec.upstream}"
 
-    # cron
+    if spec.trigger_type != "cron":
+        raise CadenceError(f"{spec.job}: unrecognized trigger_type {spec.trigger_type!r}")
+    if spec.cron is None:
+        raise CadenceError(f"{spec.job}: trigger_type 'cron' requires a cron expression, got cron=None")
+
     expected = previous_fire_time(spec.cron, spec.tz, now)
     if last_real_ts is None:
         return True, f"never did work; expected a run by {expected.isoformat()}"

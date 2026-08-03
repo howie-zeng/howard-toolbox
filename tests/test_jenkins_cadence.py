@@ -16,7 +16,6 @@ from jenkins_monitor import cadence  # noqa: E402
 from jenkins_monitor.models import JobSpec  # noqa: E402
 
 NY = ZoneInfo("America/New_York")
-UTC = dt.UTC
 
 
 def _ny(y, m, d, hh, mm):
@@ -89,9 +88,19 @@ def test_unsupported_syntax_raises():
 
 
 def test_dst_spring_forward_does_not_crash():
-    now = _ny(2026, 3, 9, 12, 0)
+    """2026-03-08 is the spring-forward day; 02:30 local does not exist that day.
+    now must be ON that day or the day-walk returns immediately and never touches the gap."""
+    now = _ny(2026, 3, 8, 12, 0)
     got = cadence.previous_fire_time("30 2 * * *", "America/New_York", now)
     assert got.tzinfo is not None
+    assert got.astimezone(NY).date() == dt.date(2026, 3, 8)
+
+
+def test_both_dom_and_dow_restricted_uses_or_semantics():
+    """Standard cron: DOM and DOW both restricted -> OR, not AND."""
+    now = _ny(2026, 8, 20, 12, 0)  # Thursday
+    got = cadence.previous_fire_time("0 9 15 * 1", "America/New_York", now)
+    assert got.astimezone(NY) == _ny(2026, 8, 17, 9, 0)  # Monday, nearer than the 15th
 
 
 # ---- staleness ----------------------------------------------------------------
@@ -148,3 +157,15 @@ def test_cron_job_with_no_real_build_ever_is_stale():
     stale, why = cadence.staleness(_CRON_SPEC, None, _ny(2026, 8, 3, 8, 0))
     assert stale is True
     assert "never" in why.lower()
+
+
+def test_unrecognized_trigger_type_raises_cadence_error():
+    spec = JobSpec(job="x", tier="fix", family="f", trigger_type="bogus")
+    with pytest.raises(cadence.CadenceError):
+        cadence.staleness(spec, None, _ny(2026, 8, 3, 8, 0))
+
+
+def test_cron_trigger_type_with_no_cron_raises_cadence_error_not_attribute_error():
+    spec = JobSpec(job="y", tier="fix", family="f", trigger_type="cron", tz="America/New_York")
+    with pytest.raises(cadence.CadenceError):
+        cadence.staleness(spec, None, _ny(2026, 8, 3, 8, 0))
