@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Detect failures, recoveries, and silent gaps across Howard's 26 `quant-*` Jenkins jobs each morning, diagnose the failures, and prepare candidate fixes in isolated LMQR worktrees for review.
+**Goal:** Detect failures, recoveries, and silent gaps across Howard's 25 `quant-*` Jenkins jobs each morning, diagnose the failures, and prepare candidate fixes in isolated LMQR worktrees for review.
 
 **Architecture:** A YAML registry describes each job's real trigger and failure semantics (job names are unreliable). A poller reads the Jenkins API once, derives each job's `last_real_build` (ignoring no-work `NOT_BUILT` seed runs), and classifies state. A state-diff against yesterday's snapshot labels findings NEW / ONGOING / RECOVERED. A diagnoser pulls console text — drilling into child builds for orchestrators — and a dispatcher prepares a worktree per distinct root cause.
 
-**Tech Stack:** Python 3.11, `requests`, `PyYAML`, stdlib `zoneinfo`. Tests with `pytest` against recorded fixtures. **No `croniter`** — it is not installed and cannot parse Jenkins' `H` (hashed minute) syntax, which 4 of the 26 jobs use.
+**Tech Stack:** Python 3.11, `requests`, `PyYAML`, stdlib `zoneinfo`. Tests with `pytest` against recorded fixtures. **No `croniter`** — it is not installed and cannot parse Jenkins' `H` (hashed minute) syntax, which 4 of the 25 jobs use.
 
 ## Global Constraints
 
@@ -25,7 +25,7 @@
 
 | File | Responsibility |
 |---|---|
-| `claude-code-routines/jenkins-jobs.yaml` | Registry: 26 jobs, real triggers, failure semantics |
+| `claude-code-routines/jenkins-jobs.yaml` | Registry: 25 jobs, real triggers, failure semantics |
 | `claude-code-routines/jenkins_monitor/__init__.py` | Package marker, version |
 | `claude-code-routines/jenkins_monitor/models.py` | Frozen dataclasses: `JobSpec`, `BuildInfo`, `JobStatus`, `Finding`, `Diagnosis` + `State` constants |
 | `claude-code-routines/jenkins_monitor/registry.py` | Load + validate YAML into `JobSpec` map |
@@ -81,15 +81,15 @@ from jenkins_monitor.models import BuildInfo  # noqa: E402
 REGISTRY_PATH = _ROUTINES / "jenkins-jobs.yaml"
 
 
-def test_registry_has_all_26_jobs():
+def test_registry_has_all_25_jobs():
     specs = registry.load_registry(REGISTRY_PATH)
-    assert len(specs) == 26
+    assert len(specs) == 25
 
 
 def test_tier_split_is_23_fix_and_3_notify():
     specs = registry.load_registry(REGISTRY_PATH)
     tiers = [s.tier for s in specs.values()]
-    assert tiers.count("fix") == 23
+    assert tiers.count("fix") == 22
     assert tiers.count("notify") == 3
 
 
@@ -356,14 +356,6 @@ jobs:
     repo: LMQR
     entrypoint: lmsimvectors/lm_sim_pub_main.py
 
-  - job: quant-DailyCRTVectors
-    tier: fix
-    family: vectors
-    trigger_type: upstream
-    upstream: quant-CRTDaily-Workflow
-    repo: LMQR
-    entrypoint: lmsimvectors/lm_sim_pub_main.py
-
   - job: quant-generate-vectors
     tier: fix
     family: vectors
@@ -604,7 +596,7 @@ def load_registry(path: str | Path) -> dict[str, JobSpec]:
 - [ ] **Step 7: Run tests to verify they pass**
 
 Run: `python -m pytest tests/test_jenkins_registry.py -v`
-Expected: PASS, 11 passed
+Expected: PASS (11 tests)
 
 - [ ] **Step 8: Lint and commit**
 
@@ -2095,7 +2087,7 @@ git commit -m "feat(jenkins-monitor): diagnoser with orchestrator child drill-do
 
 **Interfaces:**
 - Consumes: `Finding`, `JobStatus`, `Diagnosis`, `State` (Task 1).
-- Produces: `report.render(findings: list[Finding], *, token_ok: bool, total_jobs: int, capped: list[str] = ()) -> str`
+- Produces: `report.render(findings: list[Finding], *, token_ok: bool, total_jobs: int, fix_count: int = 0, notify_count: int = 0, capped: list[str] = ()) -> str`. Tier counts are passed in rather than hardcoded so the scope line cannot go stale when a job is added or archived.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2123,21 +2115,21 @@ def _f(job, state, transition, diagnosis=None):
 
 
 def test_header_states_scope_and_token_status():
-    out = report.render([], token_ok=True, total_jobs=26)
+    out = report.render([], token_ok=True, total_jobs=25)
     assert "### Jenkins Job Monitor" in out
-    assert "26" in out
+    assert "25" in out
     assert "Token: OK" in out
 
 
 def test_missing_token_is_reported_loudly_and_never_as_all_clear():
-    out = report.render([], token_ok=False, total_jobs=26)
+    out = report.render([], token_ok=False, total_jobs=25)
     assert "UNREACHABLE" in out
     assert "all clear" not in out.lower()
     assert "cannot" in out.lower() or "could not" in out.lower()
 
 
 def test_all_green_says_so_explicitly():
-    out = report.render([], token_ok=True, total_jobs=26)
+    out = report.render([], token_ok=True, total_jobs=25)
     assert "No new failures" in out
 
 
@@ -2145,13 +2137,13 @@ def test_new_failure_appears_before_ongoing():
     out = report.render(
         [_f("b", State.RED, "ONGOING"), _f("a", State.RED, "NEW")],
         token_ok=True,
-        total_jobs=26,
+        total_jobs=25,
     )
     assert out.index("NEW failures") < out.index("Ongoing")
 
 
 def test_recovered_job_is_reported():
-    out = report.render([_f("a", State.GREEN, "RECOVERED")], token_ok=True, total_jobs=26)
+    out = report.render([_f("a", State.GREEN, "RECOVERED")], token_ok=True, total_jobs=25)
     assert "Recovered" in out
     assert "a" in out
 
@@ -2162,14 +2154,14 @@ def test_diagnosis_renders_error_class_and_affected():
         source_hint="crt_deal.py:214 in get_collat_trans_df",
         affected=("NONQM_PSEUDO", "HELOC_PSEUDO"),
     )
-    out = report.render([_f("a", State.RED, "NEW", d)], token_ok=True, total_jobs=26)
+    out = report.render([_f("a", State.RED, "NEW", d)], token_ok=True, total_jobs=25)
     assert "KeyError" in out
     assert "crt_deal.py:214" in out
     assert "NONQM_PSEUDO" in out
 
 
 def test_capped_jobs_are_named_so_cap_is_not_mistaken_for_all_clear():
-    out = report.render([], token_ok=True, total_jobs=26, capped=["x", "y"])
+    out = report.render([], token_ok=True, total_jobs=25, capped=["x", "y"])
     assert "slot cap" in out.lower()
     assert "x" in out and "y" in out
 
@@ -2178,7 +2170,7 @@ def test_seed_only_and_never_did_work_explained_as_benign_or_investigate():
     out = report.render(
         [_f("s", State.SEED_ONLY, "NEW"), _f("n", State.NEVER_DID_WORK, "ONGOING")],
         token_ok=True,
-        total_jobs=26,
+        total_jobs=25,
     )
     assert "seed" in out.lower()
     assert "investigat" in out.lower()
@@ -2232,6 +2224,8 @@ def render(
     *,
     token_ok: bool,
     total_jobs: int,
+    fix_count: int = 0,
+    notify_count: int = 0,
     capped: list[str] = (),
 ) -> str:
     out: list[str] = ["### Jenkins Job Monitor", ""]
@@ -2247,7 +2241,10 @@ def render(
         ]
         return "\n".join(out)
 
-    out.append(f"- Scope: {total_jobs} jobs (23 auto-fix tier, 3 notify-only). Token: OK.")
+    scope = f"- Scope: {total_jobs} jobs"
+    if fix_count or notify_count:
+        scope += f" ({fix_count} auto-fix tier, {notify_count} notify-only)"
+    out.append(scope + ". Token: OK.")
 
     buckets: dict[str, list[Finding]] = {"NEW": [], "ONGOING": [], "RECOVERED": []}
     for f in findings:
@@ -2511,7 +2508,15 @@ def main(argv: list[str] | None = None) -> int:
         capped = [f.status.job for f in eligible[MAX_FIX_SLOTS:]]
 
     statediff.save_snapshot(statuses, outputs / f"jenkins-status-{stamp}.json")
-    text = report.render(findings, token_ok=True, total_jobs=len(specs), capped=capped)
+    fix_count = sum(1 for s in specs.values() if s.tier == "fix")
+    text = report.render(
+        findings,
+        token_ok=True,
+        total_jobs=len(specs),
+        fix_count=fix_count,
+        notify_count=len(specs) - fix_count,
+        capped=capped,
+    )
     (outputs / f"jenkins-monitor-{stamp}.md").write_text(text, encoding="utf-8")
     print(text)
     return 0
@@ -2529,7 +2534,7 @@ Expected: PASS, 3 passed
 - [ ] **Step 5: Run the full suite**
 
 Run: `python -m pytest tests/ -k jenkins -v`
-Expected: PASS, 79 passed
+Expected: PASS — all jenkins_monitor tests green
 
 - [ ] **Step 6: Live smoke test against real Jenkins**
 

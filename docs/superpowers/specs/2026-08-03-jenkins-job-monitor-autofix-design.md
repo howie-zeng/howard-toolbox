@@ -6,7 +6,8 @@
 
 ## Problem
 
-Howard owns the RESI tracking and flat-file generation pipelines — 26 `quant-*` Jenkins jobs.
+Howard owns the RESI tracking and flat-file generation pipelines — 25 `quant-*` Jenkins jobs
+(26 at design time; `quant-DailyCRTVectors` was archived and removed on 2026-08-03).
 Today he learns a job broke from qrprod notification emails, which has three structural
 failures:
 
@@ -27,7 +28,7 @@ and "did it run at all". It requires authentication.
 
 ## Goals
 
-- A durable registry of the 26 jobs with per-job cadence and failure semantics.
+- A durable registry of the 25 jobs with per-job cadence and failure semantics.
 - Daily automated classification: GREEN / RED / UNSTABLE / STALE / NEVER-RAN / UNREACHABLE.
 - Run-over-run state diffing so findings are labelled NEW / ongoing / recovered.
 - For jobs Howard owns: automatic diagnosis and a candidate fix committed in an isolated
@@ -51,7 +52,6 @@ README states jobs must not be edited in the Jenkins UI).
 | `quant-Monthly-ResiTracking-Unload` | `cron TZ=NY H 2 * * *` | **Daily** 2am, not monthly |
 | `quant-Monthly-ResiTracking-Tracking` | `cron TZ=NY H 23 * * 1-5` | **Weekdays** 11pm, not monthly |
 | `quant-Monthly-ResiTracking-pipeline` | `// cron(...)` **commented out** | effectively manual |
-| `quant-DailyCRTVectors` | none — upstream `quant-CRTDaily-Workflow` | not clock-driven |
 | `quant-DailySimHistVectorUndialed` | none — upstream `…ResiTracking-Tracking` | not clock-driven |
 | `quant-tracking-report-recache-workflow` | `cron 0 9 * * 0` (no TZ prefix) | weekly Sunday |
 
@@ -61,11 +61,11 @@ silence on the recache workflow.
 
 ## Job tiers
 
-**Tier A — own + auto-fix (23 jobs).** Code lives in LMQR; Howard owns the failure.
+**Tier A — own + auto-fix (22 jobs).** Code lives in LMQR; Howard owns the failure.
 
 `quant-DailySimDataUpdate`, `quant-DailySimDataUpdateDV01`, `quant-DailySimDataUpdateIntex`,
 `quant-DailySimDataUpdateLP`, `quant-DailySimHistVector`, `quant-DailySimHistVectorUndialed`,
-`quant-DailyCRTVectors`, `quant-generate-vectors`, `quant-WeekendCRTTrackingVectors`,
+`quant-generate-vectors`, `quant-WeekendCRTTrackingVectors`,
 `quant-WeekendCRTVectors`, `quant-Monthly-ResiTracking-pipeline`,
 `quant-Monthly-ResiTracking-Tracking`, `quant-Monthly-ResiTracking-Unload`,
 `quant-Monthly-Tracking-Report`, `quant-Monthly-Tracking-Report-Undialed`,
@@ -142,7 +142,7 @@ the existing pattern in `C:\Git\LMQR\RunScripts\oas_perf_breakdown.py`. Never in
 Anonymous access is impossible — `/api/json`, `/api/xml`, `/rssAll`, `/rssFailed` all
 return 403; only `/login` and `/whoAmI` are anonymous.
 
-One bulk call covers all 26 jobs:
+One bulk call covers all 25 jobs:
 
 ```
 GET /api/json?tree=jobs[name,color,lastBuild[number,result,building,timestamp],
@@ -169,7 +169,7 @@ Verified live on 2026-08-03. A push to the `JenkinsJobs` repo triggers
 `quant-seed-jenkinsjobs`, which re-runs **every** pipeline with `REFRESH=true` to
 re-register declared parameters and cron triggers. Those builds execute no work — their
 `Setup` and `Run` stages report `skipped due to when conditional` — and finish `NOT_BUILT`.
-Six of the 26 jobs had a `NOT_BUILT` build as their most recent build on 2026-08-03.
+Six jobs had a `NOT_BUILT` build as their most recent build on 2026-08-03.
 
 Consequences, both of which are load-bearing:
 
@@ -186,10 +186,15 @@ red/green reasoning off that, never off `lastBuild`. Obtain it via
 `/job/<name>/api/json?tree=builds[number,result,timestamp]{,25}` and take the first
 non-`NOT_BUILT` entry.
 
-`NEVER_DID_WORK` is a real finding worth reporting: `quant-DailyCRTVectors` has 37 builds,
-**all** seed refreshes, and has never once succeeded or failed. Either its upstream
-(`quant-CRTDaily-Workflow`) never invokes it, or it is vestigial. Report it as
-needs-investigation, not as a failure, and never dispatch a fix agent for it.
+`NEVER_DID_WORK` is a real finding worth reporting — a job with builds but no work ever done
+is either never invoked by its upstream or vestigial. Report it as needs-investigation, not
+as a failure, and never dispatch a fix agent for it.
+
+This state is what surfaced `quant-DailyCRTVectors` (37 builds, all seed refreshes, never a
+single success or failure). Howard confirmed on 2026-08-03 that the job is **archived**, and
+it was removed from the registry — bringing the monitored set to 25 (22 fix / 3 notify). The
+Jenkins job itself was left untouched. The state is retained because it earned its keep on
+the very first run.
 
 **Staleness model — by `trigger_type`:**
 
@@ -299,7 +304,7 @@ A new section in the existing 08:00 daily summary:
 
 ```markdown
 ### Jenkins Job Monitor
-- Scope: 26 jobs (23 auto-fix tier, 3 notify-only). Token: OK | UNREACHABLE.
+- Scope: 25 jobs (22 auto-fix tier, 3 notify-only). Token: OK | UNREACHABLE.
 - NEW failures: <job, state, diagnosis one-liner, fix branch or why not>
 - Ongoing: <job (Nth day), one line each>
 - Recovered since last run: <job, build #>
@@ -325,7 +330,7 @@ A new section in the existing 08:00 daily summary:
 - Fixtures: captured `api/json` and `consoleText` payloads, including a real
   `…UpdateLP` UNSTABLE console with a missing `Done <X>` marker, and a
   `wh_crt_update` console with no traceback (to prove NAS fallback triggers).
-- Integration (manual, token required): live read of all 26 jobs; assert the two known
+- Integration (manual, token required): live read of all 25 jobs; assert the known
   reds are detected and `…UpdateLP` reports GREEN at `#93`.
 - Registry validation: assert every job in the registry has a `<job>.jenkinsfile` in
   `C:\Git\JenkinsJobs`, and that the parsed cron still matches the registry — catches

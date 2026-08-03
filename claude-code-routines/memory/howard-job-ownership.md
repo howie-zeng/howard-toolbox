@@ -1,16 +1,16 @@
 ---
 name: howard-job-ownership
-description: "The 23 quant-* tracking/flat-file Jenkins jobs Howard owns and will fix, vs the 3 deploy jobs that are notify-only for the dev team"
+description: "The 22 quant-* tracking/flat-file Jenkins jobs Howard owns and will fix, vs the 3 deploy jobs that are notify-only for the dev team"
 metadata:
   node_type: memory
   type: project
 ---
 
 Howard is in charge of **all the RESI tracking and flat-file generation processes** (stated
-2026-08-03). Concretely, 23 `quant-*` Jenkins jobs are his to diagnose and fix:
+2026-08-03). Concretely, 22 `quant-*` Jenkins jobs are his to diagnose and fix:
 
 `quant-DailySimDataUpdate`, `-DV01`, `-Intex`, `-LP`; `quant-DailySimHistVector`,
-`quant-DailySimHistVectorUndialed`; `quant-DailyCRTVectors`; `quant-generate-vectors`;
+`quant-DailySimHistVectorUndialed`; `quant-generate-vectors`;
 `quant-WeekendCRTVectors`, `quant-WeekendCRTTrackingVectors`;
 `quant-Monthly-ResiTracking-pipeline`, `-Tracking`, `-Unload`;
 `quant-Monthly-Tracking-Report`, `-Undialed`; `quant-tracking-report-recache-workflow`;
@@ -19,6 +19,10 @@ Howard is in charge of **all the RESI tracking and flat-file generation processe
 
 **Deploy jobs are NOT his:** `quant-deploy-lmqr`, `quant-deploy-lmsimdata`,
 `quant-deploy-Rcode`. **Report** an error so he can tell the dev team; never hand him a fix.
+
+**Archived — do NOT monitor:** `quant-DailyCRTVectors` (Howard confirmed archived
+2026-08-03; it had 37 builds, all no-work seed refreshes, and never once succeeded or
+failed). Removed from the registry. The Jenkins job itself was left in place.
 
 **Why:** This is the ownership boundary that decides escalate-to-Howard vs merely-report. It
 is the positive complement to [[daily-resi-clo-summary-scope]], which lists what belongs to
