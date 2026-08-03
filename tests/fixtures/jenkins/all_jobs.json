@@ -1,0 +1,25 @@
+{
+  "jobs": [
+    {
+      "name": "quant-DailySimDataUpdateLP",
+      "color": "blue",
+      "lastBuild": {"number": 93, "result": "SUCCESS", "timestamp": 1785690000000, "building": false},
+      "lastSuccessfulBuild": {"number": 93, "timestamp": 1785690000000},
+      "lastFailedBuild": null
+    },
+    {
+      "name": "quant-tracking-report-recache-workflow",
+      "color": "red",
+      "lastBuild": {"number": 293, "result": "FAILURE", "timestamp": 1785670000000, "building": false},
+      "lastSuccessfulBuild": {"number": 276, "timestamp": 1783800000000},
+      "lastFailedBuild": {"number": 293, "timestamp": 1785670000000}
+    },
+    {
+      "name": "quant-Monthly-Tracking-Report",
+      "color": "notbuilt",
+      "lastBuild": {"number": 45, "result": "NOT_BUILT", "timestamp": 1785340000000, "building": false},
+      "lastSuccessfulBuild": {"number": 22, "timestamp": 1783400000000},
+      "lastFailedBuild": null
+    }
+  ]
+}
