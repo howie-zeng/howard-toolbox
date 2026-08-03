@@ -60,6 +60,18 @@ Mailbox folder map (learned 2026-06-01 — check ALL of these, not just Inbox/AU
 - **Folder-access gotcha:** the `outlook_email_search` `folderName` lookup resolves `Inbox`, `CLO`, `HECM`, `Jenkins Automation`, `auto`, but returns NOT_FOUND for some custom folders (`RESI`, `Tracking`). For those, get the folder ID from `read_resource mail:///folders/` (lists all folders) and read it via `read_resource mail:///folders/{id}` to enumerate recent messages.
 - In Jenkins, treat `Build FAILURE` / `Build failed in Jenkins` / `ABORTED` / `[Tests: FAILED]` as failures, and `Jenkins build is back to normal` as a recovery (implies a prior failure). A failure with no later "back to normal" or SUCCESS for the same job = still broken.
 
+Before writing the summary, run the Jenkins job monitor and fold its output in as a
+`### Jenkins Job Monitor` section:
+
+```powershell
+python -m jenkins_monitor.cli --outputs outputs
+```
+
+Run it from `claude-code-routines/`. It exits 0 even when jobs are red. If it reports
+UNREACHABLE, say so explicitly — that is an access gap, never "all clear". Only `RED` and
+`UNSTABLE` jobs in the `fix` tier are candidates for a fix agent; see
+`FIX_AGENT_RUNBOOK.md`. Deploy jobs are notify-only — report them for the dev team.
+
 Use this output format:
 
 ```markdown
