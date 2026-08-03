@@ -4,6 +4,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 _ROUTINES = Path(__file__).resolve().parents[1] / "claude-code-routines"
 if str(_ROUTINES) not in sys.path:
     sys.path.insert(0, str(_ROUTINES))
@@ -113,7 +115,7 @@ def test_ongoing_red_to_building_shows_arrow_transition():
     assert "RED" in out
     assert "BUILDING" in out
     # previous -> current must be threaded through, not a bare current-state line
-    assert "RED → BUILDING" in out
+    assert "RED -> BUILDING" in out
 
 
 def test_ongoing_red_to_building_flags_recovery_not_confirmed():
@@ -136,14 +138,16 @@ def test_ongoing_stale_to_seed_only_flags_recovery_not_confirmed():
         token_ok=True,
         total_jobs=25,
     )
-    assert "STALE → SEED_ONLY" in out
+    assert "STALE -> SEED_ONLY" in out
     assert "not yet confirmed" in out.lower()
     assert "recovered" not in out.lower()
 
 
 def test_new_finding_with_no_previous_state_shows_bare_current_state():
     out = report.render([_f("a", State.RED, "NEW")], token_ok=True, total_jobs=25)
-    # no previous_state supplied -> no arrow, just the plain state
+    # no previous_state supplied -> no "->" transition marker, just the plain state.
+    # This must still fail if the arrow (ASCII or Unicode) were wrongly emitted here.
+    assert "->" not in out
     assert "→" not in out
     assert "RED" in out
 
@@ -154,7 +158,48 @@ def test_recovered_finding_can_show_previous_state_arrow():
         token_ok=True,
         total_jobs=25,
     )
-    assert "RED → GREEN" in out
+    assert "RED -> GREEN" in out
     # a confirmed recovery is fine to call recovered - this is the one case where
     # the word is warranted, since state diff only labels RECOVERED for confirmed GREEN.
     assert "recovered" in out.lower()
+
+
+# --- Task 7 Fix pass 1 (Finding 1, CRITICAL): the report is printed to a console,
+# --- written to a .md file, and folded into an email pipeline (send_outlook_summary.py).
+# --- report.py cannot know whether any given consumer has been hardened for Unicode, so
+# --- its own output must be safe standalone. This is the real deliverable of the fix -
+# --- without it, a Unicode regression here can silently return and crash an unattended
+# --- run with zero output for a genuine failure.
+
+
+def test_render_output_encodes_cleanly_on_default_windows_console():
+    out = report.render(
+        [_f("a", State.BUILDING, "ONGOING", previous_state=State.RED)],
+        token_ok=True,
+        total_jobs=25,
+    )
+    try:
+        out.encode("cp1252")
+    except UnicodeEncodeError as exc:  # pragma: no cover - documents the exact failure mode
+        raise AssertionError(
+            "report output must encode cleanly to cp1252, the default codepage of an "
+            "unattended Windows console - a non-ASCII character here would crash the "
+            "render with zero output for a genuine finding, the exact failure class this "
+            "monitor exists to eliminate"
+        ) from exc
+
+
+# --- Task 7 Fix pass 1 (Finding 2, minor): render() only reads back the NEW / ONGOING /
+# --- RECOVERED buckets, so an unrecognized transition value used to be silently absent
+# --- from the output with no error - the "silently dropped finding" failure mode this
+# --- project must not have. It is currently unreachable because statediff.label() only
+# --- emits those three strings, but nothing enforced that, so harden it directly.
+
+
+def test_unexpected_transition_raises_instead_of_silently_dropping():
+    with pytest.raises(ValueError, match="bogus-job"):
+        report.render(
+            [_f("bogus-job", State.RED, "SOMETHING_ELSE")],
+            token_ok=True,
+            total_jobs=25,
+        )

@@ -26,13 +26,13 @@ def _state_label(f: Finding) -> str:
     """`<previous> -> <current>` when the previous state is known and differs, else bare current state."""
     current = f.status.state
     if f.previous_state and f.previous_state != current:
-        return f"{f.previous_state} → {current}"
+        return f"{f.previous_state} -> {current}"
     return current
 
 
 def _line(f: Finding) -> str:
     st = f.status
-    parts = [f"**`{st.job}`** — {_state_label(f)}: {st.detail}"]
+    parts = [f"**`{st.job}`** - {_state_label(f)}: {st.detail}"]
     if f.transition == "ONGOING" and st.state in _UNCONFIRMED_ONGOING_STATES:
         parts.append("_(recovery not yet confirmed)_")
     d = f.diagnosis
@@ -46,8 +46,8 @@ def _line(f: Finding) -> str:
         if d.child_builds:
             parts.append(f"child builds: {', '.join(f'#{n}' for n in d.child_builds)}")
         if d.confidence == "low":
-            parts.append("_(low confidence — needs manual look)_")
-    return "- " + " — ".join(parts)
+            parts.append("_(low confidence - needs manual look)_")
+    return "- " + " - ".join(parts)
 
 
 def render(
@@ -83,7 +83,12 @@ def render(
     # interleaved with truly benign entries by sorting on current state alone.
     buckets: dict[str, list[Finding]] = {"NEW": [], "ONGOING": [], "RECOVERED": []}
     for f in findings:
-        buckets.setdefault(f.transition, []).append(f)
+        if f.transition not in buckets:
+            raise ValueError(
+                f"job {f.status.job!r} has unexpected transition {f.transition!r}; "
+                "expected one of NEW, ONGOING, RECOVERED - refusing to silently drop the finding"
+            )
+        buckets[f.transition].append(f)
     for items in buckets.values():
         items.sort(key=lambda f: (_ORDER.get(f.status.state, 9), f.status.job))
 
@@ -105,16 +110,16 @@ def render(
         out += [
             "",
             f"**Diagnosed but fix not attempted (slot cap):** {', '.join(capped)}. "
-            "These are real findings that did not get an agent this run — not all clear.",
+            "These are real findings that did not get an agent this run - not all clear.",
         ]
 
     if any(f.status.state in (State.SEED_ONLY, State.NEVER_DID_WORK) for f in findings):
         out += [
             "",
             "_Notes: `SEED_ONLY` means the latest build was a benign no-work `REFRESH=true` seed "
-            "run triggered by a push to the JenkinsJobs repo — staleness is judged from the last "
+            "run triggered by a push to the JenkinsJobs repo - staleness is judged from the last "
             "real build instead. `NEVER_DID_WORK` means every recorded build was a seed refresh, "
-            "so the job has never actually run — worth investigating whether its upstream ever "
+            "so the job has never actually run - worth investigating whether its upstream ever "
             "invokes it._",
         ]
 
