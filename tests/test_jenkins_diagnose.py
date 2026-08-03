@@ -26,6 +26,29 @@ class _FakeClient:
         return self._details[(job, number)]
 
 
+class _FlakyClient(_FakeClient):
+    """Like _FakeClient, but specific (job, number) lookups raise instead of returning.
+
+    Models a genuine transport/programming failure on a single build so tests can
+    drive the diagnoser's graceful-degradation paths without a real network call.
+    """
+
+    def __init__(self, consoles=None, details=None, raise_console_for=(), raise_detail_for=()):
+        super().__init__(consoles, details)
+        self._raise_console_for = set(raise_console_for)
+        self._raise_detail_for = set(raise_detail_for)
+
+    def console(self, job, number):
+        if (job, number) in self._raise_console_for:
+            raise RuntimeError(f"HTTP 500 fetching console for {job} #{number}")
+        return super().console(job, number)
+
+    def build_detail(self, job, number):
+        if (job, number) in self._raise_detail_for:
+            raise RuntimeError(f"HTTP 500 fetching build detail for {job} #{number}")
+        return super().build_detail(job, number)
+
+
 def test_extract_python_error_finds_last_keyerror():
     text = (FIXTURES / "console_keyerror.txt").read_text(encoding="utf-8")
     err_class, block = diagnose.extract_python_error(text)
@@ -36,6 +59,30 @@ def test_extract_python_error_finds_last_keyerror():
 
 def test_extract_python_error_returns_empty_when_no_traceback():
     assert diagnose.extract_python_error("all fine\nFinished: SUCCESS") == ("", "")
+
+
+def test_extract_python_error_recognizes_bare_keyboard_interrupt():
+    """A timeout-killed or manually aborted process commonly ends its traceback this way."""
+    text = (
+        "Traceback (most recent call last):\n"
+        '  File "S:\\QR\\GitHub\\job.py", line 42, in <module>\n'
+        "    long_running_call()\n"
+        "KeyboardInterrupt\n"
+    )
+    err_class, block = diagnose.extract_python_error(text)
+    assert err_class == "KeyboardInterrupt"
+    assert block.splitlines()[-1] == "KeyboardInterrupt"
+
+
+def test_extract_python_error_bounds_unterminated_traceback():
+    """No line ever matches _ERROR_LINE - block must not grow to end-of-file."""
+    body = "\n".join(f"    print('runaway line {i}')" for i in range(500))
+    text = "Traceback (most recent call last):\n" + body
+    err_class, block = diagnose.extract_python_error(text)
+    assert err_class == ""
+    block_lines = block.splitlines()
+    assert len(block_lines) <= diagnose._MAX_TRACEBACK_LINES
+    assert len(block_lines) < len(text.splitlines())
 
 
 def test_missing_markers_reports_absent_only():
@@ -112,3 +159,68 @@ def test_diagnose_flags_low_confidence_when_console_uninformative():
     d = diagnose.diagnose_job(client, spec, status)
     assert d.confidence == "low"
     assert "wh_crt_update" in d.source_hint
+
+
+def test_diagnose_orchestrator_build_detail_failure_leaves_a_trace_and_uses_fallback_label():
+    """A build_detail failure for one child must not lose the other children's deal
+    types, must fall back to '#<num>' for the failing one, and must surface some
+    indication that the fetch failed rather than vanishing silently."""
+    spec = JobSpec(
+        job="quant-tracking-report-recache-workflow",
+        tier="fix",
+        family="resitracking",
+        trigger_type="manual",
+        orchestrator=True,
+        child_job="quant-tracking-report-recache",
+    )
+    status = JobStatus(job=spec.job, state=State.RED, latest=BuildInfo(293, "FAILURE", None), detail="d")
+    child_console = (FIXTURES / "console_keyerror.txt").read_text(encoding="utf-8")
+    client = _FlakyClient(
+        consoles={
+            (spec.job, 293): (FIXTURES / "console_wrapper_293.txt").read_text(encoding="utf-8"),
+            ("quant-tracking-report-recache", 75): child_console,
+            ("quant-tracking-report-recache", 76): child_console,
+            ("quant-tracking-report-recache", 78): child_console,
+        },
+        details={
+            ("quant-tracking-report-recache", 76): ("FAILURE", {"deal_type": "NONQM_PSEUDO"}),
+            ("quant-tracking-report-recache", 78): ("FAILURE", {"deal_type": "HELOC_PSEUDO"}),
+        },
+        raise_detail_for={("quant-tracking-report-recache", 75)},
+    )
+    d = diagnose.diagnose_job(client, spec, status)
+    assert d.error_class == "KeyError"
+    assert d.child_builds == (75, 76, 78)
+    assert set(d.affected) == {"#75", "NONQM_PSEUDO", "HELOC_PSEUDO"}
+    assert "could not read build detail for #75" in d.error_text
+
+
+def test_diagnose_job_console_failure_degrades_to_low_confidence():
+    """Top-level client.console raising must return a low-confidence diagnosis, not raise."""
+    spec = JobSpec(job="quant-x", tier="fix", family="f", trigger_type="manual")
+    status = JobStatus(job=spec.job, state=State.RED, latest=BuildInfo(10, "FAILURE", None), detail="d")
+    client = _FlakyClient(raise_console_for={(spec.job, 10)})
+    d = diagnose.diagnose_job(client, spec, status)
+    assert d.confidence == "low"
+    assert d.error_class == ""
+    assert "#10" in d.error_text
+
+
+def test_diagnose_orchestrator_no_failing_child_found_is_honest_low_confidence():
+    """Wrapper reported failure but its console names no failing child build - report
+    that honestly at low confidence instead of fabricating a cause."""
+    spec = JobSpec(
+        job="quant-tracking-report-recache-workflow",
+        tier="fix",
+        family="resitracking",
+        trigger_type="manual",
+        orchestrator=True,
+        child_job="quant-tracking-report-recache",
+    )
+    status = JobStatus(job=spec.job, state=State.RED, latest=BuildInfo(300, "FAILURE", None), detail="d")
+    client = _FakeClient(consoles={(spec.job, 300): "Started by timer\nFinished: FAILURE\n"})
+    d = diagnose.diagnose_job(client, spec, status)
+    assert d.confidence == "low"
+    assert d.error_class == ""
+    assert d.child_builds == ()
+    assert "no failing child build was found" in d.error_text
