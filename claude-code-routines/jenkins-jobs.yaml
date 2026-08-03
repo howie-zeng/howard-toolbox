@@ -13,6 +13,17 @@
 # parent running without the child following is expected, not a fault. None of the
 # jobs below set this - only a future child that is unconditionally chained to its
 # parent (no gate) should opt in.
+#
+# max_silence_days: an ABSOLUTE wall-clock ceiling on silence, checked before every
+# cadence rule and independent of any parent comparison. It exists because the cadence
+# check is deliberately disabled for non-strict upstream jobs, which left them with no
+# staleness detection at all - the observation that motivated this package (a job whose
+# last REAL build was 27 days old) classified GREEN. 21 days is chosen deliberately: the
+# 7 false positives that motivated upstream_strict: false were parent-recency
+# comparisons measuring HOURS to a few DAYS, so a three-week floor cannot reproduce any
+# of them, while still catching a job that has genuinely stopped. It is set only on
+# upstream-triggered jobs; pollscm (builds only on repo change) and manual (trigger
+# commented out) omit it on purpose, because silence there is genuinely expected.
 jobs:
   # ---- simdata family -------------------------------------------------------
   - job: quant-DailySimDataUpdate
@@ -87,6 +98,7 @@ jobs:
     family: vectors
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmsimvectors/lm_sim_pub_main.py
 
@@ -95,6 +107,7 @@ jobs:
     family: vectors
     trigger_type: upstream
     upstream: quant-riskrun-workflow
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmsimvectors/lm_sim_pub_main.py
 
@@ -103,6 +116,7 @@ jobs:
     family: vectors
     trigger_type: upstream
     upstream: quant-WeekendCRTVectorsWorkflow
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmsimvectors/lm_sim_pub_main.py
 
@@ -111,6 +125,7 @@ jobs:
     family: vectors
     trigger_type: upstream
     upstream: quant-WeekendCRTVectorsWorkflow
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmsimvectors/lm_sim_pub_main.py
 
@@ -119,7 +134,12 @@ jobs:
     tier: fix
     family: resitracking
     trigger_type: manual                # cron is COMMENTED OUT in the jenkinsfile
-    orchestrator: true
+    # `orchestrator: true` was removed here: it had no `child_job`, and diagnose.py only
+    # drills into children when BOTH are set - so drill-down was silently disabled and the
+    # diagnoser tried to pull a traceback out of a wrapper console that never has one. No
+    # child job name has been verified from the jenkinsfile, and inventing one would point
+    # the drill-down at the wrong job. Re-add BOTH fields together once the child is known;
+    # registry.py now rejects orchestrator without child_job.
     repo: LMQR
 
   - job: quant-Monthly-ResiTracking-Tracking
@@ -147,6 +167,7 @@ jobs:
     family: resitracking
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmanalytics/tracking/transition_report.py
 
@@ -155,6 +176,7 @@ jobs:
     family: resitracking
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: lmanalytics/tracking/transition_report.py
 
@@ -175,6 +197,7 @@ jobs:
     family: pseudodeal
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: resi_deal_manager.pseudo_gating
 
@@ -183,6 +206,7 @@ jobs:
     family: pseudodeal
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Tracking
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: resi_deal_manager.pseudo_gating
 
@@ -191,6 +215,7 @@ jobs:
     family: pseudodeal
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: resi_deal_manager.pseudo_gating
 
@@ -199,6 +224,7 @@ jobs:
     family: pseudodeal
     trigger_type: upstream
     upstream: quant-Monthly-ResiTracking-Unload
+    max_silence_days: 21                # absolute silence ceiling; see header
     repo: LMQR
     entrypoint: resi_deal_manager.pseudo_gating
 

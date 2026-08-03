@@ -224,3 +224,106 @@ def test_diagnose_orchestrator_no_failing_child_found_is_honest_low_confidence()
     assert d.error_class == ""
     assert d.child_builds == ()
     assert "no failing child build was found" in d.error_text
+
+
+# --- Final review, CRITICAL 2: diagnose_job used `status.latest` - the one place in the
+# --- package that regressed to Jenkins' lastBuild instead of the last_real_build rule the
+# --- whole design rests on. classify_job returns RED/UNSTABLE while `latest` can still be
+# --- a no-work NOT_BUILT seed build, because the RED/ABORTED/UNSTABLE checks all precede
+# --- the SEED_ONLY check. Reading the seed build's console (every stage "skipped due to
+# --- when conditional") made all eight success markers look absent, so the report claimed
+# --- all eight deal types failed when one did; for an orchestrator it reported "no failing
+# --- child build was found", which reads as "nothing to chase in the children".
+
+
+def test_diagnose_reads_last_real_build_not_a_newer_seed_build():
+    """#92 went UNSTABLE; a JenkinsJobs push then created #93 NOT_BUILT. The diagnosis must
+    come from #92."""
+    spec = JobSpec(
+        job="quant-DailySimDataUpdateLP",
+        tier="fix",
+        family="simdata",
+        trigger_type="cron",
+        cron="20 14 * * *",
+        tz="America/New_York",
+        unstable_is_failure=True,
+        success_markers=("Done NQM", "Done Jumbo", "Done HELOC"),
+    )
+    status = JobStatus(
+        job=spec.job,
+        state=State.UNSTABLE,
+        latest=BuildInfo(93, "NOT_BUILT", None),
+        last_real=BuildInfo(92, "UNSTABLE", None),
+        detail="d",
+    )
+    seed_console = "Stage 'NQM' skipped due to when conditional\nFinished: NOT_BUILT\n"
+    real_console = "Done NQM\nDone Jumbo\nERROR: HELOC failed\nFinished: UNSTABLE\n"
+    client = _FakeClient(consoles={(spec.job, 93): seed_console, (spec.job, 92): real_console})
+
+    d = diagnose.diagnose_job(client, spec, status)
+
+    assert d.build_number == 92, "the diagnosed build must be the last build that did work"
+    assert d.affected == ("Done HELOC",), (
+        "reading the seed build's console instead would report every marker missing - "
+        "claiming all deal types failed when only one did"
+    )
+
+
+def test_diagnose_orchestrator_reads_last_real_build_not_a_newer_seed_build():
+    """Same bug, orchestrator shape: the seed build's console names no child builds, so the
+    diagnoser reported 'no failing child build was found' for a wrapper that has three."""
+    spec = JobSpec(
+        job="quant-tracking-report-recache-workflow",
+        tier="fix",
+        family="resitracking",
+        trigger_type="manual",
+        orchestrator=True,
+        child_job="quant-tracking-report-recache",
+    )
+    status = JobStatus(
+        job=spec.job,
+        state=State.RED,
+        latest=BuildInfo(294, "NOT_BUILT", None),
+        last_real=BuildInfo(293, "FAILURE", None),
+        detail="d",
+    )
+    child_console = (FIXTURES / "console_keyerror.txt").read_text(encoding="utf-8")
+    client = _FakeClient(
+        consoles={
+            (spec.job, 294): "Stage 'recache' skipped due to when conditional\nFinished: NOT_BUILT\n",
+            (spec.job, 293): (FIXTURES / "console_wrapper_293.txt").read_text(encoding="utf-8"),
+            ("quant-tracking-report-recache", 75): child_console,
+            ("quant-tracking-report-recache", 76): child_console,
+            ("quant-tracking-report-recache", 78): child_console,
+        },
+        details={
+            ("quant-tracking-report-recache", 75): ("FAILURE", {"deal_type": "JUMBO2_0_PSEUDO"}),
+            ("quant-tracking-report-recache", 76): ("FAILURE", {"deal_type": "NONQM_PSEUDO"}),
+            ("quant-tracking-report-recache", 78): ("FAILURE", {"deal_type": "HELOC_PSEUDO"}),
+        },
+    )
+
+    d = diagnose.diagnose_job(client, spec, status)
+
+    assert d.build_number == 293
+    assert d.child_builds == (75, 76, 78)
+    assert "no failing child build was found" not in d.error_text
+
+
+def test_diagnose_falls_back_to_latest_when_no_real_build_is_known():
+    """last_real is None (e.g. an UNREACHABLE-ish status built without a build list) - the
+    diagnoser still tries `latest` rather than giving up."""
+    spec = JobSpec(job="quant-x", tier="fix", family="f", trigger_type="manual")
+    status = JobStatus(job=spec.job, state=State.RED, latest=BuildInfo(11, "FAILURE", None), detail="d")
+    client = _FakeClient(consoles={(spec.job, 11): "Traceback (most recent call last):\nKeyError: 'x'\n"})
+    d = diagnose.diagnose_job(client, spec, status)
+    assert d.build_number == 11
+    assert d.error_class == "KeyError"
+
+
+def test_diagnose_with_no_build_at_all_reports_it_and_carries_no_build_number():
+    spec = JobSpec(job="quant-x", tier="fix", family="f", trigger_type="manual")
+    status = JobStatus(job=spec.job, state=State.RED, detail="d")
+    d = diagnose.diagnose_job(_FakeClient(), spec, status)
+    assert d.build_number is None
+    assert "no build to diagnose" in d.error_text

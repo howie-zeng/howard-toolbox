@@ -97,13 +97,31 @@ def test_building_is_deferred_not_judged():
     assert st.state == State.BUILDING
 
 
-def test_unstable_is_failure_only_when_spec_says_so():
+def test_unstable_opt_out_is_explicit_and_lenient():
+    """`unstable_is_failure` now DEFAULTS to True (see the default-config test below), so
+    the lenient side of this pair must opt out explicitly. That opt-out is still supported
+    - a job whose UNSTABLE genuinely carries no information can set it False - but it has
+    to be a deliberate, visible decision in the registry, not the silent default."""
     blob = {"lastBuild": {"number": 92, "result": "UNSTABLE", "timestamp": 1}}
     builds = [_b(92, "UNSTABLE", 2)]
-    lenient = JobSpec(job="j", tier="fix", family="f", trigger_type="manual")
+    lenient = JobSpec(job="j", tier="fix", family="f", trigger_type="manual", unstable_is_failure=False)
     strict = JobSpec(job="j", tier="fix", family="f", trigger_type="manual", unstable_is_failure=True)
     assert classify.classify_job(lenient, blob, builds, NOW).state == State.GREEN
     assert classify.classify_job(strict, blob, builds, NOW).state == State.UNSTABLE
+
+
+def test_unstable_on_default_config_job_is_reported_not_silently_green():
+    """The registry is hand-maintained against jenkinsfiles that change. When any job
+    gains `catchError(buildResult: 'UNSTABLE')`, its partial failures must become visible
+    immediately - with the old default of False they were permanently invisible, and GREEN
+    would have meant 'UNSTABLE and we chose not to look' rather than 'confirmed good'."""
+    blob = {"lastBuild": {"number": 92, "result": "UNSTABLE", "timestamp": 1}}
+    builds = [_b(92, "UNSTABLE", 2)]
+    default_spec = JobSpec(job="j", tier="fix", family="f", trigger_type="manual")
+    assert default_spec.unstable_is_failure is True
+    st = classify.classify_job(default_spec, blob, builds, NOW)
+    assert st.state == State.UNSTABLE
+    assert st.state != State.GREEN
 
 
 def test_stale_detected_when_last_real_build_is_old():
@@ -162,3 +180,41 @@ def test_green_when_recent_success():
     }
     st = classify.classify_job(CRON_SPEC, blob, [_b(95, "SUCCESS", 3)], NOW)
     assert st.state == State.GREEN
+
+
+# --- Final review, CRITICAL 1 part 2: the `real is None` branch used to sit ABOVE the
+# --- lastFailedBuild-vs-lastSuccessfulBuild RED check. Both numbers come from the bulk
+# --- /api/json blob and are available even when the per-job build-list fetch failed, so a
+# --- failed fetch turned a genuinely red job into GREEN (manual trigger) or
+# --- NEVER_DID_WORK (everything else) - and NEVER_DID_WORK persisted into the snapshot
+# --- then fabricated a RECOVERED the next day for a job that never broke.
+
+
+def test_red_from_bulk_blob_survives_an_empty_build_list():
+    """No per-job builds at all (a failed or empty fetch), but the bulk blob says the
+    newest failure is newer than the newest success. That is enough to be RED."""
+    blob = {
+        "lastBuild": {"number": 293, "result": "FAILURE", "timestamp": 1},
+        "lastSuccessfulBuild": {"number": 276, "timestamp": 1},
+        "lastFailedBuild": {"number": 293, "timestamp": 1},
+    }
+    st = classify.classify_job(MANUAL_SPEC, blob, [], NOW)
+    assert st.state == State.RED, (
+        "a red job whose per-job build fetch returned nothing must stay RED - the old "
+        "order reported GREEN with a fabricated 'all NOT_BUILT seed refreshes' detail"
+    )
+    assert "all NOT_BUILT seed refreshes" not in st.detail
+
+
+def test_red_from_bulk_blob_beats_never_did_work_for_non_manual_triggers():
+    blob = {
+        "lastBuild": {"number": 50, "result": "FAILURE", "timestamp": 1},
+        "lastSuccessfulBuild": {"number": 40, "timestamp": 1},
+        "lastFailedBuild": {"number": 50, "timestamp": 1},
+    }
+    st = classify.classify_job(UPSTREAM_SPEC, blob, [], NOW)
+    assert st.state == State.RED
+    assert st.state != State.NEVER_DID_WORK, (
+        "NEVER_DID_WORK would be written to the snapshot and produce a fabricated "
+        "RECOVERED tomorrow for a job that is red right now"
+    )

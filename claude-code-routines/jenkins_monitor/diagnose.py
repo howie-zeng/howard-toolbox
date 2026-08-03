@@ -91,7 +91,15 @@ class DiagnosticClient(Protocol):
 
 
 def diagnose_job(client: DiagnosticClient, spec: JobSpec, status: JobStatus) -> Diagnosis:
-    build_no = status.latest.number if status.latest else None
+    # `last_real` first, `latest` only as a fallback: classify_job returns RED/UNSTABLE
+    # while `latest` can still be a no-work NOT_BUILT seed build (the RED/ABORTED/UNSTABLE
+    # checks all precede the SEED_ONLY check). Reading `latest` there fetched the seed
+    # run's console, whose stages all report "skipped due to when conditional" - so every
+    # success marker looked absent (all eight deal types "failed" when one did) and an
+    # orchestrator reported "no failing child build was found", which reads as
+    # "nothing to chase". The last build that actually did work is the one that broke.
+    build = status.last_real or status.latest
+    build_no = build.number if build else None
     if build_no is None:
         return Diagnosis(job=spec.job, error_class="", error_text="no build to diagnose", confidence="low")
 
@@ -103,6 +111,7 @@ def diagnose_job(client: DiagnosticClient, spec: JobSpec, status: JobStatus) -> 
             error_class="",
             error_text=f"could not read console for #{build_no}: {exc}",
             confidence="low",
+            build_number=build_no,
         )
 
     if spec.orchestrator and spec.child_job:
@@ -123,6 +132,7 @@ def diagnose_job(client: DiagnosticClient, spec: JobSpec, status: JobStatus) -> 
             affected=affected,
             source="nas-log-required",
             confidence="low",
+            build_number=build_no,
         )
 
     return Diagnosis(
@@ -133,6 +143,7 @@ def diagnose_job(client: DiagnosticClient, spec: JobSpec, status: JobStatus) -> 
         affected=affected,
         source="console",
         confidence="high" if err_class else "low",
+        build_number=build_no,
     )
 
 
@@ -146,6 +157,7 @@ def _diagnose_orchestrator(client: DiagnosticClient, spec: JobSpec, build_no: in
             error_class="",
             error_text=f"#{build_no} failed but no failing child build was found in its console",
             confidence="low",
+            build_number=build_no,
         )
 
     err_class = ""
@@ -191,4 +203,5 @@ def _diagnose_orchestrator(client: DiagnosticClient, spec: JobSpec, build_no: in
         child_builds=tuple(failing),
         source="child-console",
         confidence="high" if err_class else "low",
+        build_number=build_no,
     )

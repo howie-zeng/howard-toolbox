@@ -56,6 +56,22 @@ def classify_job(
     if latest is not None and latest.building:
         return _status(State.BUILDING, f"build #{latest.number} in progress; deferred")
 
+    # Red takes precedence, and is checked BEFORE the `real is None` branch on purpose.
+    # Both numbers come from the bulk /api/json blob, so they are available even when the
+    # per-job build-list fetch failed and `builds` is empty. Checking `real is None` first
+    # (the old order) meant a genuinely red job whose per-job call 500'd was reported as
+    # GREEN ("all NOT_BUILT seed refreshes") for a manual-trigger job, or NEVER_DID_WORK
+    # for every other trigger - and NEVER_DID_WORK persisted into the snapshot then
+    # fabricated a RECOVERED the next day for a job that never broke.
+    s_num = last_success.number if last_success else 0
+    f_num = last_failure.number if last_failure else 0
+    if f_num > s_num:
+        return _status(
+            State.RED,
+            f"#{f_num} FAILURE is newer than last success #{s_num}"
+            + (f"; {fails} consecutive failing builds" if fails > 1 else ""),
+        )
+
     if real is None:
         n = len(builds)
         if spec.trigger_type == "manual":
@@ -70,16 +86,6 @@ def classify_job(
         return _status(
             State.NEVER_DID_WORK,
             f"{n} build(s) recorded, all NOT_BUILT seed refreshes; never did work",
-        )
-
-    # Red takes precedence: a newer failure than the newest success.
-    s_num = last_success.number if last_success else 0
-    f_num = last_failure.number if last_failure else 0
-    if f_num > s_num:
-        return _status(
-            State.RED,
-            f"#{f_num} FAILURE is newer than last success #{s_num}"
-            + (f"; {fails} consecutive failing builds" if fails > 1 else ""),
         )
 
     if real.result == "ABORTED":

@@ -5,7 +5,6 @@ import datetime as dt
 from dataclasses import dataclass, field
 
 WORK_RESULTS = frozenset({"SUCCESS", "FAILURE", "UNSTABLE", "ABORTED"})
-FAILING_RESULTS = frozenset({"FAILURE", "ABORTED"})
 
 
 class State:
@@ -32,11 +31,22 @@ class JobSpec:
     cron: str | None = None
     tz: str | None = None
     grace_hours: float = 6.0
+    #: Absolute wall-clock ceiling on silence, independent of the cadence comparison. Set
+    #: it and a job is STALE once its last REAL build is older than this many days, even
+    #: for trigger types whose cadence check is intentionally disabled (non-strict
+    #: upstream). None means no ceiling - only correct where silence is genuinely
+    #: expected (pollscm: builds on repo change; manual: no trigger at all).
+    max_silence_days: float | None = None
     upstream: str | None = None
     upstream_strict: bool = False
     orchestrator: bool = False
     child_job: str | None = None
-    unstable_is_failure: bool = False
+    #: Defaults to True: an UNSTABLE build is a partial failure, and GREEN must mean
+    #: "confirmed good", never "UNSTABLE and we chose not to look". The registry is
+    #: hand-maintained against upstream jenkinsfiles that change, so a job that newly
+    #: gains `catchError(buildResult: 'UNSTABLE')` must become visible by default rather
+    #: than silently invisible. Set it False to opt a specific job out, deliberately.
+    unstable_is_failure: bool = True
     success_markers: tuple[str, ...] = ()
     console_informative: bool = True
     nas_log_glob: str | None = None
@@ -83,6 +93,11 @@ class Diagnosis:
     child_builds: tuple[int, ...] = ()
     source: str = "console"
     confidence: str = "medium"
+    #: The build whose console was actually read. Surfaced in the report so a reader can
+    #: see at a glance which build the diagnosis describes - a diagnosis taken from the
+    #: wrong build (e.g. a no-work NOT_BUILT seed run instead of the failing build) reads
+    #: as authoritative and would otherwise be indistinguishable from a correct one.
+    build_number: int | None = None
 
 
 @dataclass(frozen=True)

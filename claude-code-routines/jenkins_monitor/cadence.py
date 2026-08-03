@@ -147,6 +147,25 @@ def staleness(
     seed/refresh build "refresh" the apparent last-run time and mask a job that
     has actually gone stale - the seed build ran, but it did no real work.
     """
+    # Absolute silence ceiling, checked BEFORE every early return below. The cadence
+    # comparisons that follow are deliberately disabled for pollscm, manual and
+    # non-strict upstream jobs, which left ~half the fleet with no staleness detection at
+    # all: the motivating observation for this package - a job whose last REAL build was
+    # 27 days old - classified GREEN. This ceiling is not cadence enforcement; it is a
+    # wall-clock floor that says "however this job is triggered, this much silence is
+    # long enough that a human should look". Jobs where silence is genuinely expected
+    # (pollscm, manual) simply leave max_silence_days unset.
+    if spec.max_silence_days is not None and last_real_ts is not None:
+        silence = now - last_real_ts
+        if silence > dt.timedelta(days=spec.max_silence_days):
+            return True, (
+                f"silent for {_fmt(silence)} with no real build, past the absolute ceiling of "
+                f"{spec.max_silence_days:g} day(s) (max_silence_days). This is a wall-clock floor on "
+                f"silence, NOT cadence enforcement - trigger_type {spec.trigger_type!r} has no "
+                "enforced schedule here, so this says only that the job has been quiet long enough "
+                "to need a human look"
+            )
+
     if spec.trigger_type == "pollscm":
         return False, "SCM-polled: builds only on repo change, silence is expected"
     if spec.trigger_type == "manual":

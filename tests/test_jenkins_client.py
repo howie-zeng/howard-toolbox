@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import requests
 
 _ROUTINES = Path(__file__).resolve().parents[1] / "claude-code-routines"
 if str(_ROUTINES) not in sys.path:
@@ -134,10 +135,14 @@ def test_unreachable_raises_jenkins_unreachable():
 
 def test_get_raises_jenkins_unreachable_on_transport_exception():
     """The transport-exception branch of `_get` (session.get() itself raising) must be
-    normalized to JenkinsUnreachable, with the original exception preserved as __cause__."""
-    original = ConnectionError("boom")
+    normalized to JenkinsUnreachable, with the original exception preserved as __cause__.
+
+    The exception is a requests.exceptions.RequestException on purpose: `_get` narrows its
+    except clause to that base class so a programming error cannot be laundered into an
+    infrastructure verdict (see test_get_does_not_swallow_programming_errors)."""
+    original = requests.exceptions.ConnectionError("boom")
     sess = _RaisingSession(original)
-    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess)
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=lambda _s: None)
     with pytest.raises(client.JenkinsUnreachable) as exc_info:
         c.all_jobs()
     assert exc_info.value.__cause__ is original
@@ -166,9 +171,9 @@ def test_transport_exception_message_never_leaks_token():
     """Regression guard: same as above, but for the transport-exception path - a future edit
     that folds `self._auth` into the wrapped message would leak the token via this branch too."""
     token = "tok-SENTINEL-do-not-leak"
-    original = ConnectionError("connection reset by peer")
+    original = requests.exceptions.ConnectionError("connection reset by peer")
     sess = _RaisingSession(original)
-    c = client.JenkinsClient("http://jenkins.example", "hzeng", token, session=sess)
+    c = client.JenkinsClient("http://jenkins.example", "hzeng", token, session=sess, sleep=lambda _s: None)
     with pytest.raises(client.JenkinsUnreachable) as exc_info:
         c.all_jobs()
     assert token not in str(exc_info.value), (
@@ -193,3 +198,120 @@ def test_from_env_raises_when_token_is_empty(monkeypatch):
     monkeypatch.setenv("JENKINS_API_TOKEN", "")
     with pytest.raises(client.AuthMissing):
         client.from_env()
+
+
+# --- Final review, CRITICAL 1 part 3: `_get` used to catch bare `Exception`, so a
+# --- TypeError in our own client code was reported as JenkinsUnreachable, which the CLI
+# --- degraded into an empty build list and (before the classifier fix) a false GREEN.
+# --- Transport blips and 5xx are now retried; 4xx is a deterministic answer and is not.
+
+
+class _SequenceSession:
+    """Returns/raises a scripted item per call so retry behaviour is observable."""
+
+    def __init__(self, items):
+        self._items = list(items)
+        self.calls = 0
+
+    def get(self, url, params=None, auth=None, timeout=None):
+        self.calls += 1
+        item = self._items[min(self.calls - 1, len(self._items) - 1)]
+        if isinstance(item, BaseException):
+            raise item
+        return item
+
+
+def _no_sleep():
+    slept = []
+    return slept, slept.append
+
+
+def test_get_does_not_swallow_programming_errors_as_unreachable():
+    """A TypeError from client code must propagate, NOT become JenkinsUnreachable.
+
+    JenkinsUnreachable is a claim about infrastructure. Laundering a bug into it means the
+    CLI reports 'could not read build history' for a defect in this package - and, before
+    the classifier fix, produced a GREEN for a red job.
+    """
+    sess = _RaisingSession(TypeError("recent_builds() got an unexpected keyword argument"))
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=lambda _s: None)
+    with pytest.raises(TypeError):
+        c.all_jobs()
+
+
+def test_get_retries_transport_failure_then_succeeds():
+    payload = {"jobs": [{"name": "quant-x"}]}
+    sess = _SequenceSession(
+        [
+            requests.exceptions.ConnectionError("reset"),
+            requests.exceptions.ConnectionError("reset"),
+            _Resp(200, payload),
+        ]
+    )
+    slept, sleeper = _no_sleep()
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=sleeper)
+    assert "quant-x" in c.all_jobs()
+    assert sess.calls == 3
+    assert slept == [0.5, 1.0], "backoff must grow, and must be the injected sleep so tests never wait"
+
+
+def test_get_retries_five_hundred_then_gives_up_after_three_attempts():
+    sess = _SequenceSession([_Resp(500, text="oops")])
+    slept, sleeper = _no_sleep()
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=sleeper)
+    with pytest.raises(client.JenkinsUnreachable, match="HTTP 500"):
+        c.all_jobs()
+    assert sess.calls == 3, "a 5xx is transient (controller restart) and must be retried"
+    assert len(slept) == 2
+
+
+def test_get_does_not_retry_four_hundred_level_status():
+    sess = _SequenceSession([_Resp(403, text="forbidden")])
+    slept, sleeper = _no_sleep()
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=sleeper)
+    with pytest.raises(client.JenkinsUnreachable, match="HTTP 403"):
+        c.all_jobs()
+    assert sess.calls == 1, "401/403/404 are deterministic answers - retrying only delays the report"
+    assert slept == []
+
+
+# --- Final review, IMPORTANT 1: `resp.json()` was called by each caller, outside `_get`'s
+# --- error wrapper. A proxy or expired session answering HTTP 200 with an HTML login page
+# --- raised requests.exceptions.JSONDecodeError, which cli.py does not catch - traceback,
+# --- non-zero exit, no report and no snapshot for the whole fleet.
+
+
+class _BadJsonResp:
+    def __init__(self, text):
+        self.status_code = 200
+        self.ok = True
+        self.text = text
+
+    def json(self):
+        raise requests.exceptions.JSONDecodeError("Expecting value", self.text, 0)
+
+
+def test_html_login_page_with_http_200_raises_jenkins_unreachable_not_json_error():
+    sess = _Session({"/api/json": _BadJsonResp("<html><body>Please log in</body></html>")})
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=lambda _s: None)
+    with pytest.raises(client.JenkinsUnreachable, match="not JSON"):
+        c.all_jobs()
+
+
+def test_recent_builds_and_build_detail_also_wrap_json_decode_failures():
+    body = "<html>login</html>"
+    sess = _Session({"/job/j": _BadJsonResp(body)})
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=lambda _s: None)
+    with pytest.raises(client.JenkinsUnreachable):
+        c.recent_builds("j")
+    with pytest.raises(client.JenkinsUnreachable):
+        c.build_detail("j", 75)
+
+
+def test_non_object_json_body_raises_jenkins_unreachable():
+    """A JSON array decodes fine but has no .get - an AttributeError here would escape
+    cli.py's JenkinsUnreachable handling exactly like the decode error did."""
+    sess = _Session({"/api/json": _Resp(200, [1, 2, 3])})
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess, sleep=lambda _s: None)
+    with pytest.raises(client.JenkinsUnreachable, match="expected an object"):
+        c.all_jobs()
