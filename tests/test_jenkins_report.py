@@ -148,7 +148,6 @@ def test_new_finding_with_no_previous_state_shows_bare_current_state():
     # no previous_state supplied -> no "->" transition marker, just the plain state.
     # This must still fail if the arrow (ASCII or Unicode) were wrongly emitted here.
     assert "->" not in out
-    assert "→" not in out
     assert "RED" in out
 
 

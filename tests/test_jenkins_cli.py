@@ -173,7 +173,7 @@ def test_main_survives_non_ascii_report_on_strict_cp1252_stdout(tmp_path, monkey
             return []
 
     monkeypatch.setattr(cli, "_make_client", lambda: _Client())
-    monkeypatch.setattr(cli.report, "render", lambda *a, **k: "status café done ✓")
+    monkeypatch.setattr(cli.report, "render", lambda *a, **k: "status caf\u00e9 done \u2713")
 
     buffer = io.BytesIO()
     fake_stdout = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
@@ -199,9 +199,9 @@ def test_file_writes_use_utf8_even_with_non_ascii_content(tmp_path, monkeypatch)
             return []
 
     monkeypatch.setattr(cli, "_make_client", lambda: _Client())
-    monkeypatch.setattr(cli.report, "render", lambda *a, **k: "status café done ✓")
+    monkeypatch.setattr(cli.report, "render", lambda *a, **k: "status caf\u00e9 done \u2713")
 
     rc = cli.main(["--outputs", str(tmp_path), "--registry", str(REGISTRY), "--no-diagnose"])
     assert rc == 0
     md = next(iter(tmp_path.glob("jenkins-monitor-*.md")))
-    assert "café" in md.read_text(encoding="utf-8")
+    assert "caf\u00e9" in md.read_text(encoding="utf-8")
