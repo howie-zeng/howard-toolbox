@@ -37,6 +37,13 @@ def _line(f: Finding) -> str:
         parts.append("_(recovery not yet confirmed)_")
     d = f.diagnosis
     if d:
+        # Name the build the diagnosis was actually read from. The diagnoser deliberately
+        # inspects the last build that DID WORK, which is often not `lastBuild` (a
+        # NOT_BUILT seed refresh can be newer); printing it makes any future mismatch
+        # between the reported state and the inspected build visible to a reader instead
+        # of silently authoritative.
+        if d.build_number is not None:
+            parts.append(f"diagnosed from build #{d.build_number}")
         if d.error_class and d.error_class != "unknown":
             parts.append(f"`{d.error_class}`")
         if d.source_hint:
@@ -58,16 +65,26 @@ def render(
     fix_count: int = 0,
     notify_count: int = 0,
     capped: Sequence[str] = (),
+    reason: str = "",
+    prior_snapshot_available: bool = True,
 ) -> str:
     out: list[str] = ["### Jenkins Job Monitor", ""]
 
     if not token_ok:
+        # `reason` is threaded through because this branch is reached for BOTH a missing
+        # credential and a controller outage. Hardcoding the credential wording made the
+        # persisted .md claim "No Jenkins API credentials in the environment" during a
+        # Jenkins outage - a wrong diagnosis stated with full confidence.
         out += [
-            f"- **Status: UNREACHABLE for all {total_jobs} jobs.** No Jenkins API credentials in "
-            "the environment, so job status could not be read. This is an access gap, **not** a "
-            "statement that the jobs are healthy.",
-            "- Fix: mint a token at `http://jenkins.libremax.com/me/security/` and set "
-            "`JENKINS_USER` / `JENKINS_API_TOKEN` at Windows **User** scope.",
+            f"- **Status: UNREACHABLE for all {total_jobs} jobs.** Job status could not be read, "
+            "so nothing here is a statement that the jobs are healthy - it is an access or "
+            "infrastructure gap.",
+            f"- Cause: {reason}"
+            if reason
+            else "- Cause: not recorded by the caller (this itself is a bug worth reporting).",
+            "- If the cause is a missing/expired credential: mint a token at "
+            "`http://jenkins.libremax.com/me/security/` and set `JENKINS_USER` / "
+            "`JENKINS_API_TOKEN` at Windows **User** scope.",
             "",
         ]
         return "\n".join(out)
@@ -76,6 +93,16 @@ def render(
     if fix_count or notify_count:
         scope += f" ({fix_count} auto-fix tier, {notify_count} notify-only)"
     out.append(scope + ". Token: OK.")
+
+    if not prior_snapshot_available:
+        # Without a usable prior snapshot every current failure is labelled NEW and no
+        # RECOVERED can ever be emitted. Presenting that silently would misrepresent a
+        # long-standing failure as brand new and hide every recovery.
+        out.append(
+            "- **No prior snapshot available** (first run, or the previous snapshot was missing or "
+            "unreadable): the NEW / ONGOING / RECOVERED labels below are not meaningful this run. "
+            "Every current finding is shown as NEW, and a recovery cannot be detected at all."
+        )
 
     # Grouped and ordered strictly by transition (NEW, then ONGOING, then RECOVERED) -
     # never by raw current state. A job that was RED and is now BUILDING is an
@@ -107,10 +134,14 @@ def render(
         out += [_line(f) for f in buckets["RECOVERED"]]
 
     if capped:
+        # Every eligible finding is diagnosed; the cap only limits how many are NOMINATED
+        # for a fix agent. The old wording said "Diagnosed but fix not attempted" for jobs
+        # that had in fact been neither diagnosed nor nominated - a claim of work not done.
         out += [
             "",
-            f"**Diagnosed but fix not attempted (slot cap):** {', '.join(capped)}. "
-            "These are real findings that did not get an agent this run - not all clear.",
+            f"**Diagnosed, fix agent not nominated (fix-slot cap):** {', '.join(capped)}. "
+            "The diagnosis for each is on its line above; the cap limits only how many jobs "
+            "get an agent dispatched this run - these are real findings, not all clear.",
         ]
 
     if any(f.status.state in (State.SEED_ONLY, State.NEVER_DID_WORK) for f in findings):

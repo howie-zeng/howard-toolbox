@@ -202,3 +202,79 @@ def test_unexpected_transition_raises_instead_of_silently_dropping():
             token_ok=True,
             total_jobs=25,
         )
+
+
+# --- Final review, CRITICAL 2 (second half): the diagnosed build number must be visible.
+# --- The diagnoser deliberately reads the last build that DID WORK, which is often not
+# --- Jenkins' lastBuild. Printing it makes any future mismatch visible to a reader instead
+# --- of silently authoritative.
+
+
+def test_diagnosed_build_number_is_shown():
+    d = Diagnosis(job="a", error_class="KeyError", error_text="boom", build_number=92)
+    out = report.render([_f("a", State.RED, "NEW", d)], token_ok=True, total_jobs=25)
+    assert "#92" in out
+    assert "diagnosed from build #92" in out
+
+
+def test_no_build_number_omits_the_clause_rather_than_printing_none():
+    d = Diagnosis(job="a", error_class="KeyError", error_text="boom")
+    out = report.render([_f("a", State.RED, "NEW", d)], token_ok=True, total_jobs=25)
+    assert "None" not in out
+    assert "diagnosed from build" not in out
+
+
+# --- Final review, IMPORTANT 4: the cap now limits fix-agent nomination only; every
+# --- eligible finding is diagnosed. The old wording claimed capped jobs were "Diagnosed but
+# --- fix not attempted" when they had been neither diagnosed nor nominated.
+
+
+def test_capped_wording_claims_only_that_no_agent_was_nominated():
+    out = report.render([], token_ok=True, total_jobs=25, capped=["x", "y"])
+    assert "slot cap" in out.lower()
+    assert "x" in out and "y" in out
+    assert "not all clear" in out.lower()
+    assert "fix agent not nominated" in out.lower()
+
+
+# --- Final review, MINOR: with no usable prior snapshot every current failure is labelled
+# --- NEW and no RECOVERED can ever be emitted. Presenting that silently misrepresents a
+# --- long-standing failure as brand new and hides every recovery.
+
+
+def test_missing_prior_snapshot_is_stated_so_labels_are_not_over_read():
+    out = report.render(
+        [_f("a", State.RED, "NEW")],
+        token_ok=True,
+        total_jobs=25,
+        prior_snapshot_available=False,
+    )
+    assert "no prior snapshot" in out.lower()
+    assert "not meaningful" in out.lower()
+
+
+def test_prior_snapshot_available_is_the_default_and_adds_no_note():
+    out = report.render([_f("a", State.RED, "NEW")], token_ok=True, total_jobs=25)
+    assert "no prior snapshot" not in out.lower()
+
+
+# --- Final review, MINOR: the unreachable path passed token_ok=False for BOTH a missing
+# --- credential and a controller outage, so the persisted .md claimed "No Jenkins API
+# --- credentials in the environment" during an outage - a wrong cause stated confidently.
+
+
+def test_unreachable_report_states_the_actual_cause_not_an_assumed_one():
+    out = report.render(
+        [],
+        token_ok=False,
+        total_jobs=25,
+        reason="GET http://jenkins.libremax.com/api/json returned HTTP 503 (after 3 attempt(s))",
+    )
+    assert "503" in out
+    assert "UNREACHABLE" in out
+    assert "all clear" not in out.lower()
+
+
+def test_unreachable_report_without_a_reason_says_the_cause_was_not_recorded():
+    out = report.render([], token_ok=False, total_jobs=25)
+    assert "not recorded" in out.lower()
