@@ -147,9 +147,38 @@ class JenkinsClient:
         return self._get(f"/job/{job}/{number}/consoleText").text
 
 
+def _read_user_scope_var(name: str) -> str:
+    """Read a Windows User-scope environment variable straight from the registry.
+
+    A process started BEFORE a User-scope variable was set never sees it, and neither
+    does anything it spawns - the environment is copied at process creation. The daily
+    run is launched by a long-lived scheduler, so relying on os.environ alone meant a
+    token set today was invisible until that scheduler restarted, turning every run
+    into a reported access gap. Reading HKCU\\Environment sidesteps that entirely.
+
+    Returns "" on any failure (non-Windows, missing key, permission error) so the
+    caller falls through to its normal missing-credential error.
+    """
+    try:
+        import winreg
+    except ImportError:
+        return ""
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            value, _ = winreg.QueryValueEx(key, name)
+        return str(value) if value else ""
+    except OSError:
+        return ""
+
+
+def resolve_credential(name: str) -> str:
+    """Current process environment first, Windows User scope second."""
+    return (os.environ.get(name) or "") or _read_user_scope_var(name)
+
+
 def from_env(base_url: str = JENKINS_BASE_URL, session=None) -> JenkinsClient:
-    user = os.environ.get("JENKINS_USER") or ""
-    token = os.environ.get("JENKINS_API_TOKEN") or ""
+    user = resolve_credential("JENKINS_USER")
+    token = resolve_credential("JENKINS_API_TOKEN")
     missing = [n for n, v in (("JENKINS_USER", user), ("JENKINS_API_TOKEN", token)) if not v]
     if missing:
         raise AuthMissing(

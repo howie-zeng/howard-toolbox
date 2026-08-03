@@ -189,6 +189,7 @@ def test_transport_exception_message_never_leaks_token():
 def test_from_env_raises_when_token_missing(monkeypatch):
     monkeypatch.delenv("JENKINS_API_TOKEN", raising=False)
     monkeypatch.setenv("JENKINS_USER", "hzeng")
+    monkeypatch.setattr(client, "_read_user_scope_var", lambda name: "")
     with pytest.raises(client.AuthMissing, match="JENKINS_API_TOKEN"):
         client.from_env()
 
@@ -196,6 +197,7 @@ def test_from_env_raises_when_token_missing(monkeypatch):
 def test_from_env_raises_when_token_is_empty(monkeypatch):
     monkeypatch.setenv("JENKINS_USER", "hzeng")
     monkeypatch.setenv("JENKINS_API_TOKEN", "")
+    monkeypatch.setattr(client, "_read_user_scope_var", lambda name: "")
     with pytest.raises(client.AuthMissing):
         client.from_env()
 

@@ -17,7 +17,7 @@ _ROUTINES = Path(__file__).resolve().parents[1] / "claude-code-routines"
 if str(_ROUTINES) not in sys.path:
     sys.path.insert(0, str(_ROUTINES))
 
-from jenkins_monitor import cli  # noqa: E402
+from jenkins_monitor import cli, client  # noqa: E402
 from jenkins_monitor.client import ms_to_dt  # noqa: E402
 from jenkins_monitor.models import BuildInfo  # noqa: E402
 
@@ -352,6 +352,7 @@ def test_a_successful_orchestrator_is_not_drilled_into(tmp_path, monkeypatch):
 def test_missing_token_prints_the_gap_loudly_and_exits_zero(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("JENKINS_USER", raising=False)
     monkeypatch.delenv("JENKINS_API_TOKEN", raising=False)
+    monkeypatch.setattr(client, "_read_user_scope_var", lambda name: "")
     rc = cli.main(["facts", "--outputs", str(tmp_path), "--registry", str(REGISTRY)])
     assert rc == 0
 
@@ -458,6 +459,7 @@ def test_console_failure_is_reported_as_a_gap_not_as_an_absence_of_errors(tmp_pa
 def test_console_without_a_token_states_the_gap_and_exits_zero(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("JENKINS_USER", raising=False)
     monkeypatch.delenv("JENKINS_API_TOKEN", raising=False)
+    monkeypatch.setattr(client, "_read_user_scope_var", lambda name: "")
     assert cli.main(["console", "kid", "7"]) == 0
     assert "ACCESS GAP" in capsys.readouterr().out
 
