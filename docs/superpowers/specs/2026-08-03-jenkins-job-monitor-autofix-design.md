@@ -155,12 +155,41 @@ Classification per job:
 | State | Rule |
 |---|---|
 | `RED` | `lastFailedBuild.number > lastSuccessfulBuild.number` |
-| `UNSTABLE` | `lastBuild.result == UNSTABLE` and `unstable_is_failure` |
+| `UNSTABLE` | last **real** build result is `UNSTABLE` and `unstable_is_failure` |
 | `STALE` | see staleness model |
-| `NEVER_RAN` | no builds recorded |
+| `NEVER_DID_WORK` | no build has ever produced `SUCCESS`/`FAILURE`/`UNSTABLE` |
+| `SEED_ONLY` | last build is `NOT_BUILT` — benign, see below |
 | `BUILDING` | `lastBuild.building` — deferred, not judged |
 | `GREEN` | otherwise |
 | `UNREACHABLE` | HTTP error / missing token |
+
+### `NOT_BUILT` builds must be excluded from every judgement
+
+Verified live on 2026-08-03. A push to the `JenkinsJobs` repo triggers
+`quant-seed-jenkinsjobs`, which re-runs **every** pipeline with `REFRESH=true` to
+re-register declared parameters and cron triggers. Those builds execute no work — their
+`Setup` and `Run` stages report `skipped due to when conditional` — and finish `NOT_BUILT`.
+Six of the 26 jobs had a `NOT_BUILT` build as their most recent build on 2026-08-03.
+
+Consequences, both of which are load-bearing:
+
+1. **Never treat `NOT_BUILT` as a failure.** Doing so produces ~6 false alarms on any day
+   somebody pushes to `JenkinsJobs`.
+2. **Never treat `NOT_BUILT` as evidence the job ran.** This is the dangerous direction: a
+   seed run refreshes `lastBuild.timestamp` without doing work, which would silently mask a
+   stale job. Observed example — `quant-Monthly-Tracking-Report` had `lastBuild` #45
+   `NOT_BUILT` 4d20h old while its last **real** build (`#22`, SUCCESS) was **27 days** old.
+
+Therefore the poller must compute a **`last_real_build`** per job — the most recent build
+whose `result` is in `{SUCCESS, FAILURE, UNSTABLE, ABORTED}` — and drive *all* staleness and
+red/green reasoning off that, never off `lastBuild`. Obtain it via
+`/job/<name>/api/json?tree=builds[number,result,timestamp]{,25}` and take the first
+non-`NOT_BUILT` entry.
+
+`NEVER_DID_WORK` is a real finding worth reporting: `quant-DailyCRTVectors` has 37 builds,
+**all** seed refreshes, and has never once succeeded or failed. Either its upstream
+(`quant-CRTDaily-Workflow`) never invokes it, or it is vestigial. Report it as
+needs-investigation, not as a failure, and never dispatch a fix agent for it.
 
 **Staleness model — by `trigger_type`:**
 
@@ -200,9 +229,17 @@ For each non-green Tier-A job:
 ### 5. Fix dispatcher
 
 **Eligibility — only `RED` and `UNSTABLE` states dispatch a fix agent.** `STALE`,
-`NEVER_RAN`, and `UNREACHABLE` are trigger/infra/access problems, not code bugs; patching
-LMQR cannot fix them. They are reported for investigation with the expected cadence and
-last-build time, and never consume a fix-agent slot.
+`NEVER_DID_WORK`, `SEED_ONLY`, and `UNREACHABLE` are trigger/infra/access problems, not code
+bugs; patching LMQR cannot fix them. They are reported for investigation with the expected
+cadence and last real build time, and never consume a fix-agent slot.
+
+**Orchestrator failures dispatch against the failing CHILD, not the wrapper.** Verified on
+`quant-tracking-report-recache-workflow #293`: the wrapper reported a single flat `FAILURE`
+while its 5 fanned-out children split 3 FAILURE / 2 SUCCESS. The wrapper console yields no
+traceback at all — only `Build quant-tracking-report-recache #75 completed: FAILURE`. The
+diagnoser must enumerate children, fetch each failing child's `api/json` for its
+`parameters` (to name the deal type) and its `consoleText` (for the traceback), then group
+children sharing an identical root cause into **one** fix dispatch rather than three.
 
 **Ranking when more than 3 are eligible** — sort by, in order:
 1. consecutive-failure count descending (longest-broken first),
