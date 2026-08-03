@@ -1,0 +1,237 @@
+# Registry for Howard's quant-* tracking / flat-file Jenkins jobs.
+# Triggers transcribed from C:\Git\JenkinsJobs\<job>.jenkinsfile - the authoritative
+# source. Job NAMES DO NOT IMPLY CADENCE; do not "correct" these from the name.
+# 'H' is Jenkins' hashed value; cadence.py expands it to the full field range.
+jobs:
+  # ---- simdata family -------------------------------------------------------
+  - job: quant-DailySimDataUpdate
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "20 15 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: agencydata/wh_crt_update.py
+    console_informative: false          # --log does not mirror WARNING+ to stdout
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\wh_crt_update_*.log'
+
+  - job: quant-DailySimDataUpdateLP
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "20 14 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: agencydata/wh_lp_update.py
+    unstable_is_failure: true           # 8 deal types, each catchError->UNSTABLE
+    success_markers:
+      - "Done NQM"
+      - "Done Jumbo"
+      - "Done HELOC"
+      - "Done ALT_A"
+      - "Done Subprime"
+      - "Done NQM Pseudo"
+      - "Done Jumbo Pseudo"
+      - "Done HELOC Pseudo"
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\lp_update_*.log'
+
+  - job: quant-DailySimDataUpdateDV01
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "0 15 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdv01/dv01_update.py
+    nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\lp_update_*.log'
+
+  - job: quant-DailySimDataUpdateIntex
+    tier: fix
+    family: simdata
+    trigger_type: cron
+    cron: "0 16 * * 5"                  # FRIDAY ONLY despite the "Daily" name
+    tz: America/New_York
+    grace_hours: 8
+    repo: LMQR
+    entrypoint: lmdata/lmloader/helocintexloader.py
+
+  # ---- vectors family ------------------------------------------------------
+  - job: quant-DailySimHistVector
+    tier: fix
+    family: vectors
+    trigger_type: cron
+    cron: "20 20 * * 1-6"               # Mon-Sat
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-DailySimHistVectorUndialed
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-generate-vectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-riskrun-workflow
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-WeekendCRTTrackingVectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-WeekendCRTVectorsWorkflow
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  - job: quant-WeekendCRTVectors
+    tier: fix
+    family: vectors
+    trigger_type: upstream
+    upstream: quant-WeekendCRTVectorsWorkflow
+    repo: LMQR
+    entrypoint: lmsimvectors/lm_sim_pub_main.py
+
+  # ---- resi tracking family ------------------------------------------------
+  - job: quant-Monthly-ResiTracking-pipeline
+    tier: fix
+    family: resitracking
+    trigger_type: manual                # cron is COMMENTED OUT in the jenkinsfile
+    orchestrator: true
+    repo: LMQR
+
+  - job: quant-Monthly-ResiTracking-Tracking
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "H 23 * * 1-5"                # weekdays, despite the "Monthly" name
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-Monthly-ResiTracking-Unload
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "H 2 * * *"                   # DAILY, despite the "Monthly" name
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-Monthly-Tracking-Report
+    tier: fix
+    family: resitracking
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    repo: LMQR
+    entrypoint: lmanalytics/tracking/transition_report.py
+
+  - job: quant-Monthly-Tracking-Report-Undialed
+    tier: fix
+    family: resitracking
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    repo: LMQR
+    entrypoint: lmanalytics/tracking/transition_report.py
+
+  - job: quant-tracking-report-recache-workflow
+    tier: fix
+    family: resitracking
+    trigger_type: cron
+    cron: "0 9 * * 0"                   # Sundays; note NO TZ= prefix in jenkinsfile
+    tz: America/New_York                # controller default; assumed NY
+    grace_hours: 12
+    orchestrator: true
+    child_job: quant-tracking-report-recache
+    repo: LMQR
+
+  # ---- pseudo deal family --------------------------------------------------
+  - job: quant-PseudoDeal-Stats
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Tracking
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Tracking
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Unload
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  - job: quant-PseudoDeal-Update
+    tier: fix
+    family: pseudodeal
+    trigger_type: upstream
+    upstream: quant-Monthly-ResiTracking-Unload
+    repo: LMQR
+    entrypoint: resi_deal_manager.pseudo_gating
+
+  # ---- loaders / reports ---------------------------------------------------
+  - job: quant-RMBSLoader
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "0 23 * * 1-5"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdata/lmloader/rmbsintexloader.py
+
+  - job: quant-HECMCollateralReport
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "H 23 20-31 * *"              # 20th-31st of each month
+    tz: America/New_York
+    grace_hours: 8
+    repo: LMQR
+    entrypoint: HECM/collateral_report/hecm_monthly_automation.py
+
+  - job: quant-dv01-figure-sync
+    tier: fix
+    family: loaders
+    trigger_type: cron
+    cron: "H 20 * * *"
+    tz: America/New_York
+    grace_hours: 6
+    repo: LMQR
+    entrypoint: lmdv01.dv01_redshift
+
+  # ---- deploys: NOTIFY ONLY, never auto-fixed ------------------------------
+  - job: quant-deploy-lmqr
+    tier: notify
+    family: deploy
+    trigger_type: pollscm
+
+  - job: quant-deploy-lmsimdata
+    tier: notify
+    family: deploy
+    trigger_type: pollscm
+
+  - job: quant-deploy-Rcode
+    tier: notify
+    family: deploy
+    trigger_type: pollscm
