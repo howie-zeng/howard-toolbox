@@ -33,6 +33,7 @@ class JobSpec:
     tz: str | None = None
     grace_hours: float = 6.0
     upstream: str | None = None
+    upstream_strict: bool = False
     orchestrator: bool = False
     child_job: str | None = None
     unstable_is_failure: bool = False

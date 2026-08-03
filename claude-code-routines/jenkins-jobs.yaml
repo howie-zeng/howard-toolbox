@@ -1,7 +1,18 @@
 # Registry for Howard's quant-* tracking / flat-file Jenkins jobs.
 # Triggers transcribed from C:\Git\JenkinsJobs\<job>.jenkinsfile - the authoritative
 # source. Job NAMES DO NOT IMPLY CADENCE; do not "correct" these from the name.
-# 'H' is Jenkins' hashed value; cadence.py expands it to the full field range.
+# 'H' is Jenkins' hashed value: Jenkins picks one stable value in the field's range
+# and reuses it forever. cadence.py's staleness comparison uses that window's START
+# (e.g. 'H 20 * * *' -> 20:00) as the expected fire time, not the last possible
+# minute - see cadence.previous_fire_time / cadence._parse_field for why.
+#
+# trigger_type: upstream jobs may set `upstream_strict: true` to have staleness()
+# flag them when the parent did work more recently than they did. Default/unset is
+# False (gated): every upstream-triggered job in this file is invoked by a readiness
+# gate that may legitimately decide there is nothing for the child to do, so the
+# parent running without the child following is expected, not a fault. None of the
+# jobs below set this - only a future child that is unconditionally chained to its
+# parent (no gate) should opt in.
 jobs:
   # ---- simdata family -------------------------------------------------------
   - job: quant-DailySimDataUpdate

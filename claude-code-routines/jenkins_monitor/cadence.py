@@ -21,22 +21,31 @@ class CadenceError(ValueError):
     """The cron expression uses syntax this evaluator does not support."""
 
 
-def _parse_field(raw: str, lo: int, hi: int, field: str) -> set[int]:
-    """Expand one cron field to a set of ints.
+def _parse_field(raw: str, lo: int, hi: int, field: str) -> tuple[set[int], bool]:
+    """Expand one cron field to (values, is_hashed).
 
     Supports: '*', 'H', an int, 'a-b' ranges, and comma-separated lists of those.
-    'H' expands to the FULL range - callers pick the latest match, so a hashed
-    minute is treated as "any time in the window", never as a precise instant.
+    'H' means Jenkins picked ONE stable value somewhere in the field's range and
+    reuses it forever - we don't know which, so `values` still spans the full range
+    for matching purposes, but `is_hashed=True` tells the caller this is a hashed
+    WINDOW, not a literal "runs at every value" wildcard like '*'. Callers use that
+    flag to pick the window's START (the smallest candidate) as the comparison
+    instant: the question that matters for staleness is "did the job run at or
+    after its window opened", not "did it run by the last possible instant".
     """
     raw = raw.strip()
-    if raw in ("*", "H"):
-        return set(range(lo, hi + 1))
+    if raw == "*":
+        return set(range(lo, hi + 1)), False
+    if raw == "H":
+        return set(range(lo, hi + 1)), True
 
     out: set[int] = set()
+    hashed = False
     for part in raw.split(","):
         part = part.strip()
         if part == "H":
             out.update(range(lo, hi + 1))
+            hashed = True
             continue
         if "-" in part:
             a, _, b = part.partition("-")
@@ -57,7 +66,7 @@ def _parse_field(raw: str, lo: int, hi: int, field: str) -> set[int]:
         out.add(val)
     if not out:
         raise CadenceError(f"{field}: expanded to nothing from {raw!r}")
-    return out
+    return out, hashed
 
 
 def _jenkins_dow(day: dt.date) -> int:
@@ -66,17 +75,22 @@ def _jenkins_dow(day: dt.date) -> int:
 
 
 def previous_fire_time(cron: str, tzname: str, now: dt.datetime) -> dt.datetime:
-    """Latest moment this cron was scheduled to fire at or before `now` (UTC)."""
+    """Latest moment this cron was scheduled to fire at or before `now` (UTC).
+
+    A field written as 'H' is a hashed window - the returned instant uses that
+    window's START, e.g. 'H 20 * * *' resolves to the top of hour 20 (20:00), not
+    :59. See `_parse_field` for why the start is the correct comparison instant.
+    """
     fields = cron.split()
     if len(fields) != 5:
         raise CadenceError(f"expected 5 cron fields, got {len(fields)}: {cron!r}")
     minute_f, hour_f, dom_f, month_f, dow_f = fields
 
-    minutes = _parse_field(minute_f, 0, 59, "minute")
-    hours = _parse_field(hour_f, 0, 23, "hour")
-    doms = _parse_field(dom_f, 1, 31, "day-of-month")
-    months = _parse_field(month_f, 1, 12, "month")
-    dows_raw = _parse_field(dow_f, 0, 7, "day-of-week")
+    minutes, minute_hashed = _parse_field(minute_f, 0, 59, "minute")
+    hours, hour_hashed = _parse_field(hour_f, 0, 23, "hour")
+    doms, _dom_hashed = _parse_field(dom_f, 1, 31, "day-of-month")
+    months, _month_hashed = _parse_field(month_f, 1, 12, "month")
+    dows_raw, _dow_hashed = _parse_field(dow_f, 0, 7, "day-of-week")
     dows = {0 if d == 7 else d for d in dows_raw}  # 7 and 0 both mean Sunday
 
     dom_restricted = dom_f.strip() not in ("*", "H")
@@ -87,12 +101,19 @@ def previous_fire_time(cron: str, tzname: str, now: dt.datetime) -> dt.datetime:
     day = local_now.date()
     latest_hour, latest_min = max(hours), max(minutes)
 
+    # A hashed field ('H') is one stable value somewhere in the range, so the window's
+    # START (the smallest candidate) is the comparison instant. A non-hashed field
+    # ('*', an explicit value, or a range) still sweeps latest-first to find the most
+    # recent matching instant at or before `now`.
+    hour_candidates = [min(hours)] if hour_hashed else sorted(hours, reverse=True)
+    minute_candidates = [min(minutes)] if minute_hashed else sorted(minutes, reverse=True)
+
     for _ in range(_MAX_LOOKBACK_DAYS):
         if day.month in months and _day_matches(day, doms, dows, dom_restricted, dow_restricted):
-            for hh in sorted(hours, reverse=True):
+            for hh in hour_candidates:
                 if day == local_now.date() and hh > local_now.hour:
                     continue
-                for mm in sorted(minutes, reverse=True):
+                for mm in minute_candidates:
                     cand = dt.datetime(day.year, day.month, day.day, hh, mm, tzinfo=tz)
                     if cand <= local_now:
                         return cand.astimezone(dt.UTC)
@@ -132,8 +153,15 @@ def staleness(
         return False, "manual/disabled trigger: no expected cadence"
 
     if spec.trigger_type == "upstream":
+        if not spec.upstream_strict:
+            return False, (
+                f"upstream-triggered by {spec.upstream}: child is conditionally gated by a "
+                "readiness check, so the parent running without invoking this job is expected, "
+                "not a fault (set upstream_strict: true in the registry if this child is "
+                "unconditionally chained to its parent)"
+            )
         if upstream_ts is None or last_real_ts is None:
-            return False, f"upstream-triggered by {spec.upstream}: no comparison available"
+            return False, f"upstream-triggered by {spec.upstream} (strict): no comparison available"
         if upstream_ts > last_real_ts:
             gap = upstream_ts - last_real_ts
             return True, (f"upstream {spec.upstream} did work {_fmt(gap)} more recently than this job")

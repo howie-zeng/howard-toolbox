@@ -54,24 +54,34 @@ def test_dow_seven_also_means_sunday():
     )
 
 
-def test_hashed_minute_expands_to_latest_minute_in_hour():
-    """'H 2 * * *' fires at some minute in hour 2; use the latest to avoid
-    calling the job stale before its window closes."""
+def test_hashed_minute_uses_window_start_not_latest_minute_in_hour():
+    """'H 2 * * *' means Jenkins hashed ONE stable minute somewhere in hour 2 - we
+    don't know which, so the safe comparison instant is the window's START (02:00),
+    not the latest possible minute (02:59).
+
+    Using the end (the old behaviour) judged a job that ran early in its own hashed
+    window - e.g. at 02:19 - as late, because 02:19 < 02:59. The concern that
+    motivated picking the end ("don't call a job stale before its window closes") is
+    already handled by the separate `now > expected + grace_hours` guard in
+    staleness(), which requires real elapsed time before anything is flagged - so
+    using the start here does not reintroduce premature staleness. See
+    test_hashed_window_start_does_not_cause_premature_staleness below.
+    """
     now = _ny(2026, 8, 3, 8, 0)
     got = cadence.previous_fire_time("H 2 * * *", "America/New_York", now)
-    assert got.astimezone(NY) == _ny(2026, 8, 3, 2, 59)
+    assert got.astimezone(NY) == _ny(2026, 8, 3, 2, 0)
 
 
 def test_weekday_range_skips_weekend():
     now = _ny(2026, 8, 3, 8, 0)  # Monday morning, before 23:00
     got = cadence.previous_fire_time("H 23 * * 1-5", "America/New_York", now)
-    assert got.astimezone(NY) == _ny(2026, 7, 31, 23, 59)  # Friday
+    assert got.astimezone(NY) == _ny(2026, 7, 31, 23, 0)  # Friday, window start
 
 
 def test_day_of_month_range():
     now = _ny(2026, 8, 3, 8, 0)
     got = cadence.previous_fire_time("H 23 20-31 * *", "America/New_York", now)
-    assert got.astimezone(NY) == _ny(2026, 7, 31, 23, 59)
+    assert got.astimezone(NY) == _ny(2026, 7, 31, 23, 0)
 
 
 def test_comma_list_dow():
@@ -101,6 +111,50 @@ def test_both_dom_and_dow_restricted_uses_or_semantics():
     now = _ny(2026, 8, 20, 12, 0)  # Thursday
     got = cadence.previous_fire_time("0 9 15 * 1", "America/New_York", now)
     assert got.astimezone(NY) == _ny(2026, 8, 17, 9, 0)  # Monday, nearer than the 15th
+
+
+# ---- H window-start regression (false positives from the first live run) ------
+
+
+def test_regression_dv01_figure_sync_early_in_window_is_not_stale():
+    """Real false positive from the first live run: quant-dv01-figure-sync, cron
+    'H 20 * * *', ran at 20:56 local - inside its own hashed window - and was
+    wrongly flagged STALE because the old window-END expected time (20:59) made
+    20:56 look 3 minutes late."""
+    spec = JobSpec(
+        job="quant-dv01-figure-sync",
+        tier="fix",
+        family="loaders",
+        trigger_type="cron",
+        cron="H 20 * * *",
+        tz="America/New_York",
+        grace_hours=6,
+    )
+    last = _ny(2026, 8, 2, 20, 56)
+    now = _ny(2026, 8, 3, 10, 0)  # following mid-morning
+    stale, why = cadence.staleness(spec, last, now)
+    assert stale is False, why
+
+
+def test_hashed_window_start_does_not_cause_premature_staleness():
+    """Confirms the window-start fix does not flag a job stale just because `now`
+    falls inside a hashed window that hasn't produced today's run yet. Yesterday's
+    real run is older than today's expected (window-start) instant, but the
+    grace-hours deadline - which requires hours to elapse, not just the window to
+    open - has not passed, so this must not be stale."""
+    spec = JobSpec(
+        job="j",
+        tier="fix",
+        family="f",
+        trigger_type="cron",
+        cron="H 20 * * *",
+        tz="America/New_York",
+        grace_hours=6,
+    )
+    last = _ny(2026, 8, 2, 20, 56)  # yesterday's real run
+    now = _ny(2026, 8, 3, 20, 5)  # just past today's window open; today hasn't run yet
+    stale, why = cadence.staleness(spec, last, now)
+    assert stale is False, why
 
 
 # ---- staleness ----------------------------------------------------------------
@@ -144,8 +198,24 @@ def test_manual_job_is_never_stale():
     assert stale is False
 
 
-def test_upstream_job_stale_only_if_parent_ran_more_recently():
+def test_upstream_job_gated_by_default_is_not_stale_even_if_parent_ran_more_recently():
+    """Every upstream-triggered job in the registry is invoked by a readiness gate:
+    the parent runs unconditionally but only sometimes actually kicks off the child.
+    The parent doing work more recently than the child is the NORMAL case, not a
+    fault - the default (upstream_strict=False) must not flag it. Real false
+    positives from the first live run: quant-DailySimHistVectorUndialed,
+    quant-Monthly-Tracking-Report(-Undialed), quant-PseudoDeal-*."""
     spec = JobSpec(job="c", tier="fix", family="f", trigger_type="upstream", upstream="p")
+    now = _ny(2026, 8, 3, 8, 0)
+    stale, why = cadence.staleness(spec, _ny(2026, 8, 1, 0, 0), now, upstream_ts=_ny(2026, 8, 2, 0, 0))
+    assert stale is False
+    assert "gate" in why.lower()
+
+
+def test_upstream_job_strict_is_stale_only_if_parent_ran_more_recently():
+    """A future strictly-chained child (no readiness gate) opts in with
+    upstream_strict=True and gets the old parent-vs-child comparison back."""
+    spec = JobSpec(job="c", tier="fix", family="f", trigger_type="upstream", upstream="p", upstream_strict=True)
     now = _ny(2026, 8, 3, 8, 0)
     stale, _ = cadence.staleness(spec, _ny(2026, 8, 1, 0, 0), now, upstream_ts=_ny(2026, 8, 2, 0, 0))
     assert stale is True

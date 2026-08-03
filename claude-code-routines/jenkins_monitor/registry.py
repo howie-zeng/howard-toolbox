@@ -66,6 +66,7 @@ def load_registry(path: str | Path) -> dict[str, JobSpec]:
             tz=entry.get("tz"),
             grace_hours=float(entry.get("grace_hours", 6.0)),
             upstream=entry.get("upstream"),
+            upstream_strict=bool(entry.get("upstream_strict", False)),
             orchestrator=bool(entry.get("orchestrator", False)),
             child_job=entry.get("child_job"),
             unstable_is_failure=bool(entry.get("unstable_is_failure", False)),

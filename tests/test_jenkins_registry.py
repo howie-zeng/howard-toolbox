@@ -67,6 +67,30 @@ def test_orchestrators_flagged_with_child_job():
     assert orch.child_job == "quant-tracking-report-recache"
 
 
+def test_upstream_strict_defaults_false_and_parses_true_from_yaml(tmp_path):
+    """No job in the live registry sets upstream_strict - every upstream job is
+    conditionally gated - but the field must still parse when a future strictly
+    chained child opts in."""
+    specs = registry.load_registry(REGISTRY_PATH)
+    upstream_specs = [s for s in specs.values() if s.trigger_type == "upstream"]
+    assert upstream_specs  # sanity: the registry actually has upstream-triggered jobs
+    assert all(s.upstream_strict is False for s in upstream_specs)
+
+    strict_yaml = tmp_path / "strict.yaml"
+    strict_yaml.write_text(
+        "jobs:\n"
+        "  - job: quant-x\n"
+        "    tier: fix\n"
+        "    family: f\n"
+        "    trigger_type: upstream\n"
+        "    upstream: quant-parent\n"
+        "    upstream_strict: true\n",
+        encoding="utf-8",
+    )
+    parsed = registry.load_registry(strict_yaml)
+    assert parsed["quant-x"].upstream_strict is True
+
+
 def test_unknown_trigger_type_is_rejected(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text(

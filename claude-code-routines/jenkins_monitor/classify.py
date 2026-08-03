@@ -58,6 +58,15 @@ def classify_job(
 
     if real is None:
         n = len(builds)
+        if spec.trigger_type == "manual":
+            # No automatic trigger means no expected cadence to violate - flagging this
+            # every day forever would just be noise. NEVER_DID_WORK stays in place for
+            # every other trigger type, where it is what catches a genuinely broken
+            # upstream-triggered (or cron) job.
+            return _status(
+                State.GREEN,
+                f"manual trigger, no automatic cadence expected; {n} build(s) recorded, all NOT_BUILT seed refreshes",
+            )
         return _status(
             State.NEVER_DID_WORK,
             f"{n} build(s) recorded, all NOT_BUILT seed refreshes; never did work",

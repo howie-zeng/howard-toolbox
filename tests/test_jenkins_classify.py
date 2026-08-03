@@ -30,6 +30,7 @@ CRON_SPEC = JobSpec(
     grace_hours=6,
 )
 MANUAL_SPEC = JobSpec(job="m", tier="fix", family="f", trigger_type="manual")
+UPSTREAM_SPEC = JobSpec(job="u", tier="fix", family="f", trigger_type="upstream", upstream="p")
 
 
 def test_last_real_build_skips_not_built_seed_runs():
@@ -70,9 +71,24 @@ def test_seed_only_when_latest_is_not_built_but_history_is_green():
 
 
 def test_never_did_work_when_all_builds_are_seed_runs():
+    """An upstream-triggered job with nothing but seed refreshes is a genuine
+    NEVER_DID_WORK - this is what caught an archived/broken job on the first live
+    run, and must still fire for any non-manual trigger type."""
+    blob = {"lastBuild": {"number": 37, "result": "NOT_BUILT", "timestamp": 1}}
+    st = classify.classify_job(UPSTREAM_SPEC, blob, [_b(37, "NOT_BUILT", 100)], NOW)
+    assert st.state == State.NEVER_DID_WORK
+
+
+def test_never_did_work_suppressed_for_manual_trigger():
+    """Real false positive from the first live run: quant-Monthly-ResiTracking-pipeline
+    is trigger_type manual (cron commented out in the jenkinsfile) and has 25 builds,
+    all NOT_BUILT seed refreshes. A manual job has no expected cadence, so
+    NEVER_DID_WORK - which would otherwise show up in the digest every day forever -
+    must be suppressed in favor of GREEN with an explanatory detail."""
     blob = {"lastBuild": {"number": 37, "result": "NOT_BUILT", "timestamp": 1}}
     st = classify.classify_job(MANUAL_SPEC, blob, [_b(37, "NOT_BUILT", 100)], NOW)
-    assert st.state == State.NEVER_DID_WORK
+    assert st.state == State.GREEN
+    assert "manual" in st.detail.lower()
 
 
 def test_building_is_deferred_not_judged():
