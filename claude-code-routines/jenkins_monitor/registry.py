@@ -21,12 +21,20 @@ def load_registry(path: str | Path) -> dict[str, JobSpec]:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
         raise RegistryError(f"registry not found: {path}") from exc
+    except yaml.YAMLError as exc:
+        raise RegistryError(f"{path}: invalid YAML: {exc}") from exc
 
     if not isinstance(raw, dict) or "jobs" not in raw:
         raise RegistryError(f"{path}: top-level 'jobs:' key is required")
 
+    jobs = raw["jobs"]
+    if not isinstance(jobs, list):
+        raise RegistryError(f"{path}: 'jobs' must be a list of job entries, got {type(jobs).__name__}")
+
     specs: dict[str, JobSpec] = {}
-    for entry in raw["jobs"]:
+    for entry in jobs:
+        if not isinstance(entry, dict):
+            raise RegistryError(f"{path}: each job entry must be a mapping, got {type(entry).__name__}: {entry!r}")
         name = entry.get("job")
         if not name:
             raise RegistryError(f"{path}: an entry is missing required field 'job'")

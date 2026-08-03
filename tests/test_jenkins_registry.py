@@ -21,7 +21,7 @@ def test_registry_has_all_25_jobs():
     assert len(specs) == 25
 
 
-def test_tier_split_is_23_fix_and_3_notify():
+def test_tier_split_is_22_fix_and_3_notify():
     specs = registry.load_registry(REGISTRY_PATH)
     tiers = [s.tier for s in specs.values()]
     assert tiers.count("fix") == 22
@@ -84,6 +84,27 @@ def test_cron_trigger_requires_cron_and_tz(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(registry.RegistryError, match="cron"):
+        registry.load_registry(bad)
+
+
+def test_malformed_yaml_is_rejected(tmp_path):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("jobs: [\n", encoding="utf-8")
+    with pytest.raises(registry.RegistryError, match="invalid YAML"):
+        registry.load_registry(bad)
+
+
+def test_null_jobs_value_is_rejected(tmp_path):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("jobs:\n", encoding="utf-8")
+    with pytest.raises(registry.RegistryError, match="jobs"):
+        registry.load_registry(bad)
+
+
+def test_non_mapping_job_entry_is_rejected(tmp_path):
+    bad = tmp_path / "bad.yaml"
+    bad.write_text('jobs:\n  - "just a string"\n', encoding="utf-8")
+    with pytest.raises(registry.RegistryError, match="mapping"):
         registry.load_registry(bad)
 
 

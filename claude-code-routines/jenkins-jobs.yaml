@@ -46,6 +46,8 @@ jobs:
     grace_hours: 6
     repo: LMQR
     entrypoint: lmdv01/dv01_update.py
+    # NOT a copy-paste error: dv01_update.py:214 writes lp_update_<ts>.log into crt_update/ too.
+    # Only the timestamp distinguishes DV01 logs from the LP job's - match by run time.
     nas_log_glob: '\\libremax-nas\QR_Sanbox\QR\logs\crt_update\lp_update_*.log'
 
   - job: quant-DailySimDataUpdateIntex
