@@ -32,7 +32,7 @@ def ms_to_dt(ms: int | None) -> dt.datetime | None:
     return dt.datetime.fromtimestamp(ms / 1000, dt.UTC)
 
 
-def _build(blob: dict | None) -> BuildInfo | None:
+def build_from_blob(blob: dict | None) -> BuildInfo | None:
     if not blob:
         return None
     return BuildInfo(
@@ -41,6 +41,9 @@ def _build(blob: dict | None) -> BuildInfo | None:
         timestamp=ms_to_dt(blob.get("timestamp")),
         building=bool(blob.get("building", False)),
     )
+
+
+_build = build_from_blob
 
 
 class JenkinsClient:
