@@ -47,6 +47,20 @@ class _Session:
         return _Resp(404, text="not found")
 
 
+class _RaisingSession:
+    """Session double whose get() raises before any HTTP response exists.
+
+    Models transport-level failures (DNS errors, connection resets, timeouts) that never
+    reach the ok/status_code branch in `_get` - the caller never touches the network either.
+    """
+
+    def __init__(self, exc):
+        self._exc = exc
+
+    def get(self, url, params=None, auth=None, timeout=None):
+        raise self._exc
+
+
 def test_ms_to_dt_returns_utc_aware():
     got = client.ms_to_dt(1785000000000)
     assert got.tzinfo == dt.UTC
@@ -116,6 +130,55 @@ def test_unreachable_raises_jenkins_unreachable():
     c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess)
     with pytest.raises(client.JenkinsUnreachable):
         c.all_jobs()
+
+
+def test_get_raises_jenkins_unreachable_on_transport_exception():
+    """The transport-exception branch of `_get` (session.get() itself raising) must be
+    normalized to JenkinsUnreachable, with the original exception preserved as __cause__."""
+    original = ConnectionError("boom")
+    sess = _RaisingSession(original)
+    c = client.JenkinsClient("http://jenkins.example", "u", "t", session=sess)
+    with pytest.raises(client.JenkinsUnreachable) as exc_info:
+        c.all_jobs()
+    assert exc_info.value.__cause__ is original
+
+
+def test_non_2xx_exception_message_never_leaks_token():
+    """Regression guard: if a future edit ever logs `self._auth` or embeds credentials in a
+    URL when building the non-2xx JenkinsUnreachable message, this must fail loudly - a
+    leaked token in an exception string can end up in logs, crash reports, or CI output."""
+    token = "tok-SENTINEL-do-not-leak"
+    sess = _Session({"/api/json": _Resp(403, text="forbidden")})
+    c = client.JenkinsClient("http://jenkins.example", "hzeng", token, session=sess)
+    with pytest.raises(client.JenkinsUnreachable) as exc_info:
+        c.all_jobs()
+    assert token not in str(exc_info.value), (
+        "Auth token leaked into str(JenkinsUnreachable) on the non-2xx path - "
+        "this would expose credentials in any log/report that captures exception text."
+    )
+    assert token not in repr(exc_info.value), (
+        "Auth token leaked into repr(JenkinsUnreachable) on the non-2xx path - "
+        "this would expose credentials in any log/report that captures exception text."
+    )
+
+
+def test_transport_exception_message_never_leaks_token():
+    """Regression guard: same as above, but for the transport-exception path - a future edit
+    that folds `self._auth` into the wrapped message would leak the token via this branch too."""
+    token = "tok-SENTINEL-do-not-leak"
+    original = ConnectionError("connection reset by peer")
+    sess = _RaisingSession(original)
+    c = client.JenkinsClient("http://jenkins.example", "hzeng", token, session=sess)
+    with pytest.raises(client.JenkinsUnreachable) as exc_info:
+        c.all_jobs()
+    assert token not in str(exc_info.value), (
+        "Auth token leaked into str(JenkinsUnreachable) on the transport-exception path - "
+        "this would expose credentials in any log/report that captures exception text."
+    )
+    assert token not in repr(exc_info.value), (
+        "Auth token leaked into repr(JenkinsUnreachable) on the transport-exception path - "
+        "this would expose credentials in any log/report that captures exception text."
+    )
 
 
 def test_from_env_raises_when_token_missing(monkeypatch):
