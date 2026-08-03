@@ -72,6 +72,23 @@ UNREACHABLE, say so explicitly — that is an access gap, never "all clear". Onl
 `UNSTABLE` jobs in the `fix` tier are candidates for a fix agent; see
 `FIX_AGENT_RUNBOOK.md`. Deploy jobs are notify-only — report them for the dev team.
 
+**If the command fails for any reason** — non-zero exit, a Python traceback, no output, or
+output you cannot parse — do **not** omit the section. A missing Jenkins Job Monitor section
+is indistinguishable from "no Jenkins issues", which is the one wrong conclusion here.
+Instead:
+
+- Write the `### Jenkins Job Monitor` section anyway, stating that **the Jenkins monitor did
+  not run and job status is unknown for today**, with the exit code and the last few lines
+  of output as evidence.
+- Add "Jenkins monitor did not run — job status unknown for today" as a **top item** in the
+  `### Todo` list, above the other todos.
+- Never infer job health from the absence of failure emails when the monitor did not run;
+  the monitor exists precisely because failure emails are missed.
+
+Exit codes: `0` = it ran (jobs may still be red — read the report); `2` = malformed job
+registry (`jenkins-jobs.yaml`), so nothing was checked; any other non-zero = unexpected
+error. Treat `2` and "other" identically for the summary: status unknown, top todo.
+
 Use this output format:
 
 ```markdown
