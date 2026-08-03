@@ -1,29 +1,27 @@
 # Registry for Howard's quant-* tracking / flat-file Jenkins jobs.
+#
+# This file is DATA, not configuration for an algorithm. `jenkins_monitor facts` publishes
+# every field below verbatim into its daily fact sheet, and the agent applies judgment to
+# them per claude-code-routines/JENKINS_MONITOR_PROMPT.md. It exists because job names lie
+# about cadence and re-reading 25 jenkinsfiles every morning is slow and error-prone.
+#
 # Triggers transcribed from C:\Git\JenkinsJobs\<job>.jenkinsfile - the authoritative
 # source. Job NAMES DO NOT IMPLY CADENCE; do not "correct" these from the name.
-# 'H' is Jenkins' hashed value: Jenkins picks one stable value in the field's range
-# and reuses it forever. cadence.py's staleness comparison uses that window's START
-# (e.g. 'H 20 * * *' -> 20:00) as the expected fire time, not the last possible
-# minute - see cadence.previous_fire_time / cadence._parse_field for why.
 #
-# trigger_type: upstream jobs may set `upstream_strict: true` to have staleness()
-# flag them when the parent did work more recently than they did. Default/unset is
-# False (gated): every upstream-triggered job in this file is invoked by a readiness
-# gate that may legitimately decide there is nothing for the child to do, so the
-# parent running without the child following is expected, not a fault. None of the
-# jobs below set this - only a future child that is unconditionally chained to its
-# parent (no gate) should opt in.
+# 'H' is Jenkins' hashed value: Jenkins picks one stable value in the field's range and
+# reuses it forever, so 'H 20 * * *' denotes a WINDOW (some minute inside hour 20), not a
+# time. Any run inside that hour is on time - judging such a job against 20:59 flagged four
+# jobs stale for running early, one by three minutes.
 #
-# max_silence_days: an ABSOLUTE wall-clock ceiling on silence, checked before every
-# cadence rule and independent of any parent comparison. It exists because the cadence
-# check is deliberately disabled for non-strict upstream jobs, which left them with no
-# staleness detection at all - the observation that motivated this package (a job whose
-# last REAL build was 27 days old) classified GREEN. 21 days is chosen deliberately: the
-# 7 false positives that motivated upstream_strict: false were parent-recency
-# comparisons measuring HOURS to a few DAYS, so a three-week floor cannot reproduce any
-# of them, while still catching a job that has genuinely stopped. It is set only on
-# upstream-triggered jobs; pollscm (builds only on repo change) and manual (trigger
-# commented out) omit it on purpose, because silence there is genuinely expected.
+# max_silence_days: an ABSOLUTE wall-clock ceiling on silence, in days. Set only on
+# upstream-triggered jobs, whose parent-recency comparison is meaningless: each sits behind
+# a readiness gate that may legitimately decide there is nothing for the child to do, so the
+# parent running without the child following is expected, not a fault. Comparing against the
+# parent produced 7 false positives measuring HOURS to a few DAYS, so the 21-day floor cannot
+# reproduce any of them while still catching a job that has genuinely stopped (the
+# observation that motivated this package was a job whose last REAL build was 27 days old).
+# pollscm (builds only on repo change) and manual (trigger commented out) omit it on purpose,
+# because silence there is genuinely expected.
 jobs:
   # ---- simdata family -------------------------------------------------------
   - job: quant-DailySimDataUpdate
@@ -134,12 +132,12 @@ jobs:
     tier: fix
     family: resitracking
     trigger_type: manual                # cron is COMMENTED OUT in the jenkinsfile
-    # `orchestrator: true` was removed here: it had no `child_job`, and diagnose.py only
-    # drills into children when BOTH are set - so drill-down was silently disabled and the
-    # diagnoser tried to pull a traceback out of a wrapper console that never has one. No
-    # child job name has been verified from the jenkinsfile, and inventing one would point
-    # the drill-down at the wrong job. Re-add BOTH fields together once the child is known;
-    # registry.py now rejects orchestrator without child_job.
+    # `orchestrator: true` was removed here: it had no `child_job`, and child drill-down
+    # needs BOTH - so drill-down was silently disabled and the reader was left trying to pull
+    # a traceback out of a wrapper console that never has one. No child job name has been
+    # verified from the jenkinsfile, and inventing one would point the drill-down at the wrong
+    # job. Re-add BOTH fields together once the child is known; registry.py rejects
+    # orchestrator without child_job.
     repo: LMQR
 
   - job: quant-Monthly-ResiTracking-Tracking

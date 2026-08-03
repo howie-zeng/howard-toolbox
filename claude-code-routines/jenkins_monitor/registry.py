@@ -34,9 +34,9 @@ def _float_field(name: str, field: str, value, default: float | None) -> float |
 def _validate_tz(name: str, tzname) -> None:
     """Reject a timezone that does not resolve.
 
-    `cadence.previous_fire_time` calls ZoneInfo(tzname), which raises
-    ZoneInfoNotFoundError (a KeyError) - not CadenceError - so cli.py's per-job isolation
-    did not catch it and a single typo ('America/New_Yrok') aborted the whole run.
+    The tz is published to the agent as the window a cron fires in, so a typo
+    ('America/New_Yrok') would silently hand it a meaningless comparison. Validating at load
+    time turns that into a named config error instead.
     """
     if tzname is None:
         return
@@ -96,9 +96,9 @@ def load_registry(path: str | Path) -> dict[str, JobSpec]:
 
         orchestrator = bool(entry.get("orchestrator", False))
         if orchestrator and not entry.get("child_job"):
-            # diagnose.py only drills into children when BOTH are set, so `orchestrator`
-            # alone silently disables drill-down and then tries to pull a traceback out of
-            # a wrapper console that never has one.
+            # Child drill-down needs BOTH, so `orchestrator` alone silently disables it and
+            # leaves the agent trying to pull a traceback out of a wrapper console that never
+            # has one.
             raise RegistryError(f"{name}: orchestrator: true requires 'child_job' (drill-down target)")
 
         markers = entry.get("success_markers", ())
@@ -118,7 +118,6 @@ def load_registry(path: str | Path) -> dict[str, JobSpec]:
             grace_hours=grace_hours,
             max_silence_days=max_silence_days,
             upstream=entry.get("upstream"),
-            upstream_strict=bool(entry.get("upstream_strict", False)),
             orchestrator=orchestrator,
             child_job=entry.get("child_job"),
             unstable_is_failure=bool(entry.get("unstable_is_failure", True)),
