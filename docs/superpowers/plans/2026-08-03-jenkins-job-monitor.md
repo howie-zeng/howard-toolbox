@@ -1682,7 +1682,11 @@ def label(statuses: list[JobStatus], previous: dict[str, str]) -> list[Finding]:
         if now_bad:
             transition = "ONGOING" if prev == st.state else "NEW"
         elif prev in _ATTENTION:
-            transition = "RECOVERED"
+            # RECOVERED requires confirmed GREEN. A job that was failing and is now
+            # BUILDING or SEED_ONLY has NOT been shown to be fixed - claiming recovery
+            # there is a false all-clear, the exact failure class this module exists to
+            # eliminate. Report it as unresolved instead.
+            transition = "RECOVERED" if st.state == State.GREEN else "ONGOING"
         elif st.state == State.GREEN:
             continue  # green and was green: nothing to say
         else:
