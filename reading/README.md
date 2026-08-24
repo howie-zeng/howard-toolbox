@@ -2,6 +2,8 @@
 
 Personal reading shelf. One folder per book. Notes live in git; purchased PDFs do not.
 
+New agent for this book: paste [`tuckman-serrat-2022/AGENT_PROMPT.md`](tuckman-serrat-2022/AGENT_PROMPT.md), or `@` that file plus the book folder.
+
 ## How we use this
 
 1. You read (or paste a page/section). Ask in Chinese or English.
@@ -14,7 +16,7 @@ Personal reading shelf. One folder per book. Notes live in git; purchased PDFs d
 
 | Folder | Book | Status |
 |---|---|---|
-| [`tuckman-serrat-2022/`](tuckman-serrat-2022/BOOK.md) | Tuckman & Serrat, *Fixed Income Securities* (Wiley, 4th ed., 2022) | Not started — Ch. 0 |
+| [`tuckman-serrat-2022/`](tuckman-serrat-2022/BOOK.md) | Tuckman & Serrat, *Fixed Income Securities* (Wiley, 4th ed., 2022) | In progress — Ch. 3.3 |
 
 ## Add a book later
 
