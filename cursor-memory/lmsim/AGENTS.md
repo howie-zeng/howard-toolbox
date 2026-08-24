@@ -1,35 +1,174 @@
-## Learned User Preferences
+# LMSim build & development guide
 
-- When asked to update mappings or lookup tables: ONLY APPEND new entries. Never delete existing entries unless explicitly instructed.
-- Use StrReplace / edit tools directly for file modifications. Do not write Python helper scripts as workarounds for whitespace or tab-character difficulties. When refactoring, clean up includes that your own changes made dead (e.g., `<memory>`, `<algorithm>`, `<cmath>`, `<fstream>`, `<sstream>` left behind after pruning callers) — but do NOT shuffle, reorder, or relocate pre-existing prod includes that are unrelated to the current change.
-- Save implementation plans to `.cursor/plans/` in the workspace so they persist across sessions; `AGENTS.md`, `.cursor/`, and `.claude/` are local-only/ignored in LMSim, with the canonical synced AGENTS copy at `S:\QR\hzeng\howard-toolbox\cursor-memory\lmsim\AGENTS.md`.
-- When translating R-to-C++ servicer mappings: R maps canonical → [variants]; C++ maps variant → canonical (inverted direction).
-- C++ canonical servicer names use the no-space convention (e.g., `WELLSFARGO`, `JPMORGANCHASE`, `UNITEDWHOLESALE`).
-- Do NOT add unit test files unless explicitly asked. LLPA verification is done via R tieout, not C++ gtest.
-- Do NOT touch existing `LLPAManager` code when adding new LLPA GAM code; add new code alongside it. `GamLlpaManager` is the sibling class and must be shaped structurally like `LLPAManager` (one GAM per instance, `is_loaded()` + scalar `evaluate(...)`). Per-product scalar Inputs structs + ADL `get_double`/`get_string` helpers are the accepted extension pattern — no subclass hierarchies, no dual-GAM rebinds, no LoanState coupling. The LLPA evaluator API must stay scalar-in / scalar-out / rate-free (match `LLPAManager::getLLPA`). A trailing `const GamLlpaManager* gam_llpa = nullptr` parameter threaded symmetrically through `TimeDependentState::{init,advance_month,recompute}` virtuals and `LoanState::advance_month` is the accepted shape (CRT/Jumbo/HELOC overrides discard via `(void)gam_llpa;`) — do NOT store `gam_llpa` as a per-subtype member to avoid this.
-- For NQM state-`C` SOFTMAX/shock work, keep `CtoP_Floating` as a single model; fixed `CtoP` turnover/refi should aggregate into one raw `CtoP` probability and receive one combined fixed `CtoP` shock post-SOFTMAX, while the two fixed leaves keep identical `Shock` blocks.
-- For future NONQM parity work, do not reuse `_new_servicer`; add a dedicated asset field for `servicer_curr`.
-- When patching `.vcxproj` / `.vcxproj.filters`: StrReplace/patch tools can silently strip the UTF-8 BOM — verify BOM preservation after editing; and avoid duplicating existing `<ItemGroup>` blocks.
-- Trust upstream contracts — do not add defensive checks at the read/accessor layer for data the loader/writer already enforces; validate at the write/ingest boundary instead. Examples removed on this basis in-repo: NONQM required-header check kept in loader only, `KNOWN_NQM_DOC_MAPS` validation, the `orig_ltv_clamped` accessor, the `x_max` uniformity guard, the C++ `map_foreign_national` helper (SQL unload now emits `Foreign_National`/`Perm_Resident`/`NonPerm_Resident`/`US_Citizen` labels directly, so loader is a pass-through), and placeholder `if (!is_nonqm()) return ...` guards in NQM-only `FieldAccessor` accessors. Similarly, do not bucket/remap categorical values in accessors when the GAM factor already has an OTHER level — `Factor::get_coef()` handles unmatched levels via `has_other`, so pass through the raw value.
-- LLPA assignment helpers (`orig_llpa` / `curr_llpa`) must stay rate-free. Keep derived spread/burnout refresh (`incentive_spread_llpa_lag0`, burnout spreads) in a separate helper that takes rates — pure LLPA assignment must not pull in unrelated dependencies.
+Agents: this file is mandatory. Do not invent cmake or vcpkg flows. Use
+`.\dev.ps1` (`windows-dev` / `build_dev`; Linux: `linux-dev`). Do not run
+raw `cmake -S . -B ...` without the preset — the vcpkg cache env lives on
+the preset. If any other doc disagrees, this file wins.
 
-## Learned Workspace Facts
+**This is the definitive guide.** One preset (`windows-dev` / `linux-dev`),
+one build dir (`build_dev`), one script (`dev.ps1`); the logic lives in CMake
+(presets + `dev-venv`/`dev-ext` targets + ctest), the script only bootstraps
+the environment. Python is the only production entrypoint
+(`lmsim.sim.Sim2Runner` / `run_sim_hecm`); the standalone exe, `run_sim`,
+and the legacy flat-file loaders were removed in v2.3.0. Build instructions
+found anywhere else are retired — if a doc disagrees with this one, this one
+wins.
 
-- `CRT_SERVICER_MAP` in `StacrLoader.cpp` maps raw servicer name variants to canonical names (all-caps, no spaces). The canonical name is stored in `_crt_servicer` and fed into `CategoricalVariableSelector` as a GAM model variable; the file also contains embedded literal tab characters in some servicer name string literals, so match carefully with edit tools.
-- `AsOfQuarter::_getInput` needs an underscore separator between the variable name and the quarter value (e.g., `asofquarter_2020Q3`). Without it, coefficient lookups silently return 0.0.
-- `LLPAManager` has known latent issues: LTV index rounding mismatch (load truncates, lookup rounds) and no bounds checking on `occ_code`/`fico_code` in the public inline overload.
-- `_upd_ltv` may differ from `_ltv` at t=0 due to HPI adjustment. Always use `orig_ltv` for `orig_llpa` and `upd_ltv` for `curr_llpa`. `GAM::build_indices()` binds accessor pointers and fixed/varying classification at load time, and resolves double-curve accessors by curve **name** first (falling back to `asset_field` only if the name is unregistered); interaction curves' `selector_field` also resolves through `FieldAccessorRegistry::get_string()` (same path as `asset_field`) — a missing string accessor for any `selector_field` causes `std::runtime_error` at model load time. Origination-fixed selector_fields (e.g., `obal_adj_bkt`) must also be listed in `static_fields_` for the fixed-score cache to classify them correctly. A single GAM cannot serve both static `orig_ltv` and varying `upd_ltv` via in-place curve rebind. LMSim2 sidesteps this by passing the LTV value as a scalar into `GamLlpaManager::evaluate(const AssetData&, double ltv, std::optional<YearMonth> proj_date)` — caller picks `data.orig_ltv` for orig or `upd_ltv` for curr per call — instead of mutating curves. `SplineCurve::evaluate` already clamps at endpoints (returns `y[0]` below `x_min`, `y[size-1]` at/above the last knot), so no extra accessor-level LTV clamp is needed. For `factor.type == "month"`, `GAM::load_json` normalizes level keys `"Jan".."Dec"` to canonical `"1".."12"` at load time so R-produced and legacy GAM JSONs interop; the `month` accessor returns numeric form.
-- Avoid process-level singletons in Ray worker-reuse contexts — they cause silent cross-contamination between deal types. Legacy `LLPAManager::getInstance()` was fixed with `std::mutex`-guarded map keyed by CSV path; LMSim2 uses task-scoped API objects instead.
-- LLPA evaluator architecture (LMSim2, current): CRT/Jumbo use `LLPAManager` (scalar grid lookup). NQM uses `GamLlpaManager`, which sits on `Model` alongside `LLPAManager` and is structurally symmetric — one Model holds one GAM (like LLPAManager holds one grid), queried via `is_loaded()` and a scalar-in `evaluate(const AssetData&, double ltv, std::optional<YearMonth> proj_date)` method. No product-key strings anywhere (the old `"NQM"` map key is gone from `Model::load`, `setup_asset_data`, and `recompute_nqm_fields`). The manager internally dispatches on `d.is_nonqm()` / `d.is_heloc()` / etc. to pick the right internal Inputs builder; `NqmLlpaInputs` (at `src/model/NqmLlpaInputs.h/.cpp`) is an implementation detail included only by `GamLlpaManager.cpp` — it is NOT part of the public API and must not be included elsewhere. A private template `evaluate_impl<Inputs>` in `GamLlpaManager.cpp` is explicitly instantiated per product. Adding a HELOC / JUMBO GAM product means: extend `evaluate()`'s dispatch, add the new Inputs struct + ADL helpers + explicit instantiation. If a pool needs multiple GAMs simultaneously, give `Model` one `GamLlpaManager` member per product (same way you'd have two `LLPAManager` instances for CRT + Jumbo). Config key stays `NqmLlpaGam`; the 24-month `orig_date_num` endpoint-decay is applied inside `evaluate_impl` outside the raw `GAM` call. Integration: a trailing `const GamLlpaManager* gam_llpa = nullptr` parameter flows symmetrically through `TimeDependentState::{init,advance_month,recompute}` virtuals and `LoanState::advance_month` (and all three `Simulator`/`LoanState` call sites). CRT/Jumbo/HELOC overrides accept and discard via `(void)gam_llpa;`. `NQMTimeDependentState` uses the pointer in `recompute_nqm_fields` (anonymous namespace in `TimeDependentState.cpp`) to assign `curr_llpa` + `incentive_spread_llpa_lag0` inline, structurally parallel to CRT's block inside `init_crt_family_time_fields`. The downstream spread pipeline (`_sato_llpa_lag0` / `_incentive_spread_llpa_lag0` / `_burnout_spread_llpa_lag0`) is LLPA-source-agnostic but lives in shared `TimeDependentState.cpp` helpers, not in `LLPAManager` — any evaluator-backed NONQM path must repopulate derived spread/burnout fields after assigning `curr_llpa`. NQM-specific time-varying fields whose updates depend on `trans_state->current_state` (e.g., `modifications_during_sim`, `months_since_m30p`) live on base `TimeDependentState`; the NQM-only update is implemented in `NQMTimeDependentState` and invoked from `LoanState` via `dynamic_cast<NQMTimeDependentState*>` — init after both state inits run, advance_month immediately after `trans_state->apply()`. This is the established convention; do not add such fields onto `NQMTransitionState`.
-- `StacrLoader.cpp` M90 delinquency path calls `Poco::strToInt(dlnq_status_code, num_pmt_owed, 10)` without the empty-string guard used in REO. An empty `current_loan_delinquency_status` throws `Poco::SyntaxException` instead of preserving the default `num_pmt_owed = 3`.
-- NQM LLPA is loader-driven: the flat-file unload may emit `doc_type` as the tape alias for in-memory `doc_map`; loader also reads `doc_group` and `dscr_ratio` and computes `_orig_date_num`; `doc_detail` is NOT used by the LLPA model (PP split derived from `doc_map`). Falls back `dscr_ratio` to `1.0` when missing/nonpositive.
-- LMSim2 is a greenfield C++23 rewrite of LMSim with 3-way state decomposition (`AssetData`/`TimeDependentState`/`TransitionState`), fixed/varying GAM score caching, memory-mapped file parsing, and a 4-phase pipeline (load/simulate/format/save). Currently supports CRT, Jumbo, MI; NONQM has partial code across `AssetData`, `TransitionState`, `TimeDependentState`, `FieldAccessor`, and `SeverityCalculator` but is not fully migrated. Model configs follow the `*_submodel.json` naming convention; `Model::load()` computes `base_path = config_path.parent_path().parent_path().parent_path()` (3 levels up from the config file) and resolves all `Detail` paths relative to this base. **Repo split**: `LMSim` is the code repo only — there is no `model_files/` under `C:\Git\LMSim`. Data lives in a separate `LMSimData` repo, typically a sibling checkout (e.g., `C:\Git\LMSimData`) or a per-user dev fork on the `N:\DevSimData\` share (`LMSimData_Howard`, `LMSimData_Jay`, ...); for the current NQM release context, the N-drive LMSimData copy is treated as identical to `C:\Git\LMSimData`. `scripts/compare/lmsim2_runner.py` exposes a dedicated `LMSIM_DATA_ROOT` path (overridable via the `LMSIM_DATA_ROOT` env var, default `N:\DevSimData\LMSimData_Howard`); do not resolve data via `LMSIM_ROOT / "model_files" / ...`. `lmsim2_runner.py::convert_to_lmsim2_config` **rewrites the template's `model.modelPath` and `model.lmsimdataPath` at runtime** from `MODEL_BASE_TO_PATH[detail.base]` and `LMSIM_DATA_ROOT` — any `lmsimdataPath` / `modelPath` values set in `scripts/compare/template_config_*.json` are ignored. To change what LMSim2 sees, edit the runner's `LMSIM_DATA_ROOT` / `MODEL_BASE_TO_PATH` constants (or the env var), not the template. **Submodel config split**: PROD LMSim reads `lmmodel_agencyonly.json` → `data/NONQM/nonqm_v1.8.0.json` (legacy format); LMSim2 reads `data/NONQM/nonqm_v1.8.0_submodel.json` (submodel format) via `MODEL_BASE_TO_PATH` in `lmsim2_runner.py`. Both can coexist in the same data tree and their `Detail` paths point at the same GAM JSONs. PROD `lmmodel_agencyonly.json`'s `LLPAManager` section has only JUMBO/CRT/MI entries — NQM LLPA GAM is currently LMSim2-only. **Canonical LLPA data location**: LLPA data files live under `model_internal_config/` in the data tree regardless of product — alongside `crt_llpa_interpolated.txt` and `jumbo_llpa_interpolated.txt`, the NQM LLPA GAM belongs at `model_internal_config/nqm_llpa_gam.json`. Only product state-transition GAMs stay under `data/<product>/ModelFiles/<version>/`. Submodel configs point `ModelInternalConfig.NqmLlpaGam.Detail` at this canonical path.
-- `scripts/compare/lmsim2_runner.py` is Linux-only and is NOT a CLI entry point — it is an importable module. Its `__main__` block is a "Quick test" stub that takes a positional `deal_id` (no `--config`, `--template`, or `--skip-build`). The real integration test / CLI is `scripts/compare/compare_deal.py`, which accepts `--template` and `--skip-build`. The runner hardcodes Linux: `cmake --preset linux-relwithdebinfo` (Ninja), binary at `build_relwithdebinfo/LMSim2/LMSim2` (no `.exe`). On Windows the equivalents are preset `windows-relwithdebinfo` (VS generator) and binary `build_relwithdebinfo/LMSim2/RelWithDebInfo/LMSim2.exe` — the extra `RelWithDebInfo/` configuration subdir is the VS-generator convention. Windows end-to-end runs therefore require patching both the preset and the binary path; until/unless the runner is made cross-platform, Windows dev machines can only do build-only smoke tests via direct `cmake --preset windows-relwithdebinfo` / `cmake --build` invocations. Linux is the intended deployment target; Windows asymmetry is expected, not a bug.
-- NQM categorical/derived feature logic is split between loader-provided fields and mirrored C++ helpers: `fix_f` must read upstream-normalized flat-file `nqm_fix` (required for NONQM; `NQMAssetData::parse_subtype` throws if the field is missing or empty — map `nqm_fix` in `flat_file_config.json`), `has_dscr` should follow `dscr_valid`, active `io` should be `Y` iff `io_term >= loan_age`, and `term` bucketing / `fico_missing` / `occupancy` normalization remain intentionally duplicated between `src/model/NqmLlpaInputs.cpp` and `src/asset/FieldAccessor.cpp`. Keep mirrored paths in sync, and use `nqm_fix == "ARM"` for NQM reset-rate fields (`mon_sin_rst_v2`, `effective_reset_rate`, `full_index_spread_fade15`). For NQM ARM index mapping, normalize upstream unload `index_id` into `index_name` before C++ reads it: Refinitiv `R1`/`R3`/`R6`/`RA`/`RZ` map to `LIBOR1M`/`LIBOR3M`/`LIBOR6M`/`LIBOR1Y`/`LIBOROTHER`, COFI Unknown 20 maps to `COFIOTHER`, and null/blank/unknown codes should emit `OTHER` (LMSim2 `RateType` accepts `LIBOR1M`; `OTHER` maps to `Libor1Y`). For NQM `effective_reset_rate`, missing `f_rate_cap` means no first-rate cap — preserve flat-file presence separately (e.g., `has_first_rate_cap`) instead of applying the generic `first_rate_cap = 2.0` ARM default. For NQM `sato_llpa_lag0`, do not inherit generic investor/term spread adjustments; it is `orig_rate - pmms30_lowest_at_orig - orig_llpa`, while Jumbo/CRT stay on the legacy path. NQM `mod` reads loader-provided `modification_flag`/`number_of_modifications`; selected/pseudo flat-file tieout mismatches should be fixed by regenerating stale flat files, not by adding hidden C++ fallbacks. For NQM monthly flat-file release work, the active LMQR unload repo/path is `C:\Git\LMQR_hecm` `agencydata/wh_lp_update.py`, which projects aliases from LMSimData `file_config/flat_file_config.json`; `agencydata/convert_2_sim.py` / `convert_2_sim_config.py` is a separate helper path and not a release blocker unless production/Jenkins is confirmed to call it.
-- In LMSim2 `Simulator` SOFTMAX transitions, sub-model GAM outputs are summed into one probability then converted to odds. Shocks are applied post-normalization by overwriting a single `trans_shock` — the last sub-model's shock wins. Per-leaf shock differentiation is therefore unsafe; all sub-model leaves under the same transition must carry identical `Shock` blocks, or shocks should target the transition level.
-- PROD `StacrLoader` `fdate` rule (used in `setup_asset_data`): `CRT`, `JUMBO2_0`, `CAS`, `MI`, and `NONQM` all use `fdate = asofdate - 1 month`; only `HELOC` / `FIGURE` use `fdate = asofdate`. Both `subtract_month` conditional blocks in `setup_asset_data` must include `DealType::NONQM` — forgetting the NONQM branch silently returns stale-by-one-month LLPA / transition inputs.
-- Two different test-config file families exist and must not be confused: `LMSim2/test_config_<scenario>.json` (e.g., `test_config_eze_jumbo.json`, `test_config_enu_nqm.json`) is the **LMSim2-native** format consumed directly by `LMSim2.exe --config` — top-level keys `collat` / `model` / `scenConfig` / `simulation` / `output`. `scripts/compare/template_config_<product>_v<version>.json` is the **PROD-format** template consumed by `compare_deal.py` → `lmsim2_runner.py::convert_to_lmsim2_config`, which translates it into the LMSim2-native shape. `.vscode/launch.json` `cppvsdbg` configs invoke `LMSim2.exe` directly and pair a `test_config_*.json` with an explicit `--model <submodel JSON>`; Windows debug binary is `build_debug/LMSim2/Debug/LMSim2.exe`, relwithdebinfo is `build_relwithdebinfo/LMSim2/RelWithDebInfo/LMSim2.exe`. Current NQM EVD/Q4Y debug configs use 20260501 flat files.
-- LMSim2 dump/debug knobs differ from PROD's `DumpVariableInputOutput` / `DumpTransProb` / `DumpDebugVars` / `DebugVarsLoanIds` family: LMSim2 collapses these into `simulation.dump_gams: true`, `output.include_transitions: true`, plus an output directory (`simulation.csv_output_directory` or `output.parquet_output_directory`). `Simulator.cpp` guards the dump path with `!output_dir.empty()` — without an output directory set, dumps are silently skipped. There is no per-loan filter equivalent to `DebugVarsLoanIds`; filter dumps post-hoc by `loan_id` column. `simulation_outcomes` diagnostics should be one row per actual simulated loan/path/month, capture pre-transition/pre-advance model input state, store `predicted_probabilities` as a string, and store `selected_transition` separately as the sampled transition; do not compute extra diagnostics when outcome dumping is disabled. Current NQM outcome diagnostics intentionally exclude legacy `month2ppexp`, `inc_regime`, `fully_index_ratio`, `month_since_reset`, and `modifications_during_sim`, and use `burnout_lag0_spread_llpa_60` for burnout. The old split NQM LLPA tieout scripts/files (`json_tieout.R`, `tieout_nqm_llpa_gam.R`, `nqm_orig_llpa_gam`, `nqm_curr_llpa_gam`) are no longer part of the current release path; keep `GamLlpaManager` scalar-only and do not reintroduce LLPA-specific GAM dump APIs unless explicitly requested.
-- `LMSim2/benchmarks/CMakeLists.txt` has a broken `lmsim2_benchmark` target on HEAD — it references `benchmark_main.cpp`, but commit `5d6a0823` ("cleaning", Apr 14 2026) deleted the source without updating the CMakeLists. Result: `cmake --preset windows-*` / `linux-*` fails at generate step with "Cannot find source file: benchmark_main.cpp". Local workaround is to comment out the `lmsim2_benchmark` target; the sibling `cashflow_layout_bench` target in the same file is independent and builds fine. Fix upstream by either restoring the source or removing the target.
-- LMSim2 Windows dev-env setup gotchas: First-time `cmake --preset windows-debug` / `windows-relwithdebinfo` triggers a vcpkg cold build of ~140 packages, takes ~30 min on a populated cache, and needs **~20+ GB free on C:\\** (peak in `vcpkg/buildtrees/`, `vcpkg/packages/`, `vcpkg/downloads/`); Arrow, Boost, libpq, libffi, python3, and poco are the slowest. CMake's VS generator auto-injects `/MP` into `.vcxproj` for parallel `cl.exe` — but `/MP` **requires the companion `/FS` flag** to serialize PDB writes, otherwise the first wave of parallel compiles races on the shared `.pdb` and fails with `error C1041: cannot open program database ... please use /FS`. `/FS` is added to `lmsim_project_options` MSVC compile options in the root `CMakeLists.txt`; do not delete it and do not disable `/MP` as a workaround. After an interrupted/failed build, `mspdbsrv.exe` (Microsoft Program Database Server) can keep holding `.pdb` handles — `Remove-Item` reports success but the file persists; quick diagnosis is `fsutil file layout <path-to-pdb>` returning `Error 5: Access is denied` (normal output prints the file layout), recovery is `taskkill /F /IM mspdbsrv.exe /T` (or `Get-Process mspdbsrv` → `Stop-Process`). At runtime `LMSim2.exe` `require_env`s `MSQL_ODBC_CONNECTION_STRING` (historical rates + PMMS) and `POSTGRES_ODBC_CONNECTION_STRING` (HPA data) in `MultiScenarioPipeline.cpp`; `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB` are optional (HPA-curve cache). Missing DB connection strings cause `LMSim2.exe` to load config + scan assets, then throw at the `RateManager::load` phase — not a code bug, just missing env. Often the first blocker for a fresh Windows dev doing a local end-to-end run. `RateManager::rate(...)` historical/forward alignment must be per rate type: monthly index curves from `MonthlyRateHistoryNew` align from that table's max month, while `Pmms` / `PmmsWeeklyLow` align from PMMS daily `QLCustomCurveInputs`; partial daily PMMS data must not shift LIBOR/SOFR/CMT monthly curves. Old-origin NQM SATO tieouts can fail because the available PMMS history starts at 200501, so 2000-era origination PMMS / PMMS weekly-low lookups clamp to the first available value unless the rate history is extended/backfilled.
-- `StringAccessor` (in `LMSim2/src/asset/FieldAccessor.h`) is a **plain function pointer** `std::string_view(*)(const LoanState&)`, NOT a `std::function` — only captureless lambdas convert. Any capturing lambda (e.g., `[ym]` / `[qtr]` from a `for` loop) fails to compile as a `StringAccessor`. When registering bulk string accessors (one-hot `asofmon202003_f` / `asofquarter2020Q3_f` variants), unroll into individual `register_string(name, [](const LoanState& a) { return a.time_state->asofmon == "202003" ? std::string_view("1") : std::string_view("0"); })` calls — do not use a `for` loop over a capturing lambda. Every new string accessor in `FieldAccessor.cpp` must be captureless.
+## Requirements
+
+- Windows: **VS 2022** with the C++ toolset (auto-discovered via vswhere;
+  BuildTools SKU works), **git**, **uv**. Linux: gcc/clang + ninja + uv.
+- Network access on first configure (vcpkg registries + a FetchContent pull).
+
+## Quickstart (Windows)
+
+```powershell
+git clone <repo> ; cd LMSim
+.\dev.ps1 setup     # submodule + bootstrap vcpkg + configure (build_dev)
+.\dev.ps1 build     # everything: lmsim2_lib, tests, both Python exts
+.\dev.ps1 test      # ctest   (or: .\dev.ps1 test -Filter 'AssetDataSetupTest.*')
+.\dev.ps1 pytest    # pure-Python tests (tape_clean etc.) — no native build
+```
+
+`setup` is idempotent. With warm binary caches the configure restores all
+~125 vcpkg packages in about a minute; nothing cold-builds. Requirements:
+VS 2022 with the C++ toolset (auto-discovered via vswhere), `uv`, git.
+
+The dev preset builds **RelWithDebInfo** (`/O2 /Zi`, PDBs) against release
+vcpkg deps on the shared `x64-windows` triplet — the same triplet CI uses for
+the wheel, so caches are shared. There is deliberately no `-Od` Debug preset:
+it would need debug-CRT vcpkg builds (cold, and a known CRT-mismatch trap).
+For un-optimized stepping of one file, wrap it in
+`#pragma optimize("", off)` / `#pragma optimize("", on)` locally.
+
+## Everyday commands
+
+| Task | Command |
+|---|---|
+| Incremental build | `.\dev.ps1 build` (or `.\dev.ps1 build lmsim2_tests`) |
+| C++ tests | `.\dev.ps1 test` / `.\dev.ps1 test -Filter 'Gam*'` |
+| Python-surface tests | `.\dev.ps1 pytest` |
+| Debuggable install (RelWithDebInfo wheel → `python\.venv_dev`) | `.\dev.ps1 ext` |
+| Redistributable wheel | `.\dev.ps1 wheel` (delvewheel-repaired, import-order-immune) |
+| Nuke build | `.\dev.ps1 clean` |
+
+Concurrency defaults to `-Parallel 4` — keep it there on shared/dev boxes.
+
+## Running the sim locally
+
+```powershell
+.\dev.ps1 ext    # CMake dev-ext target: repaired RelWithDebInfo wheel -> python\.venv_dev
+python python\scripts\debug_run.py my_config.json            # HECM configs run directly
+python python\scripts\debug_run.py my_config.json --tape N:\FlatFilesMonthly\...\EZE_20260701.txt
+```
+
+`debug_run.py` bridges to `.venv_dev` automatically (`LMSIM_DEBUG_SITE`
+override available), so it works from any interpreter — including the base
+CPython the debugger needs.
+
+- Config template: `python/scripts/debug_config.example.json`. Resolution
+  order: `LMSIM2_DEBUG_CONFIG` env → argv → the example. `rate_as_of_date`
+  must be set or the sim fails deep in.
+- No database env is required: the engine takes rates and HPA as an Arrow
+  bundle from the caller. `debug_run.py` still loads `<repo>/.env` and chdirs to
+  the repo root, since `init_env` reads a CWD-relative `./.env`.
+- **`REDIS_HOST` silently switches the HPA source to Redis.** Unset it when
+  you need Postgres-sourced HPA (tie-outs).
+- **Why a repaired wheel, not a loose/editable `_ext.pyd`:** pyarrow ships its
+  own `arrow.dll`, and Windows binds dependent DLLs by base name to whatever
+  loaded first — a loose ext referencing bare vcpkg DLL names crashes whenever
+  pyarrow is in the process (either order). delvewheel renames the vendored
+  DLLs, making the install collision-immune. `dev.ps1 ext` does this for you.
+
+Small test deals: Jumbo `EZE`/`GXQ`; CRT `1436` (small), `21HQA2` (large),
+`1435,1436` (2-pool); MI `BMIR20213`/`HMIR20231`; HELOC `ACHM2023HE1`.
+`NumOfCPU=1` in the config gives deterministic path partitioning/scenout
+scaling for comparisons.
+
+## Step-into C++ debugging (VS Code)
+
+1. `.\dev.ps1 ext` (= CMake target `dev-ext`) — RelWithDebInfo wheel from a
+   nested tree (`build_dev/wheel_stage`), delvewheel-repaired, installed into `python/.venv_dev`. PDBs stay in
+   `build_dev/wheel_stage/python/lmsim/<sub>/` and match the installed `.pyd` (delvewheel
+   patches the import table, not the debug directory).
+2. Open the repo folder; `.vscode/launch.json` ships the configs:
+   - **`Py+C++: step into lmsim ext`** — one click (needs the
+     "Python C++ Debugger" extension, `benjamin-simmonds.pythoncpp-debug`).
+   - Manual: run `Python: debug_run` with `--wait`, then
+     `Native: attach to python (lmsim ext)` on the printed PID.
+3. Set breakpoints in `src/**.cpp`; symbols resolve via the launch config's
+   `symbolSearchPath` (`build_dev/wheel_stage/python/lmsim/...`).
+
+Why the launch configs run the **base** uv-managed CPython, not a venv:
+every Windows venv `python.exe` is a trampoline that re-execs the real
+interpreter as a child process — `cppvsdbg` won't follow it and breakpoints
+never bind. `LMSIM_DEBUG_SITE` + `site.addsitedir` (or `PYTHONPATH`) bridge
+to your packages without the trampoline.
+
+## Profiling
+
+- **Python side**: `debug_run.py --profile` (cProfile, top-30 cumulative).
+- **C++ on Windows**: run with `--wait`, attach the VS **Performance
+  Profiler** (Debug > Performance Profiler > attach to the PID) — the
+  RelWithDebInfo PDBs from `dev.ps1 ext` give full native stacks.
+- **C++ on Linux**: `cmake --preset linux-profile` (frame pointers +
+  `-march=native`) then perf/Callgrind on a driver run.
+
+## Caches & toolchain (why builds are fast, when they aren't)
+
+The `windows-dev` preset's `environment` block sets `VCPKG_BINARY_SOURCES` to
+the shared writable cache (`S:\QR\local_vcpkg_cache`) + the read-only CI cache
+(`N:\vcpkg-cache\windows`). It starts with `clear`, so vcpkg's default
+`%LOCALAPPDATA%\vcpkg\archives` cannot grow with duplicate artifacts. First-ever build on a
+machine may compile deps once; every rebuild after restores from cache. To
+point at a different cache, add a `CMakeUserPresets.json` that inherits
+`windows-dev` and overrides the env — no script edits.
+
+Known wart: CI runners use MSVC **14.44**, typical dev boxes **14.43** — the
+compiler hash is part of vcpkg's ABI, so N:-cache artifacts usually miss for
+local builds (see `docs/toolchain-parity.md`; toolset pinning is a deferred
+follow-up). The local caches carry you regardless.
+
+## Wheels / CI parity
+
+CI (`.github/workflows/release-python.yaml`) builds the wheel with
+`CMAKE_ARGS=--preset=windows-release-shared` (Linux:
+`linux-release-shared`) + `python -m build`, then repairs with delvewheel
+(`--add-path build_wheel/vcpkg_installed/x64-windows/bin`) / auditwheel
+(`--strip --plat manylinux_2_39_x86_64`). `dev.ps1 wheel`
+(`python/scripts/wheel_delve.ps1`) reproduces the Windows flow locally.
+`python/scripts/dev_install.ps1` remains for installing a repaired wheel
+into a local venv (`python/.venv_wheel`) for LMQR-style consumption.
+
+CI does **not** build or run the C++ test suite; `dev.ps1 test` (or the
+`windows-ci`/`linux-ci` workflow presets) is the coverage.
+
+## Linux
+
+```bash
+git submodule update --init vcpkg && ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+cmake --preset linux-dev && cmake --build build_dev -j 4
+ctest --test-dir build_dev --output-on-failure
+cmake --build build_dev --target dev-ext   # debuggable install (auditwheel)
+```
+
+## Troubleshooting
+
+- **`cl.exe not found` / Ninja can't find a compiler** — Ninja needs the MSVC
+  environment before configure; run through `dev.ps1` (it enters VsDevCmd), or
+  work in a "Developer PowerShell for VS 2022".
+- **Configure fails with `Could NOT find Python` or weird `SKBUILD` cache
+  entries** — the build dir's CMakeCache was poisoned by a scikit-build run
+  pointed at it. Never set `SKBUILD_BUILD_DIR` to an existing dev build dir
+  (`dev-ext` uses the isolated `build_dev/wheel_stage` for exactly this
+  reason). Fix: `.\dev.ps1 clean` then `setup`.
+- **vcpkg cold-builds dependencies** — the cache env comes from the
+  `windows-dev` preset; a raw `cmake -S . -B ...` without the preset gets no
+  cache config. First-ever build on a machine compiles deps once; after that
+  the `%LOCALAPPDATA%` cache carries you.
+- **Ext import crashes / `procedure could not be found` next to pyarrow** —
+  you're loading a loose/editable `_ext.pyd`. Use `dev.ps1 ext` and import
+  from `python\.venv_dev`; never `pip install -e`.
+- **Breakpoints never bind in C++** — you launched a venv `python.exe`
+  (a re-exec trampoline). Launch the base uv-managed interpreter;
+  `debug_run.py` bridges to `.venv_dev` itself.

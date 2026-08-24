@@ -251,7 +251,7 @@ jobs:
     tier: fix
     family: loaders
     trigger_type: cron
-    cron: "H 20 * * *"
+    cron: "H 17 * * *"
     tz: America/New_York
     grace_hours: 6
     repo: LMQR

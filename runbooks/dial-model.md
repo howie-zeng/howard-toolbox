@@ -1,6 +1,7 @@
 # Runbook: Dial a SIM2 model to tracking
 
 **Canonical, agent-executable procedure: [`../dial/DIAL_RUNBOOK.md`](../dial/DIAL_RUNBOOK.md)** (13 KB, every step gated).
+**After the dial converges — vectors + risk to diff: [`../dial/RISK_RUNBOOK.md`](../dial/RISK_RUNBOOK.md)** (verified commands + the flags that silently produce zero jobs).
 **Tooling:** `../dial/update_dials.py` (generate-spec / apply-spec), `../dial/dial_utils.py`, `../dial/run.py` (dial-ratio Excel). See the `dial/` section of the repo README.
 
 This page is the 60-second orientation + trap checklist. For the real steps, use `DIAL_RUNBOOK.md`.

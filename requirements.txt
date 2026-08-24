@@ -3,6 +3,7 @@ pywin32
 markdown
 Pillow
 beautifulsoup4
+pymupdf
 
 # dial (run.py, dial_utils.py)
 pandas

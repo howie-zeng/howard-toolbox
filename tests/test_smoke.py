@@ -11,6 +11,7 @@ import pytest
     [
         "emailer.render",
         "emailer.generate_diagram",
+        "emailer.parse_pdf",
         "dial.dial_utils",
         "dial.update_dials",
         "formatter.format_excel",

@@ -1,15 +1,28 @@
 # Runbook: Run vectors and risk (resi positions)
 
+> **Verified, copy-pasteable version: [`../dial/RISK_RUNBOOK.md`](../dial/RISK_RUNBOOK.md)**
+> (run end-to-end 2026-08-11). Corrections to the commands below, confirmed against the code:
+> the vector script has **no `-d` flag** (it is `-as_of_date`); `-request_mode forward_proj` is
+> required for position vectors; and **`-position_asofdate` is mandatory** — without it the run
+> exits `ERROR: No jobs to run, check input data` (`lm_sim_pub_main.py:939-941` returns before
+> the position filter ever populates the deal list). Prefer `-deal_type <TYPE> -position_only`
+> over `-deal_type PositionOnly -with_position`.
+>
+> Also: launch via **`uv run` from `C:\Git\LMQR`**, not the conda python — the Ray runtime env
+> pins the launching interpreter's `lmsim` version, and a stale one is no longer on the index.
+> Note `C:\Git\LMQR_hecm` points `SIM2_DATA_ROOT_DIR` at `N:\LMSimData` (prod), so it will not
+> see a dev-clone dial.
+
 Two stages: **(1) generate vectors**, then **(2) run risk** off those vectors.
-Always launch in **module mode from `C:\Git\LMQR_hecm`** — script mode can resolve the
-stale sibling `C:\Git\LMQR` repo.
+Always launch in **module mode** — script mode can resolve a stale sibling repo.
 
 ## 1. Vector run
 ```bash
 python -m lmsimvectors.lm_sim_pub_main \
-  -deal_type PositionOnly -with_position \
+  -deal_type <CRT|NONQM|...> -position_only -position_asofdate <YYYYMMDD> \
+  -request_mode forward_proj \
   -scenarios_batch default+opera \
-  -purpose <PURPOSE> -d <YYYYMMDD> \
+  -purpose <PURPOSE> -as_of_date <YYYYMMDD> \
   -mode batch-ray            # or batch-local
 ```
 - `-mode batch-ray` — distributed on the Ray cluster; **workers `pip install lmsim` from pypy at startup**, so a flaky pypy fails the run (see below).

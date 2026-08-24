@@ -1,0 +1,12 @@
+{
+    "input": "C:/Git/LMSimData/data/STACR/stacr_v1.8.2_submodel.json",
+    "output": "C:/Git/LMSimData/data/STACR/stacr_v1.8.2_submodel.json",
+    "overrides": [
+        {"target": "FCLS->FCLStoC", "start_date": "20241101", "dial": 0.925},
+        {"target": "FCLS->FCLStoB", "start_date": "20241101", "dial": 0.968},
+        {"target": "FCLS->FCLStoREO", "start_date": "20241101", "dial": 0.87},
+        {"target": "FCLS->FCLStoD", "start_date": "20241101", "dial": 0.955},
+        {"target": "FCLS->FCLStoP", "start_date": "20241101", "dial": 0.955},
+        {"target": "REO->REOtoD", "cohort": "CRT", "start_date": "20241101", "dial": 1.3}
+    ]
+}

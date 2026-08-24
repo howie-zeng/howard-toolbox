@@ -7,7 +7,9 @@
 
 # Excel outputs
 emailer/outputs/
+emailer/assets/
 dial/outputs/
+formatter/*_formatted.xlsx
 
 # Generated reports and simulation artifacts
 usage/*_cursor_usage.html
@@ -22,9 +24,15 @@ smooth/local_models/
 # Local/generated workflow material
 claude-code-routines/outputs/
 
+# Reading: purchased PDFs and extraction dumps stay local
+reading/**/*.pdf
+reading/_*.txt
+reading/_*.py
+
 # Editor and runtime state
 .vscode/
 .cursor/hooks/state/continual-learning.json
+.cursor/hooks/state/continual-learning-index.json
 *.log
 ~$*.docx
 

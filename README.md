@@ -18,7 +18,10 @@ howard-toolbox/
 │   └── test_smoke.py         # Import tests for all modules
 │
 ├── dial/                     # Dial calibration & model JSON updates
+│   ├── DIAL_RUNBOOK.md       # Canonical dial procedure (every step gated)
+│   ├── RISK_RUNBOOK.md       # Post-dial: vectors + risk to diff (verified commands)
 │   ├── update_dials.py       # CLI: generate specs and apply dial overrides
+│   ├── apply_dials_inplace.py # Apply a spec in place: keeps indent + Version fields
 │   ├── dial_utils.py         # Tracking file parsing & summary extraction
 │   ├── run.py                # Batch dial-ratio analysis across deal types
 │   ├── dial.ipynb            # Notebook: dial command generator & analysis
@@ -60,6 +63,9 @@ howard-toolbox/
 │   ├── python/               # Python reference simulator and report helpers
 │   ├── src/                  # C++ simulation engine
 │   └── README.md             # Build/run/report workflow
+│
+├── reading/                  # Personal reading notes (PDFs stay local)
+│   └── tuckman-serrat-2022/  # Tuckman & Serrat Fixed Income (2022)
 │
 ├── .gitignore
 ├── AGENTS.md                 # Continual-learning memory (auto-mined from chats)
