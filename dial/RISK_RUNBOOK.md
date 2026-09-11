@@ -47,6 +47,91 @@ uv run python -c "from lmsimvectors.config import sim_config_sim2 as c; print(c.
 
 ---
 
+## 0b. Pick the as-of date
+
+Use the **most recent business day** -- except that **before 17:00 local, use the prior
+business day**: today's rates are not loaded yet, and a run against a date with no rate
+curve prices off stale or missing data.
+
+```python
+import datetime as dt
+from lmutils.dateutils import addBusinessDays, is_businessday
+d = dt.date.today()
+if dt.datetime.now().hour < 17:
+    d = addBusinessDays(d, -1)
+while not is_businessday(d):
+    d = addBusinessDays(d, -1)
+```
+
+The same date goes to `-as_of_date`, `-position_asofdate` (stage 1) and `-d` (stage 2), and
+is the `as_of_date` column you filter on when diffing. `run_date` in `riskdb_hist` is just
+the write timestamp -- do not diff on it.
+
+Confirm a production baseline exists at that date before running, or there is nothing to
+diff against:
+
+```python
+pd.read_sql("select as_of_date, purpose, count(distinct cusip) c from dbo.riskdb_hist "
+            "where cusip in (...) and as_of_date >= '<date-2>' group by as_of_date, purpose "
+            "order by as_of_date desc", eng)
+```
+
+`QRPRODWRAPPERWITHSETTLE_CRT` is the production RMBS purpose to diff against.
+
+---
+
+## 0c. Flat files first, if the model gained a feature
+
+A new tape column is **silently dropped** unless `flat_file_config.json` lists it, and a
+missing column is **not an error** -- `AssetData.cpp` binds it with `opt()` and
+`AssetData.h` defaults it to 0. So the model runs, quietly, on a dead feature.
+
+`ever_fcls` is the live example: it feeds `gam_begg_stacr_M9PtoFCLS`, so any model with an
+FCLS state needs it. Production tapes did not carry it while the pseudo tapes (which the
+dials were fitted on) did -- 15.5% of Jumbo deep-DQ loans had `ever_fcls=1`.
+
+The trap is that **two different configs are in play**:
+
+| reader | path |
+|---|---|
+| unload (which columns get WRITTEN) | `FLATFILE_CONFIG_PATH` -> `N:\LMSimDataile_configlat_file_config.json` |
+| engine (which columns get READ) | `LMSIM2_HEADER_CONFIG_PATH`, defaults to `SIM2_DATA_ROOT_DIR/file_config/...` |
+
+Pointing `SIM2_DATA_SUBDIR` at a dev clone moves only the second one. To make the unload
+emit the new column, override the first:
+
+```powershell
+$env:FLATFILE_CONFIG_PATH = "//.../DevSimData/LMSimData_Howard/file_config/flat_file_config.json"
+```
+
+Do **not** set `LMSIMDATA_ROOT` for this -- it is too broad and also moves `init_config`
+and `deal_list`, which a partial clone may not carry (the deal manager dies on
+`deal_collat_mapping.json`).
+
+Then unload just the portfolio's deals, most recent month:
+
+```powershell
+python -m agencydata.wh_lp_update --env prd --deal_type <HELOC|JUMBO2_0> `
+  --deal_list "DEAL A,DEAL B" --force_unload --force_skip_stats --force_skip_trans
+```
+
+- `--force_unload` with **no date arguments** re-does exactly the latest month: the start
+  becomes `last_update_date` when the deal is already current (`wh_lp_update.py:682`).
+- Never pass `--deal_downloaddate_end` to scope a rerun -- it rewinds the download
+  watermark.
+- `--force_skip_stats --force_skip_trans` keeps production stats/transition tables out of it;
+  only the tapes are written.
+- **Verify the column actually landed** (column count should rise by one) before running
+  vectors -- a config that silently dropped it looks identical to a successful run.
+
+This override is a per-run patch. The next nightly unload reads the production config again
+and drops the column, so the config change has to reach `LMSimData` main to stick.
+
+Not every deal is unloadable this way: `wh_lp_update` only sees deals in `lib.poolgroupmap`,
+and FIGRE/GRADE-FIG deals go through `lmdv01.dv01_update_platf` instead.
+
+---
+
 ## 1. Vector run
 
 ```powershell
@@ -189,6 +274,51 @@ Vectors: 6 deals × 37 scenarios = 222/222 in ~12 min. Deals submitted were `CAS
 
 Risk: 7/8 CUSIPs × 33 scenarios = 231 rows in ~145s. `95758BBV0` (WAL 2022-CL4) failed — its deal
 is not in the CRT position list, so it had no vectors.
+
+## Worked example 2 (2026-08-24, HELOC + Jumbo pseudo-pool dials, as-of 20260824)
+
+Ran at 09:30 the next morning, so by §0b the as-of is the **prior** business day.
+
+```powershell
+cd C:\Git\LMQR-worktrees\jumbo-heloc-status-cohorts
+$env:SIM2_DATA_SUBDIR = "DevSimData/LMSimData_Howard"   # dialed models
+# lmsim must be a PUBLISHED version -- Ray workers pip-install the driver's version
+python -m lmsimvectors.lm_sim_pub_main -as_of_date 20260824 -mode batch-ray `
+  -request_mode forward_proj -purpose HZ_HEJ_DIAL -scenarios_batch "default+opera" `
+  -deal_type HELOC -position_only -position_asofdate 20260824
+# ... repeat for -deal_type JUMBO2_0
+python -m RiskRun.riskrun_main -d 20260824 --scenarioset RATE_HEDGE `
+  -c <cusips> --save --purpose HZ_HEJ_DIAL --numprocesses 8 --vector_purpose HZ_HEJ_DIAL
+```
+
+HELOC 296/296 in ~17 min, Jumbo 96/96 in ~11 min, risk 73 CUSIPs x 33 scen = 2409 rows.
+
+**The control group is the whole point.** `-deal_type HELOC` sweeps in three model versions
+at once, and only one was dialed:
+
+| model | deals | role | observed diff |
+|---|---|---|---|
+| `V1_0_V5_HE` | 21 | dialed | moves |
+| `V2_0_7_HE` (Figure) | 12 | control | **0.000 on every metric** |
+| `V2_0_7_GRADE` | 4 | control | **0.000 on every metric** |
+
+Exact zeros on 16 control CUSIPs is the evidence that cohort isolation held. If a control
+moves, stop and find out why before reading anything into the treated numbers.
+
+**Deal name does not tell you the model.** GRADE splits on the `is_fig` flag in
+`deal_manager._heloc_df`: `is_fig == 'FIG'` (the FIG1-FIG6 deals) routes to the GRADE
+model, while `'Others'` (LOC / SEQ / CES / HB) falls through to `MODEL_VERSION_HELOC`. So
+`GRADE 2026-HB1` is a *treated* deal despite the name, and was among the largest movers.
+Classify by the Model Version column of the deal-summary table, never by shelf name.
+
+**`price` is an input, not an output.** `d_price` is 0.0 for every CUSIP. Diff `yield`,
+`e_spread`, `wal`, `eff_dur`, `cum_loss`.
+
+**Expect some CUSIPs to have no vectors.** 5 deals were not in the HELOC deal list, so
+their 15 CUSIPs failed with `Couldn't retrieve model for <DEAL>` -- 357 log errors from 5
+root causes, one per scenario. Count distinct root causes, not error lines.
+
+---
 
 Related: [`DIAL_RUNBOOK.md`](DIAL_RUNBOOK.md), [`../runbooks/dial-model.md`](../runbooks/dial-model.md),
 [`../runbooks/run-risk-and-vectors.md`](../runbooks/run-risk-and-vectors.md).

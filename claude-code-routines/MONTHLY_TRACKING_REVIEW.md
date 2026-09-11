@@ -8,9 +8,33 @@ Outlook, and confirmed against him.
 
 ## What this is
 
-A monthly email to `LibreMax-Modeling` reporting how the RESI models are tracking across five
-cohorts — **STACR, CAS, NQM, JUMBO, HELOC** — with the per-cohort tracking workbooks attached
-and a screenshot of each cohort's `CtP` sheet inline.
+A monthly email to `LibreMax-Modeling` reporting how the RESI models are tracking across six
+cohorts — **STACR, CAS, NQM, JUMBO, FIGRE, HELOC** — with the per-cohort tracking workbooks
+attached and a screenshot of each cohort's `CtP` sheet inline.
+
+### The FIGRE / HELOC split — read this before anything else
+
+Through 2026-08 the routine had five cohorts and the one it called **HELOC** was really the
+**Figure** book, `tracking_V2_0_7_HE_<date>.xlsx`. Two things changed for the 2026-09 cycle:
+
+- The Figure report is now named `tracking_V2_0_7_FIGRE_<date>.xlsx` — LMQR commit `79037f1a0`
+  (`tracking_report_stem` in `lmanalytics/tracking/transition_report.py`) — and the historical
+  files under `Dialed` and `Undialed` were renamed to match.
+- A genuinely new cohort landed: the **non-Figure HELOC** book,
+  `tracking_V1_0_V5_HE_<date>.xlsx` (`MODEL_VERSION_HELOC = "V1_0_V5_HE"`,
+  `DealType.HELOC_PSEUDO`), first present in `Dialed` for 2026-09.
+
+So `_HE_` no longer means what it used to. The old discovery pattern
+`^tracking_.*_HE_(\d{8})\.xlsx$` never stopped matching — it silently began resolving to a
+**different cohort**, and FIGRE dropped out of the review with no warning whatsoever. Run
+against the 2026-09 data before the fix, `readiness` printed **"5 of 5 cohorts present —
+READY"** while reviewing the wrong HELOC book and omitting Figure entirely.
+
+`COHORTS` now carries both, FIGRE ahead of HELOC (`_scan` stops at the first matching
+pattern), and the email order is **STACR, CAS, NQM, JUMBO, FIGRE, HELOC**.
+
+**A cohort count is evidence of nothing.** Readiness counts what the patterns matched, not what
+should exist. A renamed product passes every check it has.
 
 Two routines, both **on-demand**:
 
@@ -70,11 +94,12 @@ without recomputing.
 `R:\QR\Resi_shared\tracking\Dialed` — one workbook per cohort per month:
 
 ```
-tracking_STACR_V1_8_2_CRT_20260803.xlsx
-tracking_CAS_V1_8_2_CRT_20260803.xlsx
-tracking_V1_7_6_NONQM_20260701.xlsx
-tracking_V1_8_1_JUMBO_20260803.xlsx
-tracking_V2_0_7_HE_20260803.xlsx
+tracking_STACR_V1_8_2_CRT_20260901.xlsx
+tracking_CAS_V1_8_2_CRT_20260901.xlsx
+tracking_V1_8_0_NONQM_20260901.xlsx
+tracking_V1_8_4_JUMBO_20260901.xlsx
+tracking_V2_0_7_FIGRE_20260901.xlsx     <- Figure; was tracking_V2_0_7_HE_* through 2026-08
+tracking_V1_0_V5_HE_20260901.xlsx       <- non-Figure HELOC, new in 2026-09
 ```
 
 The model-version segment changes between months, so discovery is by regex on cohort +
@@ -99,22 +124,49 @@ touches anything.
 
 **Quoted ratios come from the WAC `ALL AVG` row** — the *second* `ALL AVG` row in column C.
 This was established empirically: it reproduces all five figures from the July 2026 email
-(CAS 0.989→"0.99", NQM 1.338→"1.34", JUMBO 1.171→"1.17", HELOC 1.096→"1.10"). The AGE row does
-not match and will mislead you. `facts` reports both so you can cross-check.
+(CAS 0.989→"0.99", NQM 1.338→"1.34", JUMBO 1.171→"1.17", HELOC 1.096→"1.10" — that "HELOC" is
+the **Figure** book, which the review now calls FIGRE). The AGE row does not match and will
+mislead you. `facts` reports both so you can cross-check.
 
 **`Ratio = sum(Proj) / sum(Actual)`** over the window — not Actual/Proj. Confirmed against the
 sign of the `Abs` column. A ratio below 1.0 means the model is projecting slower than actual.
+
+**The published email stays high-level.** CPR/CtoP 3M/6M/12M plus one takeaway per cohort.
+**FCLS is STACR-only.** CAS does not report FCLS; FCLS/REO rows in the CAS tracking workbook
+are derived and must not be quoted or dialed.
+**Prefer no dial; still dial if the model is off.** A newly released model is left undialed
+and should converge to 1 (NQM V1_8_0 is the exhibit). If the published miss is the dial
+itself, propose taking it off. If the undialed model is actually off (consistent miss, not
+a window/restatement/gap), we still dial. Quote undialed CtoP and CPR separately — HELOC
+2026-09 undialed CPR 12M was 1.00 while undialed CtoP was ~1.18. Screenshot the undialed
+`CtP` sheet for that comparison; copy it to a distinct local filename first (Dialed/Undialed
+share basenames). Delivery is `emailer/run.py --md-file` paste, not the helper Outlook draft.
 
 **Label the windows correctly.** `6M Error` is the six-month tracking error. The July 2026 email
 called it a "12-month average"; Howard confirmed that was his mistake. Consequence: a cohort's
 correctly-labelled figure will not line up with what July's email said for the same metric — if
 that is visible, say so in a sentence rather than leaving the team to reconcile it.
 
-**Dial status is verified or omitted.** `Dialed` vs `Undialed` numerically identical ⇒ no dial
-applied; differing ⇒ dial applied. In July 2026 they were identical for STACR/CAS and divergent
-for NQM (1.17 dialed vs 0.78 undialed), matching what Howard wrote. When no `Undialed` twin
-exists for that date the answer is **unverified — say nothing about dials**, and never carry
-forward the previous month's claim.
+**Dial status is verified or omitted, and it is read off the projections, not the ratios.**
+`dial_status` compares the per-month `Proj` values at the quoted WAC `ALL AVG` row of `CtP` and
+`CPR` and reports the median dialed/undialed factor per sheet; months where either side's
+projection is missing or zero are skipped and counted. When no `Undialed` twin exists the
+answer is **unverified — say nothing about dials**, and never carry forward the previous
+month's claim.
+
+The check used to compare only the window `Ratio` cells, and that was **wrong in four of six
+cohorts on 2026-09**: STACR and CAS reported "dial applied" off a +0.20 gap on the 3M `CtP`
+ratio that was one absent 2026-08 projection (the surviving CAS buckets are bit-identical to
+16 significant figures), JUMBO's "dial" was 7e-09 of float noise, and FIGRE's was an `Undialed`
+book of zeros. Only HELOC had a real dial — ×1.1999 on `CtP` and ×1.15 on `CPR`, uniform across
+all 35 rows and all six months. **That uniformity is what a dial looks like**; a one-month,
+one-column difference is a defective run.
+
+Two related facts worth holding. The `Undialed` books are a **separate, later re-run** — ~24 h
+after their `Dialed` twins on 2026-09, except NQM at 9 minutes — not a no-dial branch of the
+same process, so an incomplete newest column there says nothing about dialing. And a dial can
+be sheet-specific: NQM's `CtP` is bit-identical dialed vs undialed while its `CPR` carries a
+uniform +0.8%, so "NQM is undialed" is true only of `CtP`.
 
 ## Failure modes
 
@@ -136,6 +188,33 @@ describing the gap.
 **Distinguish a data artifact from a genuine turn.** On the same run, JUMBO had no missing months
 and had genuinely reversed from over-projecting early in the year to under-projecting recently,
 so its 3-month 0.87 was real. The tell is in the Actual/Proj pairs, not the ratio.
+
+**The newest month column is provisional, and a 3M move is usually the window, not the model.**
+Both of 2026-09's apparent improvements were artifacts. NQM's 3M `CtP` went 0.894 → 0.988 almost
+entirely because July's *realized* CtoP was restated down 22.9% (1.7295 → 1.3342) between the two
+books, with the projection barely moving. JUMBO's went 0.873 → 0.957 purely because 2026-05
+(monthly ratio 0.70) rolled out of the window — its newest month, 2026-08, is the worst of the
+last three at 0.847. HELOC restated its own 2026-07 as well. **Before crediting a 3M move, check
+what left the window and whether the overlapping months still hold their old values.**
+
+**A model-version bump can silently change the universe, not just the model.** JUMBO went
+V1_8_1 → V1_8_4 between the two books, and with it the delinquency universe expanded roughly
+six-fold (M30: 311 loans / $211mm → 1,877 / $757mm) and `FCLS`/`REO` sheets appeared for the
+first time. August's transition sheets were built on the WAC-block subset, September's on the
+AGE-block pool. Transition ratios across that boundary are not comparable — say so rather than
+reporting a move.
+
+**A cohort can be present, complete-looking, and still unusable.** FIGRE's 2026-09 book had two
+independent defects at once: 41 of 56 `CtP` rows carried a literal zero `Proj` in all five older
+months (37 of them had a full series the month before), *and* its status sheets were stamped a
+month behind — `CtP`/`CtM30`/`M30tC` labelled 2026-02..2026-07 while `CPR`/`CDR` in the same file
+ran 2026-03..2026-08, with each September actual equal to the August book's value for the month
+after. The `Undialed` twin carried the same shifted actuals and *more* zeros, which places the
+fault upstream of the dial. Leading cause: the cohort's pseudo pools were renamed `HELOC*` →
+`FIGRE*` at the 2026-08 factor date while the historical projections stayed in
+`ResiTransitionTracking` under the old names — the rows are still there, keyed `V2_0_7_HE`,
+purposes `PROD` and `PROD_UNDIALED`. Held back from the email with `--skip FIGRE`, named in the
+narrative, not silently dropped.
 
 **A missing cohort usually means its pipeline failed, and nobody was emailed.** Per
 `memory/mailbox-folder-map.md`, `PAGER_DUTY` is unset for pipelines using `notifyBuildResult`,
@@ -173,8 +252,8 @@ building the draft.
 
 ## What this deliberately does not do
 
-- **It never sends.** The email goes to the whole modeling team over Howard's name. Both
-  routines stop at an Outlook draft; he reviews and sends.
+- **It never sends.** The email goes to the whole modeling team over Howard's name. As of
+  2026-09 he pastes HTML from `emailer/run.py --md-file`; do not leave extra Outlook drafts.
 - **It does not attach Howard's full Outlook signature.** The helper emits plain
   `Best, / Howard Zeng / QR`; the HTML signature with the logo is not reproduced.
 - **It does not write to `R:\QR\Resi_shared\tracking`.**

@@ -31,8 +31,16 @@ python monthly_tracking_review.py readiness --month YYYY-MM
 ```
 
 Exit `0` means every cohort is present and clean. Exit `4` means something is missing or
-gapped. The five cohorts are **STACR, CAS, NQM, JUMBO, HELOC**, read from
+gapped. The six cohorts are **STACR, CAS, NQM, JUMBO, FIGRE, HELOC**, read from
 `R:\QR\Resi_shared\tracking\Dialed`.
+
+`FIGRE` is the Figure-platform HELOC book (`tracking_V2_0_7_FIGRE_*`), which every review
+before 2026-09 called "HELOC"; `HELOC` is the separate non-Figure book
+(`tracking_V1_0_V5_HE_*`), new in 2026-09. A cohort count is not evidence of completeness —
+readiness counts what the discovery patterns matched, not what should exist. When a product is
+renamed upstream its pattern has to be added, or the cohort disappears from the review in
+silence: that is exactly what the rename did to FIGRE, and readiness still said "5 of 5 —
+READY".
 
 Two distinct problems get reported, and they need different follow-up:
 

@@ -140,6 +140,64 @@ Calibration note: the tracking report only shows the blended transition (e.g. to
 so per-component dial values must come from outside evidence (refi share, S-curve analysis);
 the report validates the blend.
 
+## 6c. When the dial barely moves: probability space vs hazard space
+
+`dial = 1 / ratio` is a **probability-space** step. It is correct only while the state's
+total outflow is far from saturation. Once a state drains most of its balance every month,
+the same arithmetic under-steps badly and the calibration looks structural when it is not.
+
+**Symptom.** Every row in one state family stalls on a common ratio plateau and stops
+responding: successive rounds move each ratio by ~0.001 while the dials keep halving. The
+probe (§6) reports 1-5% of the requested change delivered.
+
+**Diagnose at the state level, not the transition level.** Sum the sheet's Actual and Proj
+columns for the whole state:
+
+```python
+# per state: model outflow vs actual outflow, and the implied stay-put rate
+proj_sum, act_sum = sum(proj_cols), sum(actual_cols)      # % of state balance
+# a plateau at exactly proj_sum/act_sum means the LEVEL is wrong, not the shares
+```
+
+If every row's residual equals `proj_sum / act_sum`, per-transition dials cannot fix it --
+they only redistribute shares inside a total the engine holds fixed. HELOC v1.0.V5 M90P:
+model drained 98.9% per month against an actual 90.0, and `98.9/90.0 = 1.099` was
+exactly the plateau all nine rows sat on.
+
+**Solve the level in hazard space.** The outflow probability behaves as `p = 1 - exp(-r)`,
+and the hazard scales exactly with the dial (measured: a requested x0.90 moved r from
+4.5203 to 4.0393, a ratio of 0.8935). So:
+
+```python
+import math
+k = math.log(1 - p_target) / math.log(1 - p_now)   # uniform factor for every outflow
+```
+
+Apply `k` to **every** non-self transition of every state in the family, including the
+roll-worse moves. Self-transitions are skipped -- the engine overwrites them (§7.2).
+
+**Interpolate, do not extrapolate.** The single-point solve is only locally valid: at
+p=0.989 it asked for x0.51 and overshot to 80.8% outflow. Take two measured points
+that bracket the target and interpolate `log r` against `log k`:
+
+```python
+k = exp(log(k1) + (log(h(target)) - log(h(p1))) * (log(k2) - log(k1)) / (log(h(p2)) - log(h(p1))))
+```
+
+Three measured runs converged M90P to 90.406 vs 90.045 (ratio 1.0040).
+
+**Then go back to §6.** With the level right the state is out of saturation and ordinary
+probability-space compounding works on the shares again. HELOC went 0/23 -> 19/23 inside
+1% this way; the plateau disappeared entirely.
+
+**Which states need this.** Only ones whose total outflow is wrong AND high. Check before
+dialing: a state already draining the right amount (HELOC M270P: 100.0 model vs 99.8 actual)
+needs no level solve and converges on shares alone. A state at 83% (HELOC M60) is
+mildly saturated and responds partially. A state at 99% is where the naive step
+fails outright.
+
+---
+
 ## 7. Known engine quirk classes (verified on NQM; check for your product)
 
 1. **Shock placement must match the transition's structure — mismatches are SILENT no-ops.**

@@ -7,7 +7,7 @@ Run the Monthly Tracking Readiness check for month **$1** (if empty, use the cur
 
 Follow `claude-code-routines/monthly-tracking-readiness.md`.
 
-Report only — no drafting and no email. Distinguish the two failure modes: a **missing**
+Report only — no drafting and no email. First list the month's files in `Dialed` and check each one maps to a cohort: a renamed product keeps matching its old pattern and silently swaps cohorts, so an "N of N present" verdict proves nothing on its own. Distinguish the two failure modes: a **missing**
 cohort (pipeline never produced it, so check the `quant-Monthly-ResiTracking-*` Jenkins jobs
 and remember a failure there may have emailed nobody) versus a **data gap** (workbook exists
 but a month's projection is zero, which understates every window containing it). For a gap,

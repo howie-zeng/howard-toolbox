@@ -64,3 +64,35 @@ returning 0, so wrap the count, don't let it abort the scan.
 `/auto` **46 -> 71 -> 190** and `Jenkins Automation` sat at **11** for three passes before jumping
 to **53**. Four of that day's six findings lived only in the messages that arrived after pass 1.
 The stopping condition remains "in-window count unchanged across 3 consecutive reads".
+
+**CORRECTION 2026-08-29 - the primary store's `CLO` folder is LIVE; probe it every run.** Every note
+above (including 08-19 and 08-21) records `CLO` as returning **0 items** over COM. On the 08-29
+scheduled run it returned **18 items in a 32h window**, current to that morning (04:40/04:41), from
+`qrprod@libremax.com`: CLO Spread Model LO MAE Report (GAM v3.0), CLO Spread Model Curve Comparison
+(v2/v2r/delev), CLO Relative Value Trades + Positions, LibreMax CLO Surveillance, CLO IO/PO Yields,
+CLO Break-Even Yield, CLO Large MVOC Movement, CLO Loan Price Changes, and the US+Europe / BB/BBB
+Lists & Offers runs. So CLO **report contents** are verifiable again, not just job exit codes - the
+"job-side green but report contents unverified" caveat used in the 08-22 summary no longer applies.
+`RESI`, `Tracking` and `HECM` still returned 0 on this run. Treat all of these as *probe every time*:
+their availability flips both ways and the note you are reading may be a month out of date.
+
+**Weekend cadence reference (confirmed 08-29):** on a Saturday run, expect NO `CRT Monitor Report`
+in `/auto` (weekday-only; `quant-Daily-CRT-Monitor-Report` last fires Friday ~06:00 ET) and only the
+overnight pair `CLO Large MVOC Movement` + `CLO Loan Price Changes` in the `CLO` folder ~04:40 ET.
+The full CLO report chain runs on the business date's own day, so a Saturday run reviews Friday's.
+Do not report either absence as a missing report.
+
+**Sunday cadence, confirmed 2026-08-30 (extends the 08-29 weekend reference above):** the `CLO`
+folder's overnight pair (`CLO Large MVOC Movement` + `CLO Loan Price Changes`, ~04:40 ET) runs
+**Mon-Sat only, never Sunday**. Verified over 16 days of that folder: the pair appears every day
+08-19 through 08-22 and 08-24 through 08-29, and is absent on **both** Sunday 08-23 and Sunday 08-30.
+So on a Sunday run, an empty `CLO` window since Saturday morning is correct - do not report it as a
+missing report. The full weekday CLO report chain likewise runs on the business date's own day, so a
+Sunday run reviews Friday's chain (which lands in the folder Friday) plus Saturday's overnight pair
+for the Friday business date.
+
+Same run: `/auto` first read was a full day stale (169 msgs, newest 08-29 08:06) and `Jenkins
+Automation` sat at 34; one forced Send/Receive brought them to 186 and 42, stable across the next two
+reads. The stability loop remains necessary - and note `Jenkins Automation` carried the ONLY sighting
+of that morning's live BBG outage (`quant-DailyPositionTagging #977 - Build FAILURE`), with zero
+`quant-*` build mail anywhere in the 186-message `/auto` window.

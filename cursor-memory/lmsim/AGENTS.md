@@ -26,7 +26,7 @@ wins.
 git clone <repo> ; cd LMSim
 .\dev.ps1 setup     # submodule + bootstrap vcpkg + configure (build_dev)
 .\dev.ps1 build     # everything: lmsim2_lib, tests, both Python exts
-.\dev.ps1 test      # ctest   (or: .\dev.ps1 test -Filter 'AssetDataSetupTest.*')
+.\dev.ps1 test      # ctest   (or: .\dev.ps1 test -Filter 'CompiledModelTest.*')
 .\dev.ps1 pytest    # pure-Python tests (tape_clean etc.) — no native build
 ```
 

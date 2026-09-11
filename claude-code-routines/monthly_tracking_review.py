@@ -37,16 +37,24 @@ UNDIALED = TRACKING_ROOT / "Undialed"
 DEFAULT_TO = "LibreMax-Modeling"
 
 # Cohort order is the order they appear in the email.
+# FIGRE must precede HELOC: until 2026-09 the Figure cohort was itself named ``_HE_``
+# (``tracking_V2_0_7_HE_<date>.xlsx``) and was what this routine called "HELOC". It is now
+# ``_FIGRE_``, and ``_HE_`` means the separate non-Figure HELOC book (``V1_0_V5_HE``).
 COHORTS = [
     ("STACR", re.compile(r"^tracking_STACR_.*_CRT_(\d{8})\.xlsx$", re.I)),
     ("CAS", re.compile(r"^tracking_CAS_.*_CRT_(\d{8})\.xlsx$", re.I)),
     ("NQM", re.compile(r"^tracking_(?!.*PSEUDO).*_NONQM_(\d{8})\.xlsx$", re.I)),
     ("JUMBO", re.compile(r"^tracking_.*_JUMBO_(\d{8})\.xlsx$", re.I)),
+    ("FIGRE", re.compile(r"^tracking_.*_FIGRE_(\d{8})\.xlsx$", re.I)),
     ("HELOC", re.compile(r"^tracking_.*_HE_(\d{8})\.xlsx$", re.I)),
 ]
 
 # Sheets whose ratios we report. CtP drives the narrative; CPR is quoted for HELOC/JUMBO.
 METRIC_SHEETS = ("CtP", "CPR")
+
+# How far the median dialed/undialed factor may sit from 1.0 and still count as "no dial".
+# NQM's real CPR dial is +0.84%, so this has to stay well below that.
+DIAL_TOLERANCE = 0.002
 
 
 # --------------------------------------------------------------------------- discovery
@@ -222,24 +230,64 @@ def gap_warnings(report: dict) -> list[str]:
 
 
 def dial_status(name: str, stamp: dt.date, dialed: Path) -> str:
-    """'no dial' if the Undialed twin is numerically identical, else 'dial applied'.
-    Returns 'unverified' when no Undialed file exists for that date."""
+    """Dial verdict from the per-month projections, not from the window Ratio cells.
+
+    A gap between the two books' Ratio cells is produced just as easily by a projection the
+    Undialed run never wrote as by a dial. On 2026-09 the old ratio-only check was wrong in
+    four of six cohorts: STACR and CAS showed a +0.20 gap on the 3M CtP ratio that was
+    entirely one absent 2026-08 projection, JUMBO's "dial" was 7e-09 of float noise, and
+    FIGRE's was an Undialed book whose projections are all zero. Months where either side's
+    projection is missing or zero are skipped; the verdict is the median dialed/undialed
+    factor over the months that remain, reported per sheet so it can be checked.
+    """
     twin = UNDIALED / dialed.name
     if not twin.is_file():
         return "unverified (no Undialed file for this date)"
     try:
         import openpyxl
 
-        out = []
-        for p in (dialed, twin):
-            wb = openpyxl.load_workbook(p, data_only=True)
-            ws = wb["CtP"]
-            rows = _all_avg_rows(ws)
-            cols = _ratio_columns(ws)
-            r = rows[1] if len(rows) > 1 else rows[0]
-            out.append(tuple(ws.cell(row=r, column=c).value for c in sorted(cols.values())))
-            wb.close()
-        return "no dial applied" if out[0] == out[1] else "dial applied"
+        verdicts, skipped = [], 0
+        for sheet in METRIC_SHEETS:
+            series = {}
+            for label, path in (("d", dialed), ("u", twin)):
+                wb = openpyxl.load_workbook(path, data_only=True)
+                if sheet in wb.sheetnames:
+                    ws = wb[sheet]
+                    rows = _all_avg_rows(ws)
+                    if rows:
+                        r = rows[1] if len(rows) > 1 else rows[0]
+                        series[label] = {m: p for m, _a, p in _monthly_pairs(ws, r)}
+                wb.close()
+            if len(series) < 2:
+                continue
+            factors = []
+            for month, proj_d in series["d"].items():
+                proj_u = series["u"].get(month)
+                if not isinstance(proj_d, (int, float)) or not isinstance(proj_u, (int, float)):
+                    skipped += 1
+                elif proj_d == 0 or proj_u == 0:
+                    skipped += 1
+                else:
+                    factors.append(proj_d / proj_u)
+            if not factors:
+                continue
+            factors.sort()
+            median = factors[len(factors) // 2]
+            outlier = max(factors, key=lambda f: abs(f - 1.0))
+            # A dial is a factor the whole sheet carries. A median of 1.0 with one month far
+            # from it is a defective run in one column -- report it as that, not as a dial.
+            if abs(median - 1.0) <= DIAL_TOLERANCE:
+                tag = f"{sheet} none"
+                if abs(outlier - 1.0) > 10 * DIAL_TOLERANCE:
+                    tag += f" (but 1 month differs by x{outlier:.4f} -- a defective column, not a dial)"
+                verdicts.append((tag, False))
+            else:
+                verdicts.append((f"{sheet} x{median:.4f}", True))
+        if not verdicts:
+            return "unverified (no month carries a projection on both sides)"
+        note = f"; {skipped} month(s) skipped for an absent projection" if skipped else ""
+        head = "dial applied" if any(is_dial for _tag, is_dial in verdicts) else "no dial applied"
+        return f"{head} ({', '.join(tag for tag, _is_dial in verdicts)}){note}"
     except Exception as exc:  # pragma: no cover
         return f"unverified ({exc})"
 
@@ -272,7 +320,10 @@ def render_ctp_images(chosen: dict, workdir: Path) -> dict[str, Path]:
     workdir.mkdir(parents=True, exist_ok=True)
     images: dict[str, Path] = {}
 
-    xl = win32com.client.Dispatch("Excel.Application")
+    # DispatchEx, not Dispatch: this box is shared, and Dispatch attaches to whatever Excel is
+    # already running -- a colleague's session, or an instance orphaned by an earlier failure.
+    # Driving someone else's Excel is how this step picks up a modal dialog it cannot see.
+    xl = win32com.client.DispatchEx("Excel.Application")
     xl.Visible = True  # CopyPicture is unreliable without a real window
     xl.DisplayAlerts = False
     try:
@@ -282,10 +333,29 @@ def render_ctp_images(chosen: dict, workdir: Path) -> dict[str, Path]:
             if not local.exists():
                 shutil.copy2(src, local)
 
-            wb = xl.Workbooks.Open(str(local), UpdateLinks=0)
+            # Excel rejects calls with VBA_E_IGNORE (0x800AC472) while it is still settling a
+            # newly opened window. Retry the open+activate pair rather than losing the run.
+            wb = ws = None
+            for attempt in range(3):
+                try:
+                    wb = xl.Workbooks.Open(str(local), UpdateLinks=0)
+                    ws = wb.Worksheets("CtP")
+                    ws.Activate()
+                    break
+                except Exception as exc:
+                    if wb is not None:
+                        try:
+                            wb.Close(SaveChanges=False)
+                        except Exception:
+                            pass
+                    wb = ws = None
+                    if attempt == 2:
+                        raise RuntimeError(f"{name}: could not activate CtP after 3 attempts ({exc})")
+                    print(f"  [RETRY] {name}: {exc}")
+                    for _ in range(8):
+                        pythoncom.PumpWaitingMessages()
+                        time.sleep(0.5)
             try:
-                ws = wb.Worksheets("CtP")
-                ws.Activate()
                 hits = []
                 for r in range(1, 400):
                     v = ws.Cells(r, 3).Value
@@ -320,9 +390,17 @@ def render_ctp_images(chosen: dict, workdir: Path) -> dict[str, Path]:
                 images[name] = dest
                 print(f"  [OK] {name}: A1:AE{last} -> {dest.name} ({dest.stat().st_size:,} b)")
             finally:
-                wb.Close(SaveChanges=False)
+                try:
+                    wb.Close(SaveChanges=False)
+                except Exception as exc:
+                    print(f"  [WARN] {name}: could not close workbook: {exc}")
     finally:
-        xl.Quit()
+        # A failed Quit leaves an orphan EXCEL.EXE holding the scratch copies, and the next
+        # run then inherits it. Never let it mask the real error.
+        try:
+            xl.Quit()
+        except Exception as exc:
+            print(f"  [WARN] Excel did not quit cleanly: {exc}")
     return images
 
 
@@ -471,6 +549,18 @@ def cmd_draft(args) -> int:
         print(f"[FAIL] no tracking files at all for {args.month} in {DIALED}")
         return 2
 
+    # A cohort whose workbook is known-bad is worth leaving out of the mail rather than
+    # sending the team a file of zeros -- but only ever explicitly. The narrative still has
+    # to name it; a cohort that just stops appearing is the failure this routine exists to
+    # prevent.
+    skipped = [c.strip().upper() for c in (args.skip or "").split(",") if c.strip()]
+    for cohort in skipped:
+        if cohort not in chosen:
+            print(f"[FAIL] --skip {cohort}: not a cohort present for {args.month}")
+            return 2
+        del chosen[cohort]
+        print(f"[SKIP] {cohort} excluded from attachments and charts by --skip")
+
     print(f"cohorts for {args.month}: {', '.join(sorted(chosen))}")
     if missing:
         print(f"missing: {', '.join(sorted(missing))}")
@@ -542,6 +632,9 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--to", default=DEFAULT_TO)
     d.add_argument("--subject", default=None)
     d.add_argument("--workdir", default=None, help="where copies and PNGs are written")
+    d.add_argument("--skip", default=None,
+                   help="comma-separated cohorts to leave out of attachments and charts "
+                        "(the narrative must still say why)")
     d.add_argument("--ack-gaps", action="store_true",
                    help="proceed despite missing projections (narrative must address them)")
     mode = d.add_mutually_exclusive_group()

@@ -44,3 +44,34 @@ failures and two weekends of missing tracking vectors, while the sibling
 **How to apply:** never describe this chain as "no new build since yesterday" as though it were
 idle - state the weekly cadence and name the next firing as the fix deadline. Do not wait for a
 weekend re-run that will not come.
+
+**`quant-DailySimDataUpdateDV01` hides Redshift outages behind an `UnboundLocalError` (learned
+2026-09-01):** when Redshift is unreachable the console shows
+`Error connecting with Redshift: [WinError 10060] A connection attempt failed...` and then, per
+failing deal, `ERROR: Failed GRADE <deal>: cannot access local variable 'conn' where it is not
+associated with a value`. The second message is a **code bug in the handler, not the real fault** -
+`lmdv01/dv01_update_platf.py` references `conn` in its error path before it was ever bound, so the
+`UnboundLocalError` text is what gets logged per deal while the actual cause (the WinError 10060
+line) appears only once, far above. On 2026-08-31 `#131` lost `GRADE 2021-FIG2` and
+`GRADE 2025-LOC5` this way (rc=1 after ~2h49m; earlier deals had already completed, so it is a
+partial failure, and the surviving deals are NOT re-attempted). **How to apply:** treat the `conn`
+message as a symptom - scroll up for the Redshift/network line before diagnosing, and read the
+final `ERROR: Failed deals: [...]` line for the authoritative list of what to re-run. Two fixes are
+needed: Redshift reachability, and binding `conn` (or restructuring the try/except) so the true
+error survives. Distinct from the Redshift `fnm_sf` grant regression, which was a permissions
+fault (SQLSTATE 42501), not a connect timeout.
+
+**Postgres `SQLSTATE 53100 ... No space left on device` on LM-PSQL01 is a disk fix, not a code fix
+(learned 2026-09-02):** two unrelated jobs failed within one minute of each other on the same
+server message — `quant-PseudoDeal-Tracking #80` (CAS_PSEUDO) writing vector results
+(`COPY modeljsonresult`, `could not extend file "base/16388/121115861"`, via
+`lmsimvectors/model_run.py:300 write_result_batch_to_postgres`), and `quant-abs-cashflows #116`
+saving 09-01 cashflows (`COPY temp_table` from `libremax.securitycashflow`,
+`could not extend file "base/16388/t9_127089300"`, via `RiskRun/riskrunner.py:1335`). Both carry
+the server hint `Check free disk space.` and both name database OID **16388** on
+`lm-psql01.libremax.com`. **How to apply:** when any job dies mid-`COPY` with `'C': '53100'`, treat
+it as one infrastructure incident affecting every writer to that database — group the jobs into a
+single finding, fix the volume first, and re-run afterwards. Nothing self-heals, and a partial
+write is possible (CAS persisted only 440 of 12,559 results), so re-runs must be idempotent or
+forced. Same shape as [[redshift-fnm-sf-grant-regression]]: a SQLSTATE that points at the platform,
+not the pipeline.
